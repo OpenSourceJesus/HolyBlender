@@ -37,7 +37,8 @@ fn StartLevel (
 	assets: Res<LevelAssets>,
 	assetServer: Res<AssetServer>,
 	mut meshes : ResMut<Assets<Mesh>>,
-	keys: Res<ButtonInput<KeyCode>>
+	keys: Res<ButtonInput<KeyCode>>,
+	mouseButtons: Res<ButtonInput<MouseButton>>
 ) {
 	ꗈ2
     commands.spawn((Camera2dBundle::default(), WorldCursorCoords::default()));

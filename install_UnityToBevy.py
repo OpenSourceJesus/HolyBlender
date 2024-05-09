@@ -26,10 +26,11 @@ dotnet add package IronPython
 mkdir -p assets''')
 if not os.path.isdir('src'):
 	os.system('''cargo init
-	cargo add bevy_asset_loader
-	cargo add bevy_gltf_components
-	cargo add bevy_registry_export
-	cargo add bevy_gltf_blueprints''')
+		cargo add bevy
+		cargo add bevy_asset_loader
+		cargo add bevy_gltf_components
+		cargo add bevy_registry_export
+		cargo add bevy_gltf_blueprints''')
 filePath = os.getcwd() + '/Unity2Many.csproj'
 fileLines = open(filePath, "r").readlines()
 ExcludeFolder ('BareUEProject')

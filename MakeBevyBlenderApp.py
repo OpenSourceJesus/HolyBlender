@@ -39,14 +39,14 @@ ORTHOGRAPHIC_SIZE_INDICATOR = '  orthographic size: '
 NEAR_CLIP_PLANE_INDICATOR = '  near clip plane: '
 FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 CLASS_MEMBER_INDICATOR = '#💠'
-COMPONENT_TEMPLATE = '''"TestBevyProject::|": {
+COMPONENT_TEMPLATE = '''"TestBevyProject::ꗈ": {
 	  "additionalProperties": false,
 	  "isComponent": true,
 	  "isResource": false,
 	  "properties": {},
 	  "required": [],
-	  "short_name": "|",
-	  "title": "TestBevyProject::|",
+	  "short_name": "ꗈ",
+	  "title": "TestBevyProject::ꗈ",
 	  "type": "object",
 	  "typeInfo": "Struct"
 	}'''
@@ -71,6 +71,7 @@ SYSTEM_METHOD_ARGUMENTS = '''mut commands: Commands,
 	assetServer: Res<AssetServer>,
 	mut meshes : ResMut<Assets<Mesh>>,
 	keys: Res<ButtonInput<KeyCode>>,
+	mouseButtons: Res<ButtonInput<MouseButton>>,
 	mut query: Query<&mut Transform, With<ꗈ>>,
 	time: Res<Time>,
 	mut cursorEvent: EventReader<CursorMoved>'''
@@ -112,13 +113,13 @@ while i < len(codeFilesPaths):
 for i in range(len(codeFilesPaths)):
 	codeFilePath = codeFilesPaths[i]
 	mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
-	indexOfAddRegistryTextIndicator = registryText.find('|')
+	indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
 	componentText = COMPONENT_TEMPLATE
-	componentText = componentText.replace('|', mainClassName)
+	componentText = componentText.replace('ꗈ', mainClassName)
 	if i < len(codeFilesPaths) - 1:
 		componentText += ','
 	registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
-registryText = registryText.replace('|', '')
+registryText = registryText.replace('ꗈ', '')
 open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
 registry = bpy.context.window_manager.components_registry
 registry.schemaPath = REGISTRY_PATH

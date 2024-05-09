@@ -5,7 +5,7 @@ UNITY_PROJECT_PATH = ''
 UNREAL_COMMAND_PATH = os.getcwd() + '/../UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd'
 UNREAL_PROJECT_PATH = ''
 MAKE_UNREAL_PROJECT_SCRIPT_PATH = os.getcwd() + '/MakeUnrealProject.py'
-CODE_PATH = UNREAL_PROJECT_PATH + '/Source/BareUEProject'
+CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
 YAML_CLASS_ID_INDICATOR = '--- !u!'
 SCRIPT_INDICATOR = '  m_Script: '
 MESH_INDICATOR = '  m_Mesh: '
@@ -35,7 +35,7 @@ def ConvertPythonFileToCpp (filePath):
 	text = '\n'.join(lines)
 	open(filePath, 'wb').write(text.encode('utf-8'))
 	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
-	command = [ 'python3', os.getcwd() + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1' ]
+	command = [ 'python3', os.getcwd() + '/py2many/py2many.py', '--cpp=1', '--unreal=1', '--outdir=' + CODE_PATH, outputFilePath ]
 	for arg in sys.argv:
 		command.append(arg)
 	command.append(UNITY_PROJECT_PATH)
