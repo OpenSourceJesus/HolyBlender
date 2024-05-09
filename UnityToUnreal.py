@@ -35,9 +35,9 @@ def ConvertPythonFileToCpp (filePath):
 	text = '\n'.join(lines)
 	open(filePath, 'wb').write(text.encode('utf-8'))
 	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
-	command = [ 'python3', os.getcwd() + '/py2many/py2many.py', '--cpp=1', '--unreal=1', '--outdir=' + CODE_PATH, outputFilePath ]
-	for arg in sys.argv:
-		command.append(arg)
+	command = [ 'python3', os.getcwd() + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
+	# for arg in sys.argv:
+	# 	command.append(arg)
 	command.append(UNITY_PROJECT_PATH)
 	print(command)
 	
@@ -89,7 +89,7 @@ def ConvertPythonFileToCpp (filePath):
 		if line != '':
 			for mainClassName in mainClassNames:
 				if line.startswith('A' + mainClassName):
-					indexOfSpace = line.find(' ')
+					# indexOfSpace = line.find(' ')
 					# line = line[: indexOfSpace] + '*' + line[indexOfSpace :]
 					line = line.replace('A' + mainClassName, 'APrefab*')
 					outputFileLines[i] = line
@@ -124,10 +124,10 @@ def ConvertCSFileToCPP (filePath):
 		'dotnet', os.getcwd() + '/UnityToUnreal/Unity2Many.dll',
 		'includeFile=' + filePath,
 		'unreal=true',
-		'outputFolder=' + CODE_PATH,
+		'output=' + CODE_PATH,
 	]
-	for arg in sys.argv:
-		command.append(arg)
+	# for arg in sys.argv:
+	# 	command.append(arg)
 	command.append(UNITY_PROJECT_PATH)
 	print(command)
 

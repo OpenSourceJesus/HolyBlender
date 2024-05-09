@@ -136,11 +136,12 @@ def ConvertCSFileToRust (filePath):
 		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
 		'includeFile=' + filePath,
 		'bevy=true',
+		'output=/tmp',
 		'outputFolder=/tmp'
 	]
-	for arg in sys.argv:
-		command.append(arg)
-	command.append(UNITY_PROJECT_PATH)
+	# for arg in sys.argv:
+	# 	command.append(arg)
+	# command.append(UNITY_PROJECT_PATH)
 	print(command)
 
 	subprocess.check_call(command)
@@ -163,7 +164,7 @@ def ConvertPythonFileToRust (filePath):
 		lines.append(line)
 	data = '\n'.join(lines)
 	open(filePath, 'wb').write(data.encode('utf-8'))
-	command = [ 'python3', 'py2many/py2many.py', '--rust=1', '--force', '--outdir=' + CODE_PATH, filePath ]
+	command = [ 'python3', 'py2many/py2many.py', '--rust=1', '--force', filePath, '--outdir=' + CODE_PATH ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
 	command.append(UNITY_PROJECT_PATH)

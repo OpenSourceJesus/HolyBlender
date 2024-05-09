@@ -17,7 +17,7 @@ cd UnrealEngine
 ./GenerateProjectFiles.sh
 make
 cd ../Unity2Many
-sudo snap install dotnet-sdk
+sudo snap install dotnet-sdk --classic
 sudo snap refresh dotnet-sdk --channel=6.0
 dotnet new console --force
 rm Program.cs
@@ -34,6 +34,3 @@ ExcludeFolder ('CSharpToPython/src/CSharpToPython.Tests')
 ExcludeFolder ('stride')
 ExcludeFolder ('BareStrideProject')
 open(filePath, 'w').writelines(fileLines)
-fileLines = open(os.path.expanduser('~/UnrealEngine/Engine/Source/Runtime/Engine/Private/Actor.cpp'), 'wb').readliens()
-fileLines[1293] = '//' + fileLines[1293]
-open(os.path.expanduser('~/UnrealEngine/Engine/Source/Runtime/Engine/Private/Actor.cpp'), 'wb').writelines(fileLines)
