@@ -267,16 +267,158 @@ def MakeSprite (localPosition : list, localRotation : list, localSize : list, ob
 
 def MakeScript (localPosition : list, localRotation : list, localSize : list, objectName : str, scriptPath : str):
 	global mainClassName
+	global outputFileText
 	global addToOutputFileText
 	global importStatementsText
 	global outputFileTextReplaceClauses
 	ConvertCSFileToRust (scriptPath)
 	MakeComponent (objectName, 'TestBevyProject::' + mainClassName)
-	scriptText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
-	if 'fn Update' in scriptText:
+	outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
+	if 'fn Update' in outputFileText:
 		# importStatementsText += 'use ' + mainClassName + '::*;\n'
 		# outputFileTextReplaceClauses[1] += '.add_systems(Update, ' + mainClassName + '::' + mainClassName + '::Update)'
 		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
+	# open(BEVY_PROJECT_PATH + '/' + mainClassName + '.rs', 'wb').write(outputFileText.encode('utf-8'))
+	# outputFileText = 'pub mod ' + mainClassName + '\n{\n' + outputFileText + '\n}'
+	outputFileText = outputFileText.replace('fn Start', 'fn Start' + mainClassName)
+	outputFileText = outputFileText.replace('Time.deltaTime', 'time.delta_seconds()')
+	outputFileText = outputFileText.replace('Vector2', 'Vec2')
+	outputFileText = outputFileText.replace('Vec2.zero', 'Vec2::ZERO')
+	outputFileText = outputFileText.replace('Vector3', 'Vec3')
+	outputFileText = outputFileText.replace('Vec3.zero', 'Vec3::ZERO')
+	outputFileText = outputFileText.replace('Vec3.forward', 'Vec3::Y')
+	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec2')
+	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec3')
+	outputFileText = outputFileText.replace('.Normalize', '.normalize')
+	outputFileText = outputFileText.replace('pub const ', 'let mut ')
+	outputFileText = outputFileText.replace('pub static ', 'let mut ')
+	outputFileText = outputFileText.replace('transform.position', 'trs.translation')
+	outputFileText = outputFileText.replace('transform.rotation', 'trs.rotation')
+	outputFileText = outputFileText.replace('self, ', '')
+	outputFileText = outputFileText.replace('&self', '')
+	outputFileText = outputFileText.replace('self.', '')
+	outputFileText = outputFileText.replace('self', '')
+	indexOfAtan2 = 0
+	while indexOfAtan2 != -1:
+		atan2Indicator = 'Mathf.Atan2('
+		indexOfAtan2 = outputFileText.find(atan2Indicator, indexOfAtan2 + len(atan2Indicator))
+		if indexOfAtan2 != -1:
+			indexOfComma = outputFileText.find(',', indexOfAtan2)
+			yClause = outputFileText[indexOfAtan2 + len(atan2Indicator) : indexOfComma]
+			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfAtan2 + len(atan2Indicator))
+			xClause = outputFileText[indexOfComma + 1 : indexOfRightParenthesis]
+			outputFileText = outputFileText.replace(outputFileText[indexOfAtan2 : indexOfRightParenthesis + 1], yClause + '.atan2(' + xClause + ')')
+	outputFileText = outputFileText.replace('(, ', '(')
+	indexOfY = 0
+	while indexOfY != -1:
+		indexOfY = outputFileText.find('.y', indexOfY + 2)
+		if indexOfY != -1:
+			indexOfToken = IndexOfAny(outputFileText, ['=', ' ', '+', '-', '*', '/', ')', ']'], indexOfY + 2)
+			if indexOfToken == indexOfY + 2:
+				indexOfEquals = outputFileText.find('=', indexOfToken + 3)
+				if indexOfEquals == indexOfToken + 1:
+					indexOfToken += 1
+				outputFileText = outputFileText[: indexOfToken + 3] + '-' + outputFileText[indexOfToken + 3 :]
+			outputFileText = Remove(outputFileText, indexOfY + 1, 1)
+			outputFileText = outputFileText[: indexOfY + 1] + 'z' + outputFileText[indexOfY + 1 :]
+	indexOfTrsEulerAngles = 0
+	while indexOfTrsEulerAngles != -1:
+		trsEulerAnglesIndicator = 'transform.eulerAngles'
+		indexOfTrsEulerAngles = outputFileText.find(trsEulerAnglesIndicator, indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
+		if indexOfTrsEulerAngles != -1:
+			indexOfEquals = outputFileText.find('=', indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
+			textBetweenTrsEulerAnglesAndEquals = outputFileText[indexOfTrsEulerAngles + len(trsEulerAnglesIndicator) : indexOfEquals]
+			if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals == ' ':
+				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let rotation = ' + valueAfterEquals + ';\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, rotation.x, rotation.y, rotation.z)')
+	outputFileText = outputFileText.replace(mainClassName + '::', '')
+	outputFileText = outputFileText.replace('&' + mainClassName + ' {}', '')
+	indexOfMacro = 0
+	while indexOfMacro != -1:
+		indexOfMacro = outputFileText.find('#![')
+		if indexOfMacro != -1:
+			indexOfNewLine = outputFileText.find('\n', indexOfMacro)
+			outputFileText = RemoveStartEnd(outputFileText, indexOfMacro, indexOfNewLine)
+	indexOfDefaultComment = 0
+	while indexOfDefaultComment != -1:
+		indexOfDefaultComment = outputFileText.find('//! ')
+		if indexOfDefaultComment != -1:
+			indexOfNewLine = outputFileText.find('\n', indexOfDefaultComment)
+			outputFileText = RemoveStartEnd(outputFileText, indexOfDefaultComment, indexOfNewLine)
+	mainClassIndicator = 'impl ' + mainClassName + ' {'
+	indexOfMainClass = outputFileText.find(mainClassIndicator)
+	if indexOfMainClass != -1:
+		indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
+		outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
+		outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
+	mainClassIndicator = 'pub struct ' + mainClassName + ' {'
+	indexOfMainClass = outputFileText.find(mainClassIndicator)
+	membersDict = {}
+	if indexOfMainClass != -1:
+		indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
+		mainClassContents = outputFileText[indexOfMainClass + len(mainClassIndicator) : indexOfMainClassEnd]
+		outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
+		outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
+		newMainClassContents = mainClassContents.replace('pub ', 'static mut ')
+		newMainClassContents = newMainClassContents.replace(',', ';')
+		pythonFileText = open(OUTPUT_FILE_PATH.replace('.rs', '.py'), 'rb').read().decode('utf-8')
+		pythonFileLines = pythonFileText.split('\n')
+		pythonFileLines.pop(0)
+		for line in pythonFileLines:
+			if line.startswith(CLASS_MEMBER_INDICATOR):
+				indexOfColon = line.find(':')
+				memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
+				memberValue = line[indexOfColon + 1 :]
+				membersDict[memberName] = memberValue
+				indexOfMemberName = 0
+				while indexOfMemberName != -1:
+					indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
+					if indexOfMemberName != -1:
+						# newMainClassContents = newMainClassContents[: indexOfMemberName + len(memberName)] + mainClassName + newMainClassContents[indexOfMemberName + len(memberName) :]
+						indexOfSemicolon = newMainClassContents.find(';', indexOfMemberName)
+						newMainClassContents = newMainClassContents[: indexOfSemicolon] + ' = ' + memberValue + newMainClassContents[indexOfSemicolon :]
+			else:
+				break
+		# mainClassMembersDeclarations = newMainClassContents.split(';')
+		# for mainClassMembersDeclaration in mainClassMembersDeclarations:
+		# 	mainClassMemberName = mainClassMembersDeclaration[len('static ') : mainClassMembersDeclaration.find(':')]
+		# 	if mainClassMemberName != '':
+		# 		newMainClassContents = newMainClassContents.replace(mainClassMemberName, mainClassMemberName + mainClassName)
+		outputFileText = outputFileText.replace(mainClassContents, newMainClassContents)
+	mainMethodIndicator = 'pub fn main() {'
+	indexOfMainMethod = outputFileText.find(mainMethodIndicator)
+	if indexOfMainMethod != -1:
+		indexOfMainMethodEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
+		outputFileText = RemoveStartEnd(outputFileText, indexOfMainMethod, indexOfMainMethodEnd)
+	publicMethodIndicator = 'pub fn '
+	indexOfPublicMethodIndicator = 0
+	while indexOfPublicMethodIndicator != -1:
+		indexOfPublicMethodIndicator = outputFileText.find(publicMethodIndicator, indexOfPublicMethodIndicator + len(publicMethodIndicator))
+		if indexOfPublicMethodIndicator != -1:
+			indexOfLeftParenthesis = outputFileText.find('(', indexOfPublicMethodIndicator)
+			outputFileText = outputFileText[: indexOfLeftParenthesis + 1] + SYSTEM_METHOD_ARGUMENTS.replace('ꗈ', mainClassName) + outputFileText[indexOfLeftParenthesis + 1 :]
+			# indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_METHOD_ARGUMENTS))
+			# indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
+			# unsafeIndicator = '\nunsafe\n{'
+			# outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + unsafeIndicator + outputFileText[indexOfLeftCurlyBrace + 1 :]
+			# outputFileText = outputFileText[: indexOfRightCurlyBrace + len(unsafeIndicator)] + '}\n' + outputFileText[indexOfRightCurlyBrace + len(unsafeIndicator) :]
+			# if outputFileText[indexOfPublicMethodIndicator :].startswith('Update' + mainClassName):
+			indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_METHOD_ARGUMENTS))
+			indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
+			query = '\nunsafe\n{\nfor mut trs in &mut query\n{'
+			outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + query + outputFileText[indexOfLeftCurlyBrace + 1 :]
+			outputFileText = outputFileText[: indexOfRightCurlyBrace + len(query)] + '}\n}\n' + outputFileText[indexOfRightCurlyBrace + len(query) :]
+			# else:
+			# 	pass
+	indexOfUpdateMethod = outputFileText.find('fn Update')
+	if indexOfUpdateMethod != -1:
+		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
+		outputFileText += CUSTOM_TYPE_INDICATOR.replace('ꗈ', mainClassName)
+		outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
+	for memberName in membersDict:
+		outputFileText = outputFileText.replace(memberName, memberName + mainClassName)
+	addToOutputFileText += '\n\n' + outputFileText
 
 def MakeComponent (objectName : str, componentType : str):
 	global mainClassName
@@ -357,148 +499,6 @@ for codeFilePath in codeFilesPaths:
 	if not isExcluded and codeFilePath not in scriptsPaths:
 		MakeScript ([], [], [1, 1, 1], '', codeFilePath)
 		mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
-		outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
-		# open(BEVY_PROJECT_PATH + '/' + mainClassName + '.rs', 'wb').write(outputFileText.encode('utf-8'))
-		# outputFileText = 'pub mod ' + mainClassName + '\n{\n' + outputFileText + '\n}'
-		outputFileText = outputFileText.replace('fn Start', 'fn Start' + mainClassName)
-		outputFileText = outputFileText.replace('Time.deltaTime', 'time.delta_seconds()')
-		outputFileText = outputFileText.replace('Vector2', 'Vec2')
-		outputFileText = outputFileText.replace('Vec2.zero', 'Vec2::ZERO')
-		outputFileText = outputFileText.replace('Vector3', 'Vec3')
-		outputFileText = outputFileText.replace('Vec3.zero', 'Vec3::ZERO')
-		outputFileText = outputFileText.replace('Vec3.forward', 'Vec3::Y')
-		SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec2')
-		SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec3')
-		outputFileText = outputFileText.replace('.Normalize', '.normalize')
-		outputFileText = outputFileText.replace('pub const ', 'let mut ')
-		outputFileText = outputFileText.replace('pub static ', 'let mut ')
-		outputFileText = outputFileText.replace('transform.position', 'trs.translation')
-		outputFileText = outputFileText.replace('transform.rotation', 'trs.rotation')
-		outputFileText = outputFileText.replace('self, ', '')
-		outputFileText = outputFileText.replace('&self', '')
-		outputFileText = outputFileText.replace('self.', '')
-		outputFileText = outputFileText.replace('self', '')
-		indexOfAtan2 = 0
-		while indexOfAtan2 != -1:
-			atan2Indicator = 'Mathf.Atan2('
-			indexOfAtan2 = outputFileText.find(atan2Indicator, indexOfAtan2 + len(atan2Indicator))
-			if indexOfAtan2 != -1:
-				indexOfComma = outputFileText.find(',', indexOfAtan2)
-				yClause = outputFileText[indexOfAtan2 + len(atan2Indicator) : indexOfComma]
-				indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfAtan2 + len(atan2Indicator))
-				xClause = outputFileText[indexOfComma + 1 : indexOfRightParenthesis]
-				outputFileText = outputFileText.replace(outputFileText[indexOfAtan2 : indexOfRightParenthesis + 1], yClause + '.atan2(' + xClause + ')')
-		outputFileText = outputFileText.replace('(, ', '(')
-		indexOfY = 0
-		while indexOfY != -1:
-			indexOfY = outputFileText.find('.y', indexOfY + 2)
-			if indexOfY != -1:
-				indexOfToken = IndexOfAny(outputFileText, ['=', ' ', '+', '-', '*', '/', ')', ']'], indexOfY + 2)
-				if indexOfToken == indexOfY + 2:
-					indexOfEquals = outputFileText.find('=', indexOfToken + 3)
-					if indexOfEquals == indexOfToken + 1:
-						indexOfToken += 1
-					outputFileText = outputFileText[: indexOfToken + 3] + '-' + outputFileText[indexOfToken + 3 :]
-				outputFileText = Remove(outputFileText, indexOfY + 1, 1)
-				outputFileText = outputFileText[: indexOfY + 1] + 'z' + outputFileText[indexOfY + 1 :]
-		indexOfTrsEulerAngles = 0
-		while indexOfTrsEulerAngles != -1:
-			trsEulerAnglesIndicator = 'transform.eulerAngles'
-			indexOfTrsEulerAngles = outputFileText.find(trsEulerAnglesIndicator, indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
-			if indexOfTrsEulerAngles != -1:
-				indexOfEquals = outputFileText.find('=', indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
-				textBetweenTrsEulerAnglesAndEquals = outputFileText[indexOfTrsEulerAngles + len(trsEulerAnglesIndicator) : indexOfEquals]
-				if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals == ' ':
-					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-					valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let rotation = ' + valueAfterEquals + ';\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, rotation.x, rotation.y, rotation.z)')
-		outputFileText = outputFileText.replace(mainClassName + '::', '')
-		outputFileText = outputFileText.replace('&' + mainClassName + ' {}', '')
-		indexOfMacro = 0
-		while indexOfMacro != -1:
-			indexOfMacro = outputFileText.find('#![')
-			if indexOfMacro != -1:
-				indexOfNewLine = outputFileText.find('\n', indexOfMacro)
-				outputFileText = RemoveStartEnd(outputFileText, indexOfMacro, indexOfNewLine)
-		indexOfDefaultComment = 0
-		while indexOfDefaultComment != -1:
-			indexOfDefaultComment = outputFileText.find('//! ')
-			if indexOfDefaultComment != -1:
-				indexOfNewLine = outputFileText.find('\n', indexOfDefaultComment)
-				outputFileText = RemoveStartEnd(outputFileText, indexOfDefaultComment, indexOfNewLine)
-		mainClassIndicator = 'impl ' + mainClassName + ' {'
-		indexOfMainClass = outputFileText.find(mainClassIndicator)
-		if indexOfMainClass != -1:
-			indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
-			outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
-			outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
-		mainClassIndicator = 'pub struct ' + mainClassName + ' {'
-		indexOfMainClass = outputFileText.find(mainClassIndicator)
-		membersDict = {}
-		if indexOfMainClass != -1:
-			indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
-			mainClassContents = outputFileText[indexOfMainClass + len(mainClassIndicator) : indexOfMainClassEnd]
-			outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
-			outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
-			newMainClassContents = mainClassContents.replace('pub ', 'static ')
-			newMainClassContents = newMainClassContents.replace(',', ';')
-			pythonFileText = open(OUTPUT_FILE_PATH.replace('.rs', '.py'), 'rb').read().decode('utf-8')
-			pythonFileLines = pythonFileText.split('\n')
-			pythonFileLines.pop(0)
-			for line in pythonFileLines:
-				if line.startswith(CLASS_MEMBER_INDICATOR):
-					indexOfColon = line.find(':')
-					memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
-					memberValue = line[indexOfColon + 1 :]
-					membersDict[memberName] = memberValue
-					indexOfMemberName = 0
-					while indexOfMemberName != -1:
-						indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
-						if indexOfMemberName != -1:
-							# newMainClassContents = newMainClassContents[: indexOfMemberName + len(memberName)] + mainClassName + newMainClassContents[indexOfMemberName + len(memberName) :]
-							indexOfSemicolon = newMainClassContents.find(';', indexOfMemberName)
-							newMainClassContents = newMainClassContents[: indexOfSemicolon] + ' = ' + memberValue + newMainClassContents[indexOfSemicolon :]
-				else:
-					break
-			# mainClassMembersDeclarations = newMainClassContents.split(';')
-			# for mainClassMembersDeclaration in mainClassMembersDeclarations:
-			# 	mainClassMemberName = mainClassMembersDeclaration[len('static ') : mainClassMembersDeclaration.find(':')]
-			# 	if mainClassMemberName != '':
-			# 		newMainClassContents = newMainClassContents.replace(mainClassMemberName, mainClassMemberName + mainClassName)
-			outputFileText = outputFileText.replace(mainClassContents, newMainClassContents)
-		mainMethodIndicator = 'pub fn main() {'
-		indexOfMainMethod = outputFileText.find(mainMethodIndicator)
-		if indexOfMainMethod != -1:
-			indexOfMainMethodEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
-			outputFileText = RemoveStartEnd(outputFileText, indexOfMainMethod, indexOfMainMethodEnd)
-		publicMethodIndicator = 'pub fn '
-		indexOfPublicMethodIndicator = 0
-		while indexOfPublicMethodIndicator != -1:
-			indexOfPublicMethodIndicator = outputFileText.find(publicMethodIndicator, indexOfPublicMethodIndicator + len(publicMethodIndicator))
-			if indexOfPublicMethodIndicator != -1:
-				indexOfLeftParenthesis = outputFileText.find('(', indexOfPublicMethodIndicator)
-				outputFileText = outputFileText[: indexOfLeftParenthesis + 1] + SYSTEM_METHOD_ARGUMENTS.replace('ꗈ', mainClassName) + outputFileText[indexOfLeftParenthesis + 1 :]
-				# indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_METHOD_ARGUMENTS))
-				# indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
-				# unsafeIndicator = '\nunsafe\n{'
-				# outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + unsafeIndicator + outputFileText[indexOfLeftCurlyBrace + 1 :]
-				# outputFileText = outputFileText[: indexOfRightCurlyBrace + len(unsafeIndicator)] + '}\n' + outputFileText[indexOfRightCurlyBrace + len(unsafeIndicator) :]
-				# if outputFileText[indexOfPublicMethodIndicator :].startswith('Update' + mainClassName):
-				indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_METHOD_ARGUMENTS))
-				indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
-				query = '\nunsafe\n{\nfor mut trs in &mut query\n{'
-				outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + query + outputFileText[indexOfLeftCurlyBrace + 1 :]
-				outputFileText = outputFileText[: indexOfRightCurlyBrace + len(query)] + '}\n}\n' + outputFileText[indexOfRightCurlyBrace + len(query) :]
-				# else:
-				# 	pass
-		indexOfUpdateMethod = outputFileText.find('fn Update')
-		if indexOfUpdateMethod != -1:
-			outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
-			outputFileText += CUSTOM_TYPE_INDICATOR.replace('ꗈ', mainClassName)
-			outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
-		for memberName in membersDict:
-			outputFileText = outputFileText.replace(memberName, memberName + mainClassName)
-		addToOutputFileText += '\n\n' + outputFileText
 sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
 for sceneFilePath in sceneFilesPaths:
 	isExcluded = False
