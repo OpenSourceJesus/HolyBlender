@@ -88,12 +88,12 @@ mainClassNames = []
 
 for arg in sys.argv:
 	if arg.startswith(INPUT_PATH_INDICATOR):
-		UNITY_PROJECT_PATH = arg[len(INPUT_PATH_INDICATOR) :]
+		UNITY_PROJECT_PATH = os.path.expanduser(arg[len(INPUT_PATH_INDICATOR) :])
 	elif arg.startswith(OUTPUT_PATH_INDICATOR):
-		BEVY_PROJECT_PATH = arg[len(OUTPUT_PATH_INDICATOR) :]
+		BEVY_PROJECT_PATH = os.path.expanduser(arg[len(OUTPUT_PATH_INDICATOR) :])
 		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
 		CODE_PATH = BEVY_PROJECT_PATH + '/src'
-		OUTPUT_FILE_PATH = BEVY_PROJECT_PATH + '/main.rs'
+		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
 		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
@@ -144,7 +144,7 @@ def ConvertCSFileToRust (filePath):
 
 	subprocess.check_call(command)
 
-	outputFilePath = BEVY_PROJECT_PATH + '/main.py'
+	outputFilePath = CODE_PATH + '/main.py'
 	print(outputFilePath)
 	assert os.path.isfile(outputFilePath)
 

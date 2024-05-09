@@ -2,7 +2,7 @@ using CSharpToPython;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-public class UnityToGodot : Unity2Many
+public class UnityToGodot : Translator
 {
 	public new static Dictionary<string, string> typeConversionsDict = new Dictionary<string, string>() { { "string", "String" }, { "char", "String" }, { "double", "float" }, { "decimal", "float" }, { "File.ReadAllText", STATIC_CLASS_NAME + ".ReadFileText" }, { "File.WriteAllLines", STATIC_CLASS_NAME + ".WriteFileLines" }, { "File.WriteAllText", STATIC_CLASS_NAME + ".WriteFileText" }, { "Console.WriteLine", "print" }, { "Console.Write", "printraw" }, { "Math.Min", "min" }, { "Mathf.Min", "min" }, { "Math.Max", "max" }, { "Mathf.Max", "max" }, { "Math.Clamp", "clamp" }, { "Mathf.Clamp", "clamp" }, { "Mathf.Infinity", "INF" }, { "Mathf.NegativeInfinity", "-INF" }, { "base", "super" } };
 	public new static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>() { { "SubString(", "substr(" }, { "AddRange", "append_array" }, { "Add", "append" }, { "RemoveAt", "remove_at" }, { "Remove(", "erase(" }, { "Insert", "insert" }, { "Count", "size()" }, { "Length", "size()" }, { "IndexOf", "find" }, { "Replace", "replace" }, { "EndsWith", "ends_with" }, { "StartsWith", "begins_with" }, { "Clear", "clear" }, { "Split", "split" }, { "LastIndexOf", "rfind" } };
@@ -28,9 +28,9 @@ public class UnityToGodot : Unity2Many
 
 	public override void Init (string[] args)
 	{
-		Unity2Many.typeConversionsDict = typeConversionsDict;
-		Unity2Many.memberConversionsDict = memberConversionsDict;
-		Unity2Many.removeTexts = removeTexts;
+		Translator.typeConversionsDict = typeConversionsDict;
+		Translator.memberConversionsDict = memberConversionsDict;
+		Translator.removeTexts = removeTexts;
 		base.Init (args);
 	}
 

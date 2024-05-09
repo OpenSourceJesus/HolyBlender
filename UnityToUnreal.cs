@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 using SourceCodeKind = Microsoft.Scripting.SourceCodeKind;
 
-public class UnityToUnreal : Unity2Many 
+public class UnityToUnreal : Translator 
 {
 	public new static Dictionary<string, string> typeConversionsDict = new Dictionary<string, string>() { { "Vector2" , "FVector2D" }, {"FFVector2DD" , "FVector2D"}, {"Transform" , "FTransform"}, {"FFTransform" , "FTransform"} };
 	// public new static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>() { { "IndexOf", "Find"} };
@@ -51,10 +51,10 @@ public class UnityToUnreal : Unity2Many
 			typeConversionsDict.Add("List", "TArray");
 		else
 			typeConversionsDict.Add("List", "std::vector");
-		Unity2Many.typeConversionsDict = typeConversionsDict;
-		Unity2Many.typeConversionsDict = typeConversionsDict;
-		Unity2Many.memberConversionsDict = memberConversionsDict;
-		Unity2Many.removeTexts = removeTexts;
+		Translator.typeConversionsDict = typeConversionsDict;
+		Translator.typeConversionsDict = typeConversionsDict;
+		Translator.memberConversionsDict = memberConversionsDict;
+		Translator.removeTexts = removeTexts;
 		// BARE_UNREAL_PROJECT_PATH = Environment.CurrentDirectory + BARE_UNREAL_PROJECT_PATH;
 		base.Init (args);
 		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".cs");

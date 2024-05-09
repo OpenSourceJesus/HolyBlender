@@ -4,9 +4,9 @@ using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
 
-public class Unity2Many
+public class Translator
 {
-	public static Unity2Many instance;
+	public static Translator instance;
 	public static Dictionary<string, string> typeConversionsDict = new Dictionary<string, string>();
 	public static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>();
 	public static string[] removeTexts = new string[] { TEMPORARY_INDICATOR };

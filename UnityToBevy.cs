@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using SourceCodeKind = Microsoft.Scripting.SourceCodeKind;
 
-public class UnityToBevy : Unity2Many 
+public class UnityToBevy : Translator 
 {
 	// public new static Dictionary<string, string> typeConversionsDict = new Dictionary<string, string>() { { "Console.Write" , "printf" } };
 	// public new static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>() { { "IndexOf", "Find"} };
@@ -34,9 +34,9 @@ public class UnityToBevy : Unity2Many
 			if (arg.StartsWith(BEVY_MODE_INDICATOR))
 				bevyMode = bool.Parse(arg.Substring(BEVY_MODE_INDICATOR.Length));
 		}
-		Unity2Many.typeConversionsDict = typeConversionsDict;
-		Unity2Many.memberConversionsDict = memberConversionsDict;
-		Unity2Many.removeTexts = removeTexts;
+		Translator.typeConversionsDict = typeConversionsDict;
+		Translator.memberConversionsDict = memberConversionsDict;
+		Translator.removeTexts = removeTexts;
 		// BARE_BEVY_PROJECT_PATH = Environment.CurrentDirectory + BARE_BEVY_PROJECT_PATH;
 		TEMPLATES_PATH = Environment.CurrentDirectory + TEMPLATES_PATH;
 		base.Init (args);
