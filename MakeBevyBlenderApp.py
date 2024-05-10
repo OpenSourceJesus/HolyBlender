@@ -286,7 +286,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	outputFileText = outputFileText.replace('Vec2.zero', 'Vec2::ZERO')
 	outputFileText = outputFileText.replace('Vector3', 'Vec3')
 	outputFileText = outputFileText.replace('Vec3.zero', 'Vec3::ZERO')
-	outputFileText = outputFileText.replace('Vec3.forward', 'Vec3::Y')
+	outputFileText = outputFileText.replace('Vec3.forward', '-Vec3::Y')
 	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec2')
 	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec3')
 	outputFileText = outputFileText.replace('.Normalize', '.normalize')
@@ -331,7 +331,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals == ' ':
 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let rotation = ' + valueAfterEquals + ';\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, rotation.x, rotation.y, rotation.z)')
+				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, rotation.x, rotation.y + 90.0, rotation.z)')
 	outputFileText = outputFileText.replace(mainClassName + '::', '')
 	outputFileText = outputFileText.replace('&' + mainClassName + ' {}', '')
 	indexOfMacro = 0
@@ -417,23 +417,33 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		indexOfInstantiate = outputFileText.find(instantiateIndicator)
 		if indexOfInstantiate != -1:
 			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
-			instatntiateCommand = outputFileText[indexOfInstantiate : indexOfRightParenthesis + 1]
+			instantiateCommand = outputFileText[indexOfInstantiate : indexOfRightParenthesis + 1]
+			if instantiateCommand == '':
+				break
 			indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
 			position = ''
 			rotation = ''
 			if indexOfEndOfWhatToInstantiate > indexOfRightParenthesis:
 				indexOfEndOfWhatToInstantiate = indexOfRightParenthesis
-			else:
-				indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate)
-				indexOfRotation = outputFileText.find(',', indexOfPosition)
+			elif indexOfEndOfWhatToInstantiate != -1:
+				indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate + 1)
+				indexOfRotation = outputFileText.find(',', indexOfPosition + 1)
 				position = outputFileText[indexOfPosition + 1 : indexOfRotation]
 				rotation = outputFileText[indexOfRotation + 1 : indexOfRightParenthesis]
 			whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
-			newInstantiateCommand = 'let spawned = commands.spawn(' + whatToInstantiate + ').id();'
-			if indexOfPosition != -1:
-				newInstantiateCommand += ', ' + position + ', ' + rotation
-			newInstantiateCommand += ')'
-			outputFileText = outputFileText.replace(instatntiateCommand, newInstantiateCommand)
+			whatToInstantiate = '''Camera2dBundle {
+					..default()
+				}'''
+			newInstantiateCommand = 'let mut spawned = commands.spawn(' + whatToInstantiate + ').id();'
+			print('YAY' + position + 'YAY2')
+			print('YAY' + rotation + 'YAY2')
+			if position != '':
+				# newInstantiateCommand += ', ' + position + ', ' + rotation
+				newInstantiateCommand += 'spawned.translation = ' + position + ';'
+				newInstantiateCommand += 'spawned.rotation = ' + rotation + ';'
+			# newInstantiateCommand += ')'
+			print('YAY3' + instantiateCommand)
+			outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
 	indexOfUpdateMethod = outputFileText.find('fn Update')
 	if indexOfUpdateMethod != -1:
 		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
