@@ -4,10 +4,15 @@ I am running out of energy for this project, and it is slowing down. Also, pleas
 Unity2Many
 
 # Description
-A set of tools for game and software development  Currently, three tools can be used (as well as an addon for Blender); UnityToUnreaal, UnityToBevy, and KritaToBlender. UnityToUnreal and UnityToBevy translates a Unity project to an Unreal or Bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated. MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project. The export buttons for UnityToUnreal and UnityToBevy in the Blender interface are found in each Text Editor panel. The Unity project path, Unreal project path, and Bevy project path are found in the World settings.
+A set of tools for game and software development  Currently, three tools can be used (as well as an addon for Blender); UnityToUnreaal, UnityToBevy, and KritaToBlender.
+
+UnityToUnreal and UnityToBevy translates a Unity project to an Unreal or Bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated.
+
+MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project. The export buttons for UnityToUnreal and UnityToBevy in the Blender interface are found in each Text Editor panel. The Unity project path, Unreal project path, and Bevy project path are found in the World settings.
 
 # Installation
 Inside the terminal program on your computer, type or copy and paste 'git clone https://github.com/OpenSourceJesus/Unity2Many --depth=1' and press the Enter key to download the files and folders of this project to your computer. Note that these installation steps require internet to be currently connected.
+
 Then run (type the following and press enter) 'make install_UnityToUnreal' to install the required parts to translate a Unity project to an Unreal project. To install the parts for any of the other tools like UnityToBevy, KritaToBlender, or BlenderPlugin, run 'make install_' and then add the name of the tool to run as one command.
 
 ## Requirements
@@ -15,6 +20,7 @@ Currently, only Linux operating systems are supported. All testing has been done
 
 # Usage
 Inside the terminal program on your computer, type or copy and paste 'python3 UnityToUnreal.py input={path to Unity project to translate from} output={path to Unreal project to translate to}' and press the Enter key. Replace '{', '}', and what is in between them with the path to the Unity project and the path to the Unreal project respectively. You can also add ' exclude={path or part of a path in the Unity project to exclude from the translation}' in the terminal command to not translate any files in the Unity project that contain what is in between the '{' and '}'. Note that using '~' as a replacement for '/home/{your computer account username}' in the termainal command will not work.
+
 Currently, to use the KritaToBlender tool run the Krita program and then mouse over the 'Tools' dropdown at the top of Krita. Mouse over 'Scripts' and then click on 'Scripter'. Then, mouse over 'File' and click on 'Open'. Navigate to MakeKritaBlenderFile.py in the file browser that automatically opens and then double-click on that file in this file browser. Finally, click on the play button circled in this image:![alt text](image.png) to run the script.
 
 # Support
