@@ -60,7 +60,7 @@ def IndexOfMatchingLeftParenthesis (string : str, charIndex : int):
 				parenthesisTier += 1
 	return -1
 
-def IsInString (string : str, charIndex : int):
+def IsInString_CS (string : str, charIndex : int):
 	if charIndex == 0 or charIndex == len(string) - 1:
 		return False
 	output = False
@@ -105,3 +105,8 @@ def GetCountOfAnyAtStart (string : str, findAny : list[str], startIndex : int = 
 		if not found:
 			break
 	return output
+
+def IsInComment_CS (string : str, charIndex : int):
+	indexOfComment = string.rfind('//')
+	indexOfNewLine = string.find('\n', indexOfComment)
+	return charIndex > indexOfComment and charIndex < indexOfNewLine

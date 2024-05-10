@@ -48,7 +48,7 @@ def ConvertPythonFileToCpp (filePath):
 		indexOfMainClassName = 0
 		while indexOfMainClassName != -1:
 			indexOfMainClassName = outputFileText.find(mainClassName, indexOfMainClassName + len(mainClassName))
-			if indexOfMainClassName != -1 and outputFileText[indexOfMainClassName - 1 : indexOfMainClassName] != 'A' and not IsInString(outputFileText, indexOfMainClassName):
+			if indexOfMainClassName != -1 and outputFileText[indexOfMainClassName - 1 : indexOfMainClassName] != 'A' and not IsInString_CS(outputFileText, indexOfMainClassName):
 				outputFileText = outputFileText[: indexOfMainClassName] + 'A' + outputFileText[indexOfMainClassName :]
 		equalsNullIndicator = '= nullptr'
 		indexOfEqualsNull = 0
