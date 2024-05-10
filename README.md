@@ -15,6 +15,8 @@ Inside the terminal program on your computer, type or copy and paste 'git clone 
 
 Then run (type the following and press enter) 'make install_UnityToUnreal' to install the required parts to translate a Unity project to an Unreal project. To install the parts for any of the other tools like UnityToBevy, KritaToBlender, or BlenderPlugin, run 'make install_' and then add the name of the tool to run as one command.
 
+This project's translation tools rely on my forks of CSharpToPython (https://github.com/OpenSourceJesus/CSharpToPython) and py2many (https://github.com/OpenSourceJesus/py2many). Additionally, UnityToBevy relies on Blender_bevy_components_workflow (https://github.com/OpenSourceJesus/Blender_bevy_components_workflow).
+
 ## Requirements
 Currently, only Linux operating systems are supported. All testing has been done on Ubuntu 23.10.
 

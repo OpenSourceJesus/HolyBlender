@@ -4,11 +4,11 @@ def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + os.getcwd() + '/' + relativePath + '/**\" />\n')
 
 if not os.path.isdir('CSharpToPython'):
-	os.system('git clone https://github.com/Master109/CSharpToPython --depth=1')
+	os.system('git clone https://github.com/OpenSourceJesus/CSharpToPython --depth=1')
 if not os.path.isdir('py2many'):
-	os.system('git clone https://github.com/Master109/py2many --depth=1')
+	os.system('git clone https://github.com/OpenSourceJesus/py2many --depth=1')
 if not os.path.isdir('Blender_bevy_components_workflow'):
-	os.system('git clone https://github.com/Master109/Blender_bevy_components_workflow --depth=1')
+	os.system('git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1')
 os.system('''sudo apt-get install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
 sudo apt -y install python3-numpy
 sudo apt install python3-setuptools

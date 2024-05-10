@@ -4,9 +4,9 @@ def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + os.getcwd() + '/' + relativePath + '/**\" />\n')
 
 if not os.path.isdir('CSharpToPython'):
-	os.system('''git clone https://github.com/Master109/CSharpToPython.git --depth=1''')
+	os.system('''git clone https://github.com/OpenSourceJesus/CSharpToPython.git --depth=1''')
 if not os.path.isdir('py2many'):
-	os.system('''git clone https://github.com/Master109/py2many.git --depth=1''')
+	os.system('''git clone https://github.com/OpenSourceJesus/py2many.git --depth=1''')
 os.system('''sudo apt install python3-setuptools
 sudo apt install python3-toposort
 sudo apt install clang-format
