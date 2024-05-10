@@ -1,43 +1,41 @@
-# Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+I am running out of energy for this project, and it is slowing down. Also, please feel free to contribute!
 
 # Name
-Choose a self-explaining name for your project.
+Unity2Many
 
 # Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-# Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-# Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+A set of tools for game and software development  Currently, three tools can be used (as well as an addon for Blender); UnityToUnreaal, UnityToBevy, and KritaToBlender. UnityToUnreal and UnityToBevy translates a Unity project to an Unreal or Bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated. MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project. The export buttons for UnityToUnreal and UnityToBevy in the Blender interface are found in each Text Editor panel. The Unity project path, Unreal project path, and Bevy project path are found in the World settings.
 
 # Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+Inside the terminal program on your computer, type or copy and paste 'git clone https://github.com/OpenSourceJesus/Unity2Many --depth=1' and press the Enter key to download the files and folders of this project to your computer. Note that these installation steps require internet to be currently connected.
+Then run (type the following and press enter) 'make install_UnityToUnreal' to install the required parts to translate a Unity project to an Unreal project. To install the parts for any of the other tools like UnityToBevy, KritaToBlender, or BlenderPlugin, run 'make install_' and then add the name of the tool to run as one command.
+
+## Requirements
+Currently, only Linux operating systems are supported. All testing has been done on Ubuntu 23.10.
 
 # Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+Inside the terminal program on your computer, type or copy and paste 'python3 UnityToUnreal.py input={path to Unity project to translate from} output={path to Unreal project to translate to}' and press the Enter key. Replace '{', '}', and what is in between them with the path to the Unity project and the path to the Unreal project respectively. You can also add ' exclude={path or part of a path in the Unity project to exclude from the translation}' in the terminal command to not translate any files in the Unity project that contain what is in between the '{' and '}'. Note that using '~' as a replacement for '/home/{your computer account username}' in the termainal command will not work.
+Currently, to use the KritaToBlender tool run the Krita program and then mouse over the 'Tools' dropdown at the top of Krita. Mouse over 'Scripts' and then click on 'Scripter'. Then, mouse over 'File' and click on 'Open'. Navigate to MakeKritaBlenderFile.py in the file browser that automatically opens and then double-click on that file in this file browser. Finally, click on the play button circled in this image:![alt text](image.png) to run the script.
 
 # Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+Use this webpage to know what should be done in the future of this project (and what has been done) and feel free to add issues (entries) to it: 'https://github.com/OpenSourceJesus/Unity2Many/issues'. Also, my email is 'gileadcosman@gmail.com', and I would love to respond to any questions or comments you have.
 
 # Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+The tools UnityToStride and UnityToGodot have been started and will hopefully be done eventually. Also, adding spawning and prefab support to the translation tools will hopefully be done eventually. Additionally, support for using KritaToBlender, UnityToStride and UnityToGodot should be added to BlenderPlugin eventually. For viewing or contributing to the list of what should get be done in the future of this project (and what has been done), use this webpage: 'https://github.com/OpenSourceJesus/Unity2Many/issues'.
 
 # Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+I will accept all contributions.
 
 # Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+So far only I, Gilead Cosman, have worked on this project.
 
 # License
-For open source projects, say how it is licensed.
+MIT License
 
-# Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Copyright 2024 Gilead Cosman
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the “Software”), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

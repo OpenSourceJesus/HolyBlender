@@ -1,6 +1,8 @@
 import bpy, os
 from mathutils import *
 
+MERGED_LAYERS_FILE = '~/bomb-game/Assets/Art/Textures/Slime.png'
+
 data = open('/tmp/Krita Data', 'rb').read().decode('utf-8')
 bpy.ops.wm.read_homefile(app_template='2D_Animation')
 for pointsString in data.split('\n'):
@@ -16,7 +18,9 @@ for pointsString in data.split('\n'):
 	stroke.use_cyclic = True
 	pointsStrings = pointsString.split(', ')
 	stroke.points.add(len(pointsStrings))
-	imagePath = os.path.expanduser('~/bomb-game/Assets/Art/Textures/Slime.png')
+	if not os.path.isfile(MERGED_LAYERS_FILE):
+		raise Exception('ERROR from MakeKritaBlenderFile2.py: The variable MERGED_LAYERS_FILE is not set an existing file path on your computer')
+	imagePath = os.path.expanduser(MERGED_LAYERS_FILE)
 	bpy.ops.image.open(filepath=imagePath)
 	image = bpy.data.images[-1]
 	material = bpy.data.materials.new(name='GPencil Material')
