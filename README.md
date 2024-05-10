@@ -21,11 +21,14 @@ This project's translation tools rely on my forks of CSharpToPython (https://git
 Currently, only Linux operating systems are supported. All testing has been done on Ubuntu 23.10.
 
 # Usage
-In the terminal run 'python3 UnityToUnreal.py input={path to Unity project to translate from} output={path to Unreal project to translate to}'. Replace '{', '}', and what is in between them with the path to the Unity project and the path to the Unreal project respectively. You can also add ' exclude={path or part of a path in the Unity project to exclude from the translation}' in the terminal command to not translate any files in the Unity project that contain what is in between the '{' and '}'. Note that using '~' as a replacement for '/home/{your computer account username} (your account folder)' in the termainal command will not work.
+In the terminal run 'python3 UnityToUnreal.py input={path to Unity project to translate from} output={path to Unreal project to translate to}'. Replace '{', '}', and what is in between them with the path to the Unity project and the path to the Unreal project respectively. You can also add ' exclude={path or part of a path in the Unity project to exclude from the translation}' in the terminal command to not translate any files in the Unity project that contain what is in between the '{' and '}'. Note that using '~' as a replacement for '/home/{your computer account username}' (your account folder) in the termainal command will not work.
 
 Currently, to use the KritaToBlender tool run the Krita program and then mouse over the 'Tools' dropdown at the top of Krita. Mouse over 'Scripts' and then click on 'Scripter'. Then, mouse over 'File' and click on 'Open'. Navigate to MakeKritaBlenderFile.py in the file browser that automatically opens and then double-click on that file in this file browser. Finally, click on the play button circled in this image:![alt text](image.png) to run the script.
 
 Also, I made this project for testing as an input Unity project for translation: 'https://github.com/OpenSourceJesus/Unity2Many-TestUnityProject'.
+
+## Notes
+Currently some comments are treated as code (not desired behvaior). Also in UnityToBevy, when float variables in scripts of the Unity project are declared they need to be set to a value that contains a decimal and an 'f' at the end for proper translation.
 
 # Support
 Use this webpage to know what should be done in the future of this project (and what has been done) and feel free to add issues (entries) to it: 'https://github.com/OpenSourceJesus/Unity2Many/issues'. Also, my email is 'gileadcosman@gmail.com', and I would love to respond to any questions or comments you have.

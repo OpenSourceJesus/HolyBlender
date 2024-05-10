@@ -415,24 +415,25 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	while indexOfInstantiate != -1:
 		instantiateIndicator = 'Instantiate('
 		indexOfInstantiate = outputFileText.find(instantiateIndicator)
-		indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
-		instatntiateCommand = outputFileText[indexOfInstantiate : indexOfRightParenthesis + 1]
-		indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
-		position = ''
-		rotation = ''
-		if indexOfEndOfWhatToInstantiate > indexOfRightParenthesis:
-			indexOfEndOfWhatToInstantiate = indexOfRightParenthesis
-		else:
-			indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate)
-			indexOfRotation = outputFileText.find(',', indexOfPosition)
-			position = outputFileText[indexOfPosition + 1 : indexOfRotation]
-			rotation = outputFileText[indexOfRotation + 1 : indexOfRightParenthesis]
-		whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) + 1 : indexOfEndOfWhatToInstantiate]
-		newInstantiateCommand = 'let spawned = commands.spawn(' + whatToInstantiate + ').id();'
-		if indexOfPosition != -1:
-			newInstantiateCommand += ', ' + position + ', ' + rotation
-		newInstantiateCommand += ')'
-		outputFileText = outputFileText.replace(instatntiateCommand, newInstantiateCommand)
+		if indexOfInstantiate != -1:
+			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
+			instatntiateCommand = outputFileText[indexOfInstantiate : indexOfRightParenthesis + 1]
+			indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
+			position = ''
+			rotation = ''
+			if indexOfEndOfWhatToInstantiate > indexOfRightParenthesis:
+				indexOfEndOfWhatToInstantiate = indexOfRightParenthesis
+			else:
+				indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate)
+				indexOfRotation = outputFileText.find(',', indexOfPosition)
+				position = outputFileText[indexOfPosition + 1 : indexOfRotation]
+				rotation = outputFileText[indexOfRotation + 1 : indexOfRightParenthesis]
+			whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
+			newInstantiateCommand = 'let spawned = commands.spawn(' + whatToInstantiate + ').id();'
+			if indexOfPosition != -1:
+				newInstantiateCommand += ', ' + position + ', ' + rotation
+			newInstantiateCommand += ')'
+			outputFileText = outputFileText.replace(instatntiateCommand, newInstantiateCommand)
 	indexOfUpdateMethod = outputFileText.find('fn Update')
 	if indexOfUpdateMethod != -1:
 		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
@@ -461,12 +462,11 @@ def MakeComponent (objectName : str, componentType : str):
 # for typeInfo in typeInfos:
 # 	MakeComponent (typeInfo)
 
-def DeleteScene (scene=None):
+def DeleteScene (scene = None):
 	if scene is None:
 		scene = bpy.context.scene
-	else:
-		if isinstance(scene, str):
-			scene = bpy.data.scenes[scene]
+	elif isinstance(scene, str):
+		scene = bpy.data.scenes[scene]
 	for object in scene.objects:
 		bpy.data.objects.remove(object, do_unlink=True)
 

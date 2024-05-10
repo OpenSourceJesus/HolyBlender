@@ -2,13 +2,16 @@ import os, sys
 from StringExtensions import *
 from SystemExtensions import *
 
+INPUT_PATH_INDICATOR = 'input='
 EXCLUDE_ITEM_INDICATOR = 'exclude='
 GUID_INDICATOR = 'guid: '
-UNITY_PROJECT_PATH = os.path.expanduser('~/TestUnityProject')
+UNITY_PROJECT_PATH = ''
 excludeItems = []
 
 for arg in sys.argv:
-	if arg.startswith(EXCLUDE_ITEM_INDICATOR):
+	if arg.startswith(INPUT_PATH_INDICATOR):
+		UNITY_PROJECT_PATH = os.path.expanduser(arg[len(INPUT_PATH_INDICATOR) :])
+	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
 		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) :])
 
 metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')

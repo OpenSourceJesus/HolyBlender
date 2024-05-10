@@ -18,7 +18,7 @@ build_UnityToUnreal:
 	dotnet build Unity2Many.csproj -p:StartupObject=UnityToUnreal -o=UnityToUnreal
 
 UnityToUnreal:
-	python3 UnityToUnreal.py input=/home/gilead/TestUnityProject output=/home/gilead/Unity2Many/BareUEProject exclude=/Library
+	python3 UnityToUnreal.py input=/home/gilead/Unity2Many-TestUnityProject output=/home/gilead/Unity2Many/BareUEProject exclude=/Library
 
 new_Unreal_project:
 	echo 'Not made yet'
@@ -32,7 +32,7 @@ build_UnityToBevy:
 	dotnet build Unity2Many.csproj -p:StartupObject=UnityToBevy -o=UnityToBevy
 
 UnityToBevy:
-	python3 UnityToBevy.py input=/home/gilead/TestUnityProject output=/home/gilead/Unity2Many exclude=/Library
+	python3 UnityToBevy.py input=/home/gilead/Unity2Many-TestUnityProject output=/home/gilead/Unity2Many exclude=/Library
 
 install_KritaToBlender:
 	# sudo apt install python3
