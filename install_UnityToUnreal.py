@@ -17,8 +17,7 @@ cd UnrealEngine
 ./GenerateProjectFiles.sh
 make
 cd ../Unity2Many
-sudo snap install dotnet-sdk --classic
-sudo snap refresh dotnet-sdk --channel=6.0
+sudo apt install dotnet-sdk-6.0
 dotnet new console --force
 rm Program.cs
 dotnet add package Microsoft.CodeAnalysis

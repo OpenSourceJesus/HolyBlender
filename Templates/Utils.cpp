@@ -38,3 +38,13 @@ FVector2D Utils::ToVec2D (FVector v)
 {
 	return FVector2D(v.X, v.Y);
 }
+
+// AActor Utils::GetActor (FString name, UWorld* world)
+// {
+// 	for (TActorIterator<AActor> actor(world); actor; ++ actor)
+// 	{
+// 			return actor;
+// 	}
+// 	// throw new std::exception();
+// 	return nullptr;
+// }

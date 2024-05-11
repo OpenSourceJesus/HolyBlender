@@ -17,7 +17,7 @@ sudo apt -y install clang-format
 sudo snap install blender --classic
 sudo snap install rustup --classic
 rustup default stable
-sudo snap install dotnet-sdk --classic
+sudo apt install dotnet-sdk-8.0
 dotnet new console --force
 rm Program.cs
 dotnet add package Microsoft.CodeAnalysis

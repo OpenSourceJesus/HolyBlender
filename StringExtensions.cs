@@ -26,7 +26,7 @@ public static class StringExtensions
 		return output;
 	}
 
-	public static int GetIndexOfMatchingParenthesis (this string str, int charIndex)
+	public static int GetIndexOfMatchingRightParenthesis (this string str, int charIndex)
 	{
 		int parenthesisTier = 1;
 		int indexOfParenthesis = charIndex;
@@ -48,7 +48,7 @@ public static class StringExtensions
 		return -1;
 	}
 
-	public static int GetIndexOfMatchingGenericSymbol (this string str, int charIndex)
+	public static int GetIndexOfMatchingRightGenericSymbol (this string str, int charIndex)
 	{
 		int genericTier = 1;
 		int indexOfGeneric = charIndex;

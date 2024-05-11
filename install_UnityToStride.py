@@ -16,8 +16,7 @@ if not os.path.isdir('stride'):
 		sudo apt install libfreetype6-dev
 		sudo apt install libopenal-dev
 		sudo apt install libsdl2-dev''')
-os.system('''sudo snap install dotnet-sdk
-sudo snap refresh dotnet-sdk --channel=8.0
+os.system('''sudo apt install dotnet-sdk-8.0
 cd BarerStrideProject/BarerStrideProject.Linux
 dotnet add package Microsoft.CodeAnalysis
 dotnet add package Microsoft.CodeAnalysis.CSharp

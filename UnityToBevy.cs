@@ -170,7 +170,7 @@ public class UnityToBevy : Translator
 			int indexOfLeftParenthesis = output.IndexOf('(');
 			if (indexOfLeftParenthesis != -1 && !output.IsInChar(indexOfLeftParenthesis) && !output.IsInString(indexOfLeftParenthesis))
 			{
-				int indexOfMatchingParenthesis = output.GetIndexOfMatchingParenthesis(indexOfLeftParenthesis);
+				int indexOfMatchingParenthesis = output.GetIndexOfMatchingRightParenthesis(indexOfLeftParenthesis);
 				string expression = output.SubstringStartEnd(indexOfLeftParenthesis, indexOfMatchingParenthesis + 1);
 				SyntaxTree tree = CSharpSyntaxTree.ParseText(expression);
 				ConvertSyntaxNode (tree.GetRoot(), outputLineIndex, outputCharIndex, indents, parsedMainClass);

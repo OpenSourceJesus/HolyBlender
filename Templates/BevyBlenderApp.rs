@@ -66,9 +66,9 @@ struct WorldCursorCoords(Vec2);
 static mut cursorWorldPoint : Vec3 = Vec3::ZERO;
 
 fn SetCursorWorldPoint (
-    q_window_primary: Query<&Window, With<PrimaryWindow>>,
-    q_window: Query<&Window>,
-    mut q_camera: Query<(&Camera, &GlobalTransform, &mut WorldCursorCoords)>,
+    q_window_primary : Query<&Window, With<PrimaryWindow>>,
+    q_window : Query<&Window>,
+    mut q_camera : Query<(&Camera, &GlobalTransform, &mut WorldCursorCoords)>,
 ) {
     for (camera, camera_transform, mut worldcursor) in &mut q_camera {
         let window = match camera.target {
@@ -93,3 +93,13 @@ fn SetCursorWorldPoint (
         }
     }
 }
+
+// fn GetEntity (name : str, world : Res<World>)
+// {
+// 	for (entity in world.iter_entities_mut())
+// 	{
+// 		if (entity.name == name)
+// 			return entity;
+// 	}
+// 	return entity;
+// }

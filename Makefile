@@ -15,7 +15,7 @@ install_UnityToUnreal:
 
 build_UnityToUnreal:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:StartupObject=UnityToUnreal -o=UnityToUnreal
+	dotnet build Unity2Many.csproj -p:TargetFramwork=net6.0 -p:StartupObject=UnityToUnreal -o=UnityToUnreal
 
 UnityToUnreal:
 	python3 UnityToUnreal.py input=/home/gilead/Unity2Many-TestUnityProject output=/home/gilead/Unity2Many/BareUEProject exclude=/Library
@@ -29,7 +29,7 @@ install_UnityToBevy:
 
 build_UnityToBevy:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:StartupObject=UnityToBevy -o=UnityToBevy
+	dotnet build Unity2Many.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityToBevy -o=UnityToBevy
 
 UnityToBevy:
 	python3 UnityToBevy.py input=/home/gilead/Unity2Many-TestUnityProject output=/home/gilead/Unity2Many exclude=/Library

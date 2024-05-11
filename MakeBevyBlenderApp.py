@@ -39,6 +39,7 @@ ORTHOGRAPHIC_SIZE_INDICATOR = '  orthographic size: '
 NEAR_CLIP_PLANE_INDICATOR = '  near clip plane: '
 FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 CLASS_MEMBER_INDICATOR = '#💠'
+GAME_OBJECT_FIND_INDICATOR = 'GameObject.Find('
 COMPONENT_TEMPLATE = '''"TestBevyProject::ꗈ": {
 	  "additionalProperties": false,
 	  "isComponent": true,
@@ -73,6 +74,7 @@ SYSTEM_METHOD_ARGUMENTS = '''mut commands: Commands,
 	keys: Res<ButtonInput<KeyCode>>,
 	mouseButtons: Res<ButtonInput<MouseButton>>,
 	mut query: Query<&mut Transform, With<ꗈ>>,
+	mut nameQuery: Query<&mut Name>,
 	time: Res<Time>,
 	mut cursorEvent: EventReader<CursorMoved>'''
 CUSTOM_TYPE_INDICATOR = '''#[derive(Component, Reflect, Default, Debug)]
@@ -179,8 +181,8 @@ def ConvertPythonFileToRust (filePath):
 
 def MakeCamera (localPosition : list, localRotation : list, localSize : list, objectName : str, horizontalFov : bool, fov : float, isOrthographic : bool, orthographicSize : float, nearClipPlane : float, farClipPlane : float):
 	global outputFileTextReplaceClauses
-	cameraData = bpy.data.cameras.new("Camera")
-	cameraObject = bpy.data.objects.new("Camera", cameraData)
+	cameraData = bpy.data.cameras.new('Camera')
+	cameraObject = bpy.data.objects.new('Camera', cameraData)
 	bpy.context.scene.collection.objects.link(cameraObject)
 	bpy.context.view_layer.objects.active = cameraObject
 	cameraObject.location = Vector((localPosition[0], localPosition[1], -localPosition[2]))
@@ -231,8 +233,8 @@ def MakeLight (localPosition : list, localRotation : list, localSize : list, obj
 		lightType = 'SUN'
 	elif lightType == 2:
 		lightType = 'POINT'
-	lightData = bpy.data.lights.new(name="Light data", type=lightType)
-	lightObject = bpy.data.objects.new("Light", lightData)
+	lightData = bpy.data.lights.new(name='Light data', type=lightType)
+	lightObject = bpy.data.objects.new('Light', lightData)
 	bpy.context.collection.objects.link(lightObject)
 	bpy.context.view_layer.objects.active = lightObject
 	lightObject.location = Vector((localPosition[0], localPosition[1], -localPosition[2]))
@@ -442,8 +444,17 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 				newInstantiateCommand += 'spawned.translation = ' + position + ';'
 				newInstantiateCommand += 'spawned.rotation = ' + rotation + ';'
 			# newInstantiateCommand += ')'
-			print('YAY3' + instantiateCommand)
 			outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
+	indexOfGameObjectFind = 0
+	while indexOfGameObjectFind != -1:
+		indexOfGameObjectFind = outputFileText.find(GAME_OBJECT_FIND_INDICATOR)
+		if indexOfGameObjectFind != -1:
+			indexOfRightParenthesis = outputFileText.GetIndexOfMatchingRightParenthesis(indexOfGameObjectFind + GAME_OBJECT_FIND_INDICATOR.Length)
+			gameObjectFind = outputFileText.SubstringStartEnd(indexOfGameObjectFind, indexOfRightParenthesis)
+			print('YAY' + gameObjectFind)
+			whatToFind = gameObjectFind.SubstringStartEnd(GAME_OBJECT_FIND_INDICATOR.Length, gameObjectFind.Length - 2)
+			entitytFind = '\nunsafe\n{\nfor mut enitty in &mut nameQuery\n{if enitty == ' + whatToFind + '\n{'
+			outputLine = outputLine.Replace(gameObjectFind, entitytFind)
 	indexOfUpdateMethod = outputFileText.find('fn Update')
 	if indexOfUpdateMethod != -1:
 		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
@@ -456,18 +467,18 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 def MakeComponent (objectName : str, componentType : str):
 	global mainClassName
 	definition = typeInfos[componentType]
-	componentType = definition["title"]
-	isComponent = definition['isComponent'] if "isComponent" in definition else False
+	componentType = definition['title']
+	isComponent = definition['isComponent'] if 'isComponent' in definition else False
 	if isComponent:
 		addComponentOperator(component_type=componentType)
 		if objectName != '':
 			bpy.data.objects[objectName][mainClassName] = ''
-		# if "SomeProp" in bpy.context.object:
-		# 	print("Property found")
-		# value = bpy.data.scenes["Scene"].get("test_prop", "fallback value")
-		# group = bpy.data.groups.new("MyTestGroup")
-		# group["GameSettings"] = {"foo": 10, "bar": "spam", "baz": {}}
-		# del group["GameSettings"]
+		# if 'SomeProp' in bpy.context.object:
+		# 	print('Property found')
+		# value = bpy.data.scenes['Scene'].get('test_prop', 'fallback value')
+		# group = bpy.data.groups.new('MyTestGroup')
+		# group['GameSettings'] = {'foo': 10, 'bar': 'spam', 'baz': {}}
+		# del group['GameSettings']
 
 # for typeInfo in typeInfos:
 # 	MakeComponent (typeInfo)
