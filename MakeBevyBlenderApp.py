@@ -449,7 +449,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	while indexOfGameObjectFind != -1:
 		indexOfGameObjectFind = outputFileText.find(GAME_OBJECT_FIND_INDICATOR)
 		if indexOfGameObjectFind != -1:
-			indexOfRightParenthesis = outputFileText.GetIndexOfMatchingRightParenthesis(indexOfGameObjectFind + GAME_OBJECT_FIND_INDICATOR.Length)
+			indexOfRightParenthesis = outputFileText.IndexOfMatchingRightParenthesis(indexOfGameObjectFind + GAME_OBJECT_FIND_INDICATOR.Length)
 			gameObjectFind = outputFileText.SubstringStartEnd(indexOfGameObjectFind, indexOfRightParenthesis)
 			print('YAY' + gameObjectFind)
 			whatToFind = gameObjectFind.SubstringStartEnd(GAME_OBJECT_FIND_INDICATOR.Length, gameObjectFind.Length - 2)

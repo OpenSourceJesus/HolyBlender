@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\BareStrideProject.Linux\BareStrideProject.csproj" />
+    <!-- <ProjectReference Include="..\BareStrideProject.Linux\BareStrideProject.Linux.csproj" /> -->
   </ItemGroup>
 
   <ItemGroup>

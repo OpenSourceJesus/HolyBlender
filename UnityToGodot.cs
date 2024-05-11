@@ -422,7 +422,7 @@ class KeyValuePair:
 			if (indexOfNewLine != -1)
 				output = output.Remove(indexOfNewLine);
 			int indexOfLeftParenthesis = output.IndexOf('(');
-			int indexOfMatchingParenthesis = output.GetIndexOfMatchingRightParenthesis(indexOfLeftParenthesis);
+			int indexOfMatchingParenthesis = output.IndexOfMatchingRightParenthesis(indexOfLeftParenthesis);
 			output = "while " + output.SubstringStartEnd(indexOfLeftParenthesis + 1, indexOfMatchingParenthesis) + ':' + output.Substring(indexOfMatchingParenthesis + 1);
 			InsertInOutputFileLines (output, outputLineIndex, outputCharIndex, indents);
 			indents ++;
@@ -435,7 +435,7 @@ class KeyValuePair:
 			children.MoveNext();
 			ConvertSyntaxNode (children.Current, outputLineIndex, outputCharIndex, indents, parsedMainClass);
 			int indexOfWhile = output.IndexOf(WHILE_INDICATOR);
-			string condition = output.SubstringStartEnd(indexOfWhile + WHILE_INDICATOR.Length, output.GetIndexOfMatchingRightParenthesis(indexOfWhile + WHILE_INDICATOR.Length - 1));
+			string condition = output.SubstringStartEnd(indexOfWhile + WHILE_INDICATOR.Length, output.IndexOfMatchingRightParenthesis(indexOfWhile + WHILE_INDICATOR.Length - 1));
 			int indexOfNewLine = output.IndexOf('\n');
 			if (indexOfNewLine != -1)
 				output = output.Remove(indexOfNewLine);
@@ -450,7 +450,7 @@ class KeyValuePair:
 			if (indexOfNewLine != -1)
 				output = output.Remove(indexOfNewLine);
 			int indexOfLeftParenthesis = output.IndexOf('(');
-			int indexOfMatchingRightParenthesis = output.GetIndexOfMatchingRightParenthesis(indexOfLeftParenthesis);
+			int indexOfMatchingRightParenthesis = output.IndexOfMatchingRightParenthesis(indexOfLeftParenthesis);
 			output = "if " + output.SubstringStartEnd(indexOfLeftParenthesis + 1, indexOfMatchingRightParenthesis) + ':' + output.Substring(indexOfMatchingRightParenthesis + 1);
 			InsertInOutputFileLines (output, outputLineIndex, outputCharIndex, indents);
 			indents ++;
@@ -511,10 +511,10 @@ class KeyValuePair:
 			{
 				int indexOfLeftGenericSymbol = output.IndexOf('<');
 				if (indexOfLeftGenericSymbol != -1 && output.IsInGenerics(indexOfLeftGenericSymbol) && !output.IsInChar(indexOfLeftGenericSymbol) && !output.IsInString(indexOfLeftGenericSymbol))
-					variableType = "Array[" + output.SubstringStartEnd(indexOfLeftGenericSymbol + 1, output.GetIndexOfMatchingRightGenericSymbol(indexOfLeftGenericSymbol)) + ']';
+					variableType = "Array[" + output.SubstringStartEnd(indexOfLeftGenericSymbol + 1, output.IndexOfMatchingRightGenericSymbol(indexOfLeftGenericSymbol)) + ']';
 				while (indexOfLeftGenericSymbol != -1)
 				{
-					int indexOfMatchingGenericSymbol = output.GetIndexOfMatchingRightGenericSymbol(indexOfLeftGenericSymbol);
+					int indexOfMatchingGenericSymbol = output.IndexOfMatchingRightGenericSymbol(indexOfLeftGenericSymbol);
 					if (indexOfMatchingGenericSymbol != -1)
 						output = output.RemoveStartEnd(indexOfLeftGenericSymbol, indexOfMatchingGenericSymbol + 1);
 					indexOfLeftGenericSymbol = output.IndexOf('<', indexOfLeftGenericSymbol + 1);

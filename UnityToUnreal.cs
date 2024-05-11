@@ -363,7 +363,7 @@ public class UnityToUnreal : Translator
 			int indexOfLeftParenthesis = output.IndexOf('(');
 			if (indexOfLeftParenthesis != -1 && !output.IsInChar(indexOfLeftParenthesis) && !output.IsInString(indexOfLeftParenthesis))
 			{
-				int indexOfMatchingParenthesis = output.GetIndexOfMatchingRightParenthesis(indexOfLeftParenthesis);
+				int indexOfMatchingParenthesis = output.IndexOfMatchingRightParenthesis(indexOfLeftParenthesis);
 				string expression = output.SubstringStartEnd(indexOfLeftParenthesis, indexOfMatchingParenthesis + 1);
 				SyntaxTree tree = CSharpSyntaxTree.ParseText(expression);
 				ConvertSyntaxNode (tree.GetRoot(), outputLineIndex, outputCharIndex, indents, parsedMainClass);
