@@ -1,17 +1,21 @@
-import os, subprocess
-from GetUnityProjectInfo import *
+import os, subprocess, sys
+# from GetUnityProjectInfo import *
+from StringExtensions import *
+from SystemExtensions import *
 
 UNITY_PROJECT_PATH = ''
 UNREAL_COMMAND_PATH = os.getcwd() + '/../UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd'
 UNREAL_PROJECT_PATH = ''
 MAKE_UNREAL_PROJECT_SCRIPT_PATH = os.getcwd() + '/MakeUnrealProject.py'
 CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
-YAML_CLASS_ID_INDICATOR = '--- !u!'
-SCRIPT_INDICATOR = '  m_Script: '
-MESH_INDICATOR = '  m_Mesh: '
 INPUT_PATH_INDICATOR = 'input='
 OUTPUT_PATH_INDICATOR = 'output='
+EXCLUDE_ITEM_INDICATOR = 'exclude='
+SCRIPT_INDICATOR = '  m_Script: '
+GUID_INDICATOR = 'guid: '
+CLASS_MEMBER_INDICATOR = '#💠'
 mainClassNames = []
+excludeItems = []
 
 for arg in sys.argv:
 	if arg.startswith(INPUT_PATH_INDICATOR):
@@ -19,12 +23,33 @@ for arg in sys.argv:
 	elif arg.startswith(OUTPUT_PATH_INDICATOR):
 		UNREAL_PROJECT_PATH = os.path.expanduser(arg[len(OUTPUT_PATH_INDICATOR) :])
 		CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
+	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
+		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) :])
+
+metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
+fileGuidsDict = {}
+for metaFilePath in metaFilesPaths:
+	isExcluded = False
+	for excludeItem in excludeItems:
+		if excludeItem in metaFilePath:
+			isExcluded = True
+			break
+	if isExcluded:
+		continue
+	metaFileText = open(metaFilePath, 'rb').read().decode('utf-8')
+	indexOfGuid = metaFileText.find(GUID_INDICATOR) + len(GUID_INDICATOR)
+	indexOfNewLine = metaFileText.find('\n', indexOfGuid)
+	if indexOfNewLine == -1:
+		indexOfNewLine = len(metaFileText)
+	guid = metaFileText[indexOfGuid : indexOfNewLine]
+	fileGuidsDict[guid] = metaFilePath.replace('.meta', '')
 
 # os.system('rm -r ' + UNREAL_PROJECT_PATH)
 # os.system('cp -r "../BareUEProject" ' + UNREAL_PROJECT_PATH)
 os.system('make build_UnityToUnreal')
 
 def ConvertPythonFileToCpp (filePath):
+	global membersDict
 	global mainClassNames
 	lines = []
 	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
@@ -81,6 +106,21 @@ def ConvertPythonFileToCpp (filePath):
 				indexOfMainConstructor = outputFileText.find(mainConstructor)
 				value = line[indexOfEquals + 1 :]
 				outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = ' + value + ';\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
+		else:
+			break
+	for line in pythonFileLines:
+		if line.startswith(CLASS_MEMBER_INDICATOR):
+			indexOfColon = line.find(':')
+			memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
+			memberValue = membersDict.get(memberName, None)
+			if memberValue == None:
+				memberValue = line[indexOfColon + 1 :]
+			indexOfMemberName = 0
+			while indexOfMemberName != -1:
+				indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
+				if indexOfMemberName != -1:
+					indexOfSemicolon = newMainClassContents.find(';', indexOfMemberName)
+					newMainClassContents = newMainClassContents[: indexOfSemicolon] + ' = ' + memberValue + newMainClassContents[indexOfSemicolon :]
 		else:
 			break
 	outputFileLines = outputFileText.split('\n')
@@ -165,42 +205,27 @@ while True:
 	if not isExcluded:
 		mainClassNames.append(os.path.split(codeFilePath)[-1].split('.')[0])
 	i += 1
+sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
+for sceneFilePath in sceneFilesPaths:
+	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+	sceneFileLines = sceneFileText.split('\n')
+	for line in sceneFileLines:
+		if line.endswith(':'):
+			currentType = line[: len(line) - 1]
+		elif line.startswith('  '):
+			if currentType == 'MonoBehaviour':
+				if line.startswith(SCRIPT_INDICATOR):
+					indexOfGuid = line.find(GUID_INDICATOR)
+					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
+					if scriptPath != None:
+						scriptName = scriptPath[scriptPath.rfind('/') + 1 :]
+						if not line.startswith('  m_'):
+							indexOfColon = line.find(': ')
+							memberName = line[2 : indexOfColon] + '_' + scriptName
+							value = line[indexOfColon + 2 :]
+							membersDict[memberName] = value
 for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)
-# sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
-# for sceneFilePath in sceneFilesPaths:
-# 	sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
-# 	sceneName = sceneName.replace('.unity', '')
-# 	sceneName = '/Game/' + sceneName + '/' + sceneName
-# 	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
-# 	sceneFileLines = sceneFileText.split('\n')
-# 	currentTypes = []
-# 	currentType = ''
-# 	meshAssetPath = ''
-# 	scriptsPaths = []
-# 	for line in sceneFileLines:
-# 		if line.endswith(':'):
-# 			if line.startswith('GameObject') or line.startswith('SceneRoots'):
-# 				if 'MeshRenderer' in currentTypes:
-# 					ImportAsset (meshAssetPath)
-# 				# if 'MonoBehaviour' in currentTypes:
-# 				# 	for scriptPath in scriptsPaths:
-# 				# 		if not scriptPath.endswith('/UniversalAdditionalCameraData.cs') and not scriptPath.endswith('/UniversalAdditionalLightData.cs'):
-# 				# 			ConvertCSFileToCPP (scriptPath)
-# 				currentTypes.clear()
-# 				scriptsPaths.clear()
-# 			currentType = line[: len(line) - 1]
-# 			currentTypes.append(currentType)
-# 		elif line.startswith('  '):
-# 			if currentType == 'MeshFilter':
-# 				if line.startswith(MESH_INDICATOR):
-# 					indexOfGuid = line.find(GUID_INDICATOR)
-# 					meshAssetPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
-# 			# elif currentType == 'MonoBehaviour':
-# 			# 	if line.startswith(SCRIPT_INDICATOR):
-# 			# 		indexOfGuid = line.find(GUID_INDICATOR)
-# 			# 		scriptPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
-# 			# 		scriptsPaths.append(scriptPath)
 
 command = 'dotnet ' + os.getcwd() + '/../UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll BareUEProject Development Linux -Project="' + UNREAL_PROJECT_PATH + '/BareUEProject.uproject" -TargetType=Editor -Progress'
 print(command)
@@ -208,7 +233,7 @@ print(command)
 os.system(command)
 
 data = '\n'.join(sys.argv)
-open('/tmp/Unity2Many Data', 'wb').write(data.encode('utf-8'))
+open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
 
 command = UNREAL_COMMAND_PATH + ' ' + UNREAL_PROJECT_PATH + '/BareUEProject.uproject -nullrhi -ExecutePythonScript=' + MAKE_UNREAL_PROJECT_SCRIPT_PATH
 print(command)

@@ -2,11 +2,11 @@ import unreal, os, sys
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from StringExtensions import *
 from SystemExtensions import *
-from GetUnityProjectInfo import *
 
 INPUT_PATH_INDICATOR = 'input='
 OUTPUT_PATH_INDICATOR = 'output='
 YAML_ELEMENT_ID_INDICATOR = '--- !u!'
+GUID_INDICATOR = 'guid: '
 PARENT_INDICATOR = '  m_Father: {fileID: '
 ACTIVE_INDICATOR = '  m_IsActive: '
 MESH_INDICATOR = '  m_Mesh: '
@@ -40,17 +40,32 @@ EXCLUDE_ITEM_INDICATOR = 'exclude='
 excludeItems = []
 blueprintAsset = None
 
-for arg in sys.argv:
+data = open('/tmp/Unity2Many Data (UnityToUnreal)', 'rb').read().decode('utf-8').split('\n')
+for arg in data:
 	if arg.startswith(INPUT_PATH_INDICATOR):
 		UNITY_PROJECT_PATH = arg[len(INPUT_PATH_INDICATOR) :]
 	elif arg.startswith(OUTPUT_PATH_INDICATOR):
 		UNREAL_PROJECT_PATH = arg[len(OUTPUT_PATH_INDICATOR) :]
 		CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
-
-data = open('/tmp/Unity2Many Data', 'rb').read().decode('utf-8').split('\n')
-for arg in data:
-	if arg.startswith(EXCLUDE_ITEM_INDICATOR):
+	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
 		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) + 1 :])
+metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
+fileGuidsDict = {}
+for metaFilePath in metaFilesPaths:
+	isExcluded = False
+	for excludeItem in excludeItems:
+		if excludeItem in metaFilePath:
+			isExcluded = True
+			break
+	if isExcluded:
+		continue
+	metaFileText = open(metaFilePath, 'rb').read().decode('utf-8')
+	indexOfGuid = metaFileText.find(GUID_INDICATOR) + len(GUID_INDICATOR)
+	indexOfNewLine = metaFileText.find('\n', indexOfGuid)
+	if indexOfNewLine == -1:
+		indexOfNewLine = len(metaFileText)
+	guid = metaFileText[indexOfGuid : indexOfNewLine]
+	fileGuidsDict[guid] = metaFilePath.replace('.meta', '')
 
 def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, meshAssetPath : str):
 	projectFilePath = UNREAL_PROJECT_PATH + '/Content' + meshAssetPath[meshAssetPath.rfind('/') :]
@@ -306,8 +321,9 @@ def MakeLevel (sceneFileText : str):
 			elif currentType == 'MonoBehaviour':
 				if line.startswith(SCRIPT_INDICATOR):
 					indexOfGuid = line.find(GUID_INDICATOR)
-					scriptPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
-					scriptsPaths.append(scriptPath)
+					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
+					if scriptPath != None:
+						scriptsPaths.append(scriptPath)
 				# elif not line[2 :].startswith('m_'):
 				# 	indexOfGuid = line.find(GUID_INDICATOR)
 				# 	prefabPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]

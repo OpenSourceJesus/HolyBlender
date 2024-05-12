@@ -33,3 +33,12 @@ ExcludeFolder ('CSharpToPython/src/CSharpToPython.Tests')
 ExcludeFolder ('stride')
 ExcludeFolder ('BareStrideProject')
 open(filePath, 'w').writelines(fileLines)
+actorClassPath = os.path.expanduser('~/UnrealEngine/Engine/Source/Runtime/Engine/Private/Actor.cpp')
+fileLines = open(actorClassPath, 'wb').readliens()
+i = 0
+while i < len(fileLines):
+	line = fileLines[i]
+	if 'check(' in line:
+		fileLines[i] = '//' + line
+	i += 1
+open(actorClassPath, 'wb').writelines(fileLines)
