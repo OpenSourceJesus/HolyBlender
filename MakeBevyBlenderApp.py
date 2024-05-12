@@ -88,6 +88,7 @@ addToOutputFileText = ''
 mainClassName = ''
 translatedFiles = []
 mainClassNames = []
+membersDict = {}
 
 for arg in sys.argv:
 	if arg.startswith(INPUT_PATH_INDICATOR):
@@ -268,6 +269,7 @@ def MakeSprite (localPosition : list, localRotation : list, localSize : list, ob
 	return importedObject
 
 def MakeScript (localPosition : list, localRotation : list, localSize : list, objectName : str, scriptPath : str):
+	global membersDict
 	global mainClassName
 	global outputFileText
 	global addToOutputFileText
@@ -356,7 +358,6 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
 	mainClassIndicator = 'pub struct ' + mainClassName + ' {'
 	indexOfMainClass = outputFileText.find(mainClassIndicator)
-	membersDict = {}
 	if indexOfMainClass != -1:
 		indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
 		mainClassContents = outputFileText[indexOfMainClass + len(mainClassIndicator) : indexOfMainClassEnd]
@@ -371,8 +372,12 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			if line.startswith(CLASS_MEMBER_INDICATOR):
 				indexOfColon = line.find(':')
 				memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
-				memberValue = line[indexOfColon + 1 :]
-				membersDict[memberName] = memberValue
+				memberValue = membersDict.get(memberName, None)
+				if memberValue == None:
+					memberValue = line[indexOfColon + 1 :]
+				if IsNumber(memberValue) and '.' not in memberValue:
+					memberValue += '.0'
+					membersDict[memberName] = memberValue
 				indexOfMemberName = 0
 				while indexOfMemberName != -1:
 					indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
@@ -432,7 +437,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 				indexOfRotation = outputFileText.find(',', indexOfPosition + 1)
 				position = outputFileText[indexOfPosition + 1 : indexOfRotation]
 				rotation = outputFileText[indexOfRotation + 1 : indexOfRightParenthesis]
-			whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
+			# whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
 			whatToInstantiate = '''Camera2dBundle {
 					..default()
 				}'''
@@ -603,6 +608,7 @@ for sceneFilePath in sceneFilesPaths:
 				# parent = ''
 				currentTypes.clear()
 				currentScriptsPaths.clear()
+				membersDict.clear()
 			currentType = line[: len(line) - 1]
 			currentTypes.append(currentType)
 		elif line.startswith(YAML_ELEMENT_ID_INDICATOR):
@@ -670,6 +676,11 @@ for sceneFilePath in sceneFilesPaths:
 					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
 					if scriptPath != None:
 						currentScriptsPaths.append(scriptPath)
+				elif not line.startswith('  m_'):
+					indexOfColon = line.find(': ')
+					memberName = line[2 : indexOfColon]
+					value = line[indexOfColon + 2 :]
+					membersDict[memberName] = value
 			elif currentType == 'Light':
 				if line.startswith(LIGHT_TYPE_INDICATOR):
 					lightType = int(line[len(LIGHT_TYPE_INDICATOR) :])

@@ -110,3 +110,10 @@ def IsInComment_CS (string : str, charIndex : int):
 	indexOfComment = string.rfind('//')
 	indexOfNewLine = string.find('\n', indexOfComment)
 	return charIndex > indexOfComment and charIndex < indexOfNewLine
+
+def IsNumber (value : str) -> bool:
+	try:
+		float(value)
+	except ValueError:
+		return False
+	return True
