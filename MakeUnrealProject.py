@@ -151,25 +151,25 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	destinationPath += '/' + assetName
 	ASSET_REGISTRY.scan_files_synchronous([destinationPath])
 	unreal.EditorAssetSubsystem().save_asset(destinationPath)
-	rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
+	# rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
 	# classType = unreal.StaticMeshComponent
 	# subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset))
 	# SUBOBJECT_DATA.rename_subobject(subHandle, unreal.Text('Test'))
-	blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
-	classType = unreal.StaticMeshComponent
-	params = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)
-	subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(params)
-	if not failReason.is_empty():
-		raise Exception('ERROR from SUBOBJECT_DATA.add_new_subobject: {failReason}')
-	SUBOBJECT_DATA.attach_subobject(rootData, subHandle)
-	subData = blueprintLibrary.get_data(subHandle)
-	subComponent = blueprintLibrary.get_object(subData)
+	# blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
+	# classType = unreal.StaticMeshComponent
+	# params = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)
+	# subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(params)
+	# if not failReason.is_empty():
+	# 	raise Exception('ERROR from SUBOBJECT_DATA.add_new_subobject: {failReason}')
+	# SUBOBJECT_DATA.attach_subobject(rootData, subHandle)
+	# subData = blueprintLibrary.get_data(subHandle)
+	# subComponent = blueprintLibrary.get_object(subData)
 	# assetPath = '/Game/'
 	# asset = unreal.EditorAssetLibrary.load_asset(assetPath)
 	# if asset is not None:
 	# 	subComponent.set_editor_property('static_mesh', asset)
-	location, isValid = unreal.StringLibrary.conv_string_to_vector('(X=-208.000000,Y=-1877.000000,Z=662.000000)')
-	subComponent.set_editor_property('relative_location', location)
+	# location, isValid = unreal.StringLibrary.conv_string_to_vector('(X=-208.000000,Y=-1877.000000,Z=662.000000)')
+	# subComponent.set_editor_property('relative_location', location)
 	blueprint = unreal.load_object(None, destinationPath)
 	blueprintActor = unreal.EditorLevelLibrary.spawn_actor_from_object(blueprint, location, rotation)
 	attachRule = unreal.AttachmentRule.KEEP_WORLD
@@ -305,7 +305,7 @@ def MakeLevel (sceneFileText : str):
 					localRotation.w = float(w)
 					localRotation = localRotation.rotator()
 					# localRotation.yaw *= -1
-					localRotation.yaw += 181
+					localRotation.yaw += 180
 				elif line.startswith(LOCAL_SCALE_INDICATOR):
 					indexOfComma = line.find(',')
 					x = line[len(LOCAL_SCALE_INDICATOR) + 3 : indexOfComma]
