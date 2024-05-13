@@ -16,6 +16,7 @@ GUID_INDICATOR = 'guid: '
 CLASS_MEMBER_INDICATOR = '#💠'
 mainClassNames = []
 excludeItems = []
+membersDict = {}
 
 for arg in sys.argv:
 	if arg.startswith(INPUT_PATH_INDICATOR):
@@ -117,10 +118,10 @@ def ConvertPythonFileToCpp (filePath):
 				memberValue = line[indexOfColon + 1 :]
 			indexOfMemberName = 0
 			while indexOfMemberName != -1:
-				indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
+				indexOfMemberName = outputFileText.find(memberName, indexOfMemberName + 1)
 				if indexOfMemberName != -1:
-					indexOfSemicolon = newMainClassContents.find(';', indexOfMemberName)
-					newMainClassContents = newMainClassContents[: indexOfSemicolon] + ' = ' + memberValue + newMainClassContents[indexOfSemicolon :]
+					indexOfSemicolon = outputFileText.find(';', indexOfMemberName)
+					outputFileText = outputFileText[: indexOfSemicolon] + ' = ' + memberValue + outputFileText[indexOfSemicolon :]
 		else:
 			break
 	outputFileLines = outputFileText.split('\n')
@@ -209,6 +210,7 @@ sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
 for sceneFilePath in sceneFilesPaths:
 	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
 	sceneFileLines = sceneFileText.split('\n')
+	scriptName = ''
 	for line in sceneFileLines:
 		if line.endswith(':'):
 			currentType = line[: len(line) - 1]
@@ -219,11 +221,11 @@ for sceneFilePath in sceneFilesPaths:
 					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
 					if scriptPath != None:
 						scriptName = scriptPath[scriptPath.rfind('/') + 1 :]
-						if not line.startswith('  m_'):
-							indexOfColon = line.find(': ')
-							memberName = line[2 : indexOfColon] + '_' + scriptName
-							value = line[indexOfColon + 2 :]
-							membersDict[memberName] = value
+				elif not line.startswith('  m_'):
+					indexOfColon = line.find(': ')
+					memberName = line[2 : indexOfColon] + '_' + scriptName
+					value = line[indexOfColon + 2 :]
+					membersDict[memberName] = value
 for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)
 

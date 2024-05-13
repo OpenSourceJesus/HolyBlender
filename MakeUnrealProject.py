@@ -304,7 +304,6 @@ def MakeLevel (sceneFileText : str):
 					w = line[indexOfW + 3 : indexOfComma]
 					localRotation.w = float(w)
 					localRotation = localRotation.rotator()
-					# localRotation.yaw *= -1
 					localRotation.yaw += 180
 				elif line.startswith(LOCAL_SCALE_INDICATOR):
 					indexOfComma = line.find(',')

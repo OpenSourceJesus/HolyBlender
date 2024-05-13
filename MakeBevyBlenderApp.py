@@ -90,6 +90,7 @@ translatedFiles = []
 mainClassNames = []
 membersDict = {}
 
+data = ''
 for arg in sys.argv:
 	if arg.startswith(INPUT_PATH_INDICATOR):
 		UNITY_PROJECT_PATH = os.path.expanduser(arg[len(INPUT_PATH_INDICATOR) :])
@@ -99,6 +100,8 @@ for arg in sys.argv:
 		CODE_PATH = BEVY_PROJECT_PATH + '/src'
 		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
 		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
+		data += arg + '\n'
+open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 i = 0
