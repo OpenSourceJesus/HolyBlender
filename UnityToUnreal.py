@@ -95,33 +95,20 @@ def ConvertPythonFileToCpp (filePath):
 			indexOfColon = line.find(':')
 			variableName = line[: indexOfColon]
 			mainClassName = os.path.split(outputFilePath)[-1].split('.')[0]
-			outputFileText = outputFileText.replace(variableName, variableName + mainClassName)
-			headerFileText = headerFileText.replace(variableName, variableName + mainClassName)
+			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
+			headerFileText = headerFileText.replace(variableName, variableName + '_' + mainClassName)
 			indexOfVariableName = headerFileText.find(variableName)
 			indexOfNewLine = headerFileText.rfind('\n', 0, indexOfVariableName)
 			headerFileText = headerFileText[: indexOfNewLine] + '\n\tUPROPERTY(EditAnywhere)' + headerFileText[indexOfNewLine :]
 			indexOfEquals = line.find('=', indexOfColon + 1)
 			if indexOfEquals != -1:
-				variableName += mainClassName
+				variableName += '_' + mainClassName
 				mainConstructor = '::A' + mainClassName + '() {'
 				indexOfMainConstructor = outputFileText.find(mainConstructor)
-				value = line[indexOfEquals + 1 :]
+				value = membersDict.get(variableName, None)
+				if value == None:
+					value = line[indexOfEquals + 1 :]
 				outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = ' + value + ';\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
-		else:
-			break
-	for line in pythonFileLines:
-		if line.startswith(CLASS_MEMBER_INDICATOR):
-			indexOfColon = line.find(':')
-			memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
-			memberValue = membersDict.get(memberName, None)
-			if memberValue == None:
-				memberValue = line[indexOfColon + 1 :]
-			indexOfMemberName = 0
-			while indexOfMemberName != -1:
-				indexOfMemberName = outputFileText.find(memberName, indexOfMemberName + 1)
-				if indexOfMemberName != -1:
-					indexOfSemicolon = outputFileText.find(';', indexOfMemberName)
-					outputFileText = outputFileText[: indexOfSemicolon] + ' = ' + memberValue + outputFileText[indexOfSemicolon :]
 		else:
 			break
 	outputFileLines = outputFileText.split('\n')
@@ -135,6 +122,16 @@ def ConvertPythonFileToCpp (filePath):
 					line = line.replace('A' + mainClassName, 'APrefab*')
 					outputFileLines[i] = line
 					break
+			mainClassName = os.path.split(outputFilePath)[-1].split('.')[0]
+			for memberName in membersDict:
+				indexOfMemberName = 0
+				while indexOfMemberName != -1:
+					indexOfMemberName = line.find(memberName, indexOfMemberName + 1)
+					if indexOfMemberName != -1:
+						memberValue = membersDict[memberName]
+						line = line.replace(line[indexOfMemberName :], memberName + '_' + mainClassName + ' = ' + memberValue + ';')
+						line = line.replace('_' + mainClassName + '_' + mainClassName, '_' + mainClassName)
+						outputFileLines[i] = line
 		else:
 			break
 	outputFileText = '\n'.join(outputFileLines)
@@ -220,10 +217,11 @@ for sceneFilePath in sceneFilesPaths:
 					indexOfGuid = line.find(GUID_INDICATOR)
 					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
 					if scriptPath != None:
-						scriptName = scriptPath[scriptPath.rfind('/') + 1 :]
+						scriptName = scriptPath[scriptPath.rfind('/') + 1 : scriptPath.rfind('.')]
 				elif not line.startswith('  m_'):
 					indexOfColon = line.find(': ')
 					memberName = line[2 : indexOfColon] + '_' + scriptName
+					print('YAY' + memberName)
 					value = line[indexOfColon + 2 :]
 					membersDict[memberName] = value
 for codeFilePath in codeFilesPaths:
