@@ -2,7 +2,7 @@
 # *DO NOT EDIT*
 
 UNREALROOTPATH = /home/gilead/UnrealEngine
-GAMEPROJECTFILE =/home/gilead/BareUEProject/BareUEProject.uproject
+GAMEPROJECTFILE =/home/gilead/Unity2Many/BareUEProject/BareUEProject.uproject
 
 TARGETS = \
 	BareUEProject-Linux-Debug  \

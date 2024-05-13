@@ -134,6 +134,16 @@ def ConvertPythonFileToCpp (filePath):
 						outputFileLines[i] = line
 		else:
 			break
+	for i in range(len(outputFileLines)):
+		line = outputFileLines[i]
+		line = line.replace(' ', '')
+		indexOfX = 0
+		while indexOfX != -1:
+			indexOfX = line.find('.X', indexOfX + 1)
+			if indexOfX != -1:
+				indexOfEquals = line.find('=', indexOfX)
+				if indexOfEquals <= indexOfX + 3:
+					outputFileLines[i] = line[: indexOfEquals + 1] + '-' + line[indexOfEquals + 1 :]
 	outputFileText = '\n'.join(outputFileLines)
 	indexOfUProperty = 0
 	uPropertyIndicator = 'UPROPERTY('
