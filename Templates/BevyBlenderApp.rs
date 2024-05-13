@@ -21,7 +21,8 @@ fn main() {
 				.load_collection::<LevelAssets>(),
 		)
 		.add_systems(OnEnter(MyStates::Next), StartLevel)
-		.add_systems(Update, SetCursorWorldPoint)
+		.add_systems(Update, SetcursorPoint)
+		.add_event::<ScreenToWorldPointEvent>()
 		ꗈ1
 		.run();
 }
@@ -38,17 +39,21 @@ fn StartLevel (
 	assetServer: Res<AssetServer>,
 	mut meshes : ResMut<Assets<Mesh>>,
 	keys: Res<ButtonInput<KeyCode>>,
-	mouseButtons: Res<ButtonInput<MouseButton>>
+	mouseButtons: Res<ButtonInput<MouseButton>>,
+    mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>
 ) {
-	ꗈ2
-    commands.spawn((Camera2dBundle::default(), WorldCursorCoords::default()));
-	commands.spawn((
-		SceneBundle {
-			scene: assets.level.clone(),
-			..default()
-		},
-		Name::new("Game"),
-	));
+	unsafe
+	{
+		ꗈ2
+		commands.spawn((Camera2dBundle::default(), CursorCoords::default()));
+		commands.spawn((
+			SceneBundle {
+				scene: assets.level.clone(),
+				..default()
+			},
+			Name::new("Game"),
+		));
+	}
 }
 
 #[derive(
@@ -61,16 +66,16 @@ enum MyStates {
 }
 
 #[derive(Component, Default)]
-struct WorldCursorCoords(Vec2);
+struct CursorCoords(Vec2);
 
-static mut cursorWorldPoint : Vec3 = Vec3::ZERO;
+static mut cursorPoint : Vec3 = Vec3::ZERO;
 
-fn SetCursorWorldPoint (
+fn SetcursorPoint (
     q_window_primary : Query<&Window, With<PrimaryWindow>>,
     q_window : Query<&Window>,
-    mut q_camera : Query<(&Camera, &GlobalTransform, &mut WorldCursorCoords)>,
+    mut q_camera : Query<(&Camera, &GlobalTransform, &mut CursorCoords)>,
 ) {
-    for (camera, camera_transform, mut worldcursor) in &mut q_camera {
+    for (camera, camera_transform, mut cursorCoords) in &mut q_camera {
         let window = match camera.target {
 			RenderTarget::Window(WindowRef::Primary) => {
                 q_window_primary.single()
@@ -82,15 +87,56 @@ fn SetCursorWorldPoint (
                 continue;
             }
         };
-        if let Some(world_position) = window.cursor_position()
-            .and_then(|cursor| camera.viewport_to_world(camera_transform, cursor))
-            .map(|ray| ray.origin.truncate())
-        {
-			unsafe
-			{
-				cursorWorldPoint = Vec3::new(world_position.x, 0.0, -world_position.y);
-			}
-        }
+        let world_position = window.cursor_position().unwrap();
+		unsafe
+		{
+			cursorPoint = Vec3::new(world_position.x, 0.0, -world_position.y);
+		}
+    }
+}
+
+fn GetScreenToWorldPoint (screenPoint : Vec3, mut screenToWorldPointEvent: &mut EventWriter<ScreenToWorldPointEvent>) -> Vec3
+{
+	screenToWorldPointEvent.send(ScreenToWorldPointEvent(screenPoint));
+	unsafe
+	{
+		return worldPoint;
+	}
+}
+
+#[derive(Event)]
+struct ScreenToWorldPointEvent(Vec3);
+
+static mut worldPoint : Vec3 = Vec3::ZERO;
+
+fn ScreenToWorldPoint (
+    q_window_primary : Query<&Window, With<PrimaryWindow>>,
+    q_window : Query<&Window>,
+    mut q_camera : Query<(&Camera, &GlobalTransform)>,
+    mut screenToWorldPointEvent: EventReader<ScreenToWorldPointEvent>
+)
+{
+    for (camera, camera_transform) in &mut q_camera {
+        let window = match camera.target {
+			RenderTarget::Window(WindowRef::Primary) => {
+                q_window_primary.single()
+            },
+            RenderTarget::Window(WindowRef::Entity(e_window)) => {
+                q_window.get(e_window).unwrap()
+            },
+            _ => {
+                continue;
+            }
+        };
+		let mut screenPoint : Vec3 = Vec3::ZERO;
+		for event in screenToWorldPointEvent.read()
+		{
+			screenPoint = event.0;
+		}
+		unsafe
+		{
+			worldPoint = camera.viewport_to_world(camera_transform, Vec2::new(screenPoint.x, screenPoint.y)).unwrap().origin;
+		}
     }
 }
 

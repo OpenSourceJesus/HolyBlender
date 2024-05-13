@@ -76,7 +76,8 @@ SYSTEM_METHOD_ARGUMENTS = '''mut commands: Commands,
 	mut query: Query<&mut Transform, With<ꗈ>>,
 	mut nameQuery: Query<&mut Name>,
 	time: Res<Time>,
-	mut cursorEvent: EventReader<CursorMoved>'''
+	mut cursorEvent: EventReader<CursorMoved>,
+    mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>'''
 CUSTOM_TYPE_INDICATOR = '''#[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
 struct ꗈ;'''
@@ -297,6 +298,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec2')
 	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec3')
 	outputFileText = outputFileText.replace('.Normalize', '.normalize')
+	outputFileText = outputFileText.replace(', screenToWorldPointEvent', ', &mut screenToWorldPointEvent')
 	outputFileText = outputFileText.replace('pub const ', 'let mut ')
 	outputFileText = outputFileText.replace('pub static ', 'let mut ')
 	outputFileText = outputFileText.replace('transform.position', 'trs.translation')
