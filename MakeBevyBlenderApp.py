@@ -41,15 +41,15 @@ FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 CLASS_MEMBER_INDICATOR = '#💠'
 GAME_OBJECT_FIND_INDICATOR = 'GameObject.Find('
 COMPONENT_TEMPLATE = '''"TestBevyProject::ꗈ": {
-	  "additionalProperties": false,
-	  "isComponent": true,
-	  "isResource": false,
-	  "properties": {},
-	  "required": [],
-	  "short_name": "ꗈ",
-	  "title": "TestBevyProject::ꗈ",
-	  "type": "object",
-	  "typeInfo": "Struct"
+		"additionalProperties": false,
+		"isComponent": true,
+		"isResource": false,
+		"properties": {},
+		"required": [],
+		"short_name": "ꗈ",
+		"title": "TestBevyProject::ꗈ",
+		"type": "object",
+		"typeInfo": "Struct"
 	}'''
 # CAMERA_2D_TEMPLATE = '''commands.spawn(Camera2dBundle {
 # 		transform: Transform::from_xyz(ꗈ0, ꗈ1, ꗈ2).with_rotation(Quat::from_xyzw(ꗈ3, ꗈ4, ꗈ5, ꗈ6)),
@@ -340,7 +340,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals == ' ':
 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, rotation.x, rotation.y + 90.0, rotation.z)')
+				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, rotation.x, rotation.y, rotation.z)')
 	outputFileText = outputFileText.replace(mainClassName + '::', '')
 	outputFileText = outputFileText.replace('&' + mainClassName + ' {}', '')
 	indexOfMacro = 0

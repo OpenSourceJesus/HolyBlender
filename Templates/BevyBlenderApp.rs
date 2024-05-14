@@ -23,6 +23,7 @@ fn main() {
 		.add_systems(OnEnter(MyStates::Next), StartLevel)
 		.add_systems(Update, SetCursorPoint)
 		.add_event::<ScreenToWorldPointEvent>()
+		.add_systems(Update, ScreenToWorldPoint)
 		ꗈ1
 		.run();
 }
@@ -40,12 +41,11 @@ fn StartLevel (
 	mut meshes : ResMut<Assets<Mesh>>,
 	keys: Res<ButtonInput<KeyCode>>,
 	mouseButtons: Res<ButtonInput<MouseButton>>,
-    mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>
+    mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>,
 ) {
 	unsafe
 	{
 		ꗈ2
-		commands.spawn((Camera2dBundle::default(), CursorCoords::default()));
 		commands.spawn((
 			SceneBundle {
 				scene: assets.level.clone(),
@@ -65,17 +65,14 @@ enum MyStates {
 	Next,
 }
 
-#[derive(Component, Default)]
-struct CursorCoords(Vec2);
-
 static mut cursorPoint : Vec3 = Vec3::ZERO;
 
 fn SetCursorPoint (
     q_window_primary : Query<&Window, With<PrimaryWindow>>,
     q_window : Query<&Window>,
-    mut q_camera : Query<(&Camera, &GlobalTransform, &mut CursorCoords)>,
+    mut q_camera : Query<(&Camera, &GlobalTransform)>,
 ) {
-    for (camera, camera_transform, mut cursorCoords) in &mut q_camera {
+    for (camera, camera_transform) in &mut q_camera {
         let window = match camera.target {
 			RenderTarget::Window(WindowRef::Primary) => {
                 q_window_primary.single()
@@ -91,7 +88,7 @@ fn SetCursorPoint (
         {
 			unsafe
 			{
-				cursorPoint = Vec3::new(world_position.x, 0.0, -world_position.y);
+				cursorPoint = Vec3::new(world_position.x, world_position.y, 0.0);
 			}
         }
     }
@@ -135,19 +132,13 @@ fn ScreenToWorldPoint (
 		{
 			screenPoint = event.0;
 		}
-		unsafe
+		let ray = camera.viewport_to_world(camera_transform, Vec2::new(screenPoint.x, screenPoint.y));
+		if ray != None
 		{
-			worldPoint = camera.viewport_to_world(camera_transform, Vec2::new(screenPoint.x, screenPoint.y)).unwrap().origin;
+			unsafe
+			{
+				worldPoint = ray.unwrap().origin;
+			}
 		}
     }
 }
-
-// fn GetEntity (name : str, world : Res<World>)
-// {
-// 	for (entity in world.iter_entities_mut())
-// 	{
-// 		if (entity.name == name)
-// 			return entity;
-// 	}
-// 	return entity;
-// }
