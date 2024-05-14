@@ -142,7 +142,7 @@ def ConvertPythonFileToCpp (filePath):
 			indexOfX = line.find('.X', indexOfX + 1)
 			if indexOfX != -1:
 				indexOfEquals = line.find('=', indexOfX)
-				if indexOfEquals <= indexOfX + 3:
+				if indexOfEquals != -1 and indexOfEquals <= indexOfX + 3:
 					outputFileLines[i] = line[: indexOfEquals + 1] + '-' + line[indexOfEquals + 1 :]
 	outputFileText = '\n'.join(outputFileLines)
 	indexOfUProperty = 0
