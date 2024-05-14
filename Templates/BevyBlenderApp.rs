@@ -21,7 +21,7 @@ fn main() {
 				.load_collection::<LevelAssets>(),
 		)
 		.add_systems(OnEnter(MyStates::Next), StartLevel)
-		.add_systems(Update, SetcursorPoint)
+		.add_systems(Update, SetCursorPoint)
 		.add_event::<ScreenToWorldPointEvent>()
 		ꗈ1
 		.run();
@@ -70,7 +70,7 @@ struct CursorCoords(Vec2);
 
 static mut cursorPoint : Vec3 = Vec3::ZERO;
 
-fn SetcursorPoint (
+fn SetCursorPoint (
     q_window_primary : Query<&Window, With<PrimaryWindow>>,
     q_window : Query<&Window>,
     mut q_camera : Query<(&Camera, &GlobalTransform, &mut CursorCoords)>,
@@ -87,11 +87,13 @@ fn SetcursorPoint (
                 continue;
             }
         };
-        let world_position = window.cursor_position().unwrap();
-		unsafe
-		{
-			cursorPoint = Vec3::new(world_position.x, 0.0, -world_position.y);
-		}
+		if let Some(world_position) = window.cursor_position()
+        {
+			unsafe
+			{
+				cursorPoint = Vec3::new(world_position.x, 0.0, -world_position.y);
+			}
+        }
     }
 }
 
