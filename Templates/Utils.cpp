@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "Camera/PlayerCameraManager.h"
 #include "Templates/SharedPointer.h"
+#include "UObject/UObjectGlobals.h"
+#include "Prefab.h"
 
 Utils::Utils ()
 {
@@ -28,9 +30,10 @@ FVector Utils::ScreenToWorldPoint (UWorld* world, FVector screenPoint)
 // 	return ScreenToWorldPoint(world, GetMousePosition(world));
 // }
 
-AActor* Utils::SpawnActor (UWorld* world, AActor actor, FVector location, FRotator rotation)
+AActor* Utils::SpawnActor (UWorld* world, APrefab* prefab, FVector location, FRotator rotation)
 {
-	AActor* output = world->SpawnActor(actor.StaticClass(), TSharedPtr<const FVector>(&location).Get(), TSharedPtr<const FRotator>(&rotation).Get(), FActorSpawnParameters());
+	UObject* object = FindObject<UObject>(nullptr, *prefab->assetPath);
+	AActor* output = world->SpawnActor(object->StaticClass(), TSharedPtr<const FVector>(&location).Get(), TSharedPtr<const FRotator>(&rotation).Get(), FActorSpawnParameters());
 	return output;
 }
 

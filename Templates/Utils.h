@@ -4,6 +4,7 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "PackedLevelActor/PackedLevelActor.h"
+#include "Prefab.h"
 
 class BAREUEPROJECT_API Utils
 {
@@ -12,7 +13,7 @@ public:
 	static FVector GetMousePosition (UWorld* world);
 	static FVector ScreenToWorldPoint (UWorld* world, FVector screenPoint);
 	// static FVector GetMousePositionWorld (UWorld* world);
-	static AActor* SpawnActor (UWorld* world, AActor actor, FVector position, FRotator rotation);
+	static AActor* SpawnActor (UWorld* world, APrefab* prefab, FVector position, FRotator rotation);
 	static FVector2D ToVec2D (FVector v);
 	// static AActor GetActor (FString name, UWorld* world);
 	template<typename T> static T GetRootActorInLevel (ULevel* level)

@@ -169,7 +169,8 @@ def ConvertPythonFileToCpp (filePath):
 def ConvertCSFileToCPP (filePath):
 	assert os.path.isfile(filePath)
 	command = [
-		'dotnet', os.getcwd() + '/UnityToUnreal/Unity2Many.dll',
+		'dotnet',
+		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
 		'includeFile=' + filePath,
 		'unreal=true',
 		'output=' + CODE_PATH,
@@ -233,6 +234,8 @@ for sceneFilePath in sceneFilesPaths:
 					memberName = line[2 : indexOfColon] + '_' + scriptName
 					print('YAY' + memberName)
 					value = line[indexOfColon + 2 :]
+					if value.startswith('{'):
+						pass
 					membersDict[memberName] = value
 for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)
