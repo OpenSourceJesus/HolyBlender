@@ -233,13 +233,14 @@ for sceneFilePath in sceneFilesPaths:
 					indexOfColon = line.find(': ')
 					memberName = line[2 : indexOfColon] + '_' + scriptName
 					value = line[indexOfColon + 2 :]
-					# if value.startswith('{'):
-					# 	indexOfGuid = value.find(GUID_INDICATOR)
-					# 	indexOfComma = value.rfind(',')
-					# 	guid = value[indexOfGuid + len(GUID_INDICATOR) : indexOfComma]
-					# 	print('YAY' + guid)
-					# 	filePath = fileGuidsDict[guid]
-					# 	value = 'TSharedPtr<const APrefab>(&APrefab(' + filePath + ')).Get()'
+					if value.startswith('{'):
+						indexOfGuid = line.find(GUID_INDICATOR)
+						indexOfComma = line.rfind(',')
+						guid = line[indexOfGuid + len(GUID_INDICATOR) : indexOfComma]
+						print('YAY' + guid)
+						filePath = fileGuidsDict.get(guid, None)
+						if filePath != None:
+							value = 'TSharedPtr<APrefab>(&APrefab("' + filePath + '")).Get()'
 					membersDict[memberName] = value
 for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)
