@@ -232,10 +232,14 @@ for sceneFilePath in sceneFilesPaths:
 				elif not line.startswith('  m_'):
 					indexOfColon = line.find(': ')
 					memberName = line[2 : indexOfColon] + '_' + scriptName
-					print('YAY' + memberName)
 					value = line[indexOfColon + 2 :]
-					if value.startswith('{'):
-						pass
+					# if value.startswith('{'):
+					# 	indexOfGuid = value.find(GUID_INDICATOR)
+					# 	indexOfComma = value.rfind(',')
+					# 	guid = value[indexOfGuid + len(GUID_INDICATOR) : indexOfComma]
+					# 	print('YAY' + guid)
+					# 	filePath = fileGuidsDict[guid]
+					# 	value = 'TSharedPtr<const APrefab>(&APrefab(' + filePath + ')).Get()'
 					membersDict[memberName] = value
 for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)
