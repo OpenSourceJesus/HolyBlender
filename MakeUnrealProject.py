@@ -5,8 +5,10 @@ from SystemExtensions import *
 
 INPUT_PATH_INDICATOR = 'input='
 OUTPUT_PATH_INDICATOR = 'output='
-YAML_ELEMENT_ID_INDICATOR = '--- !u!'
+EXCLUDE_ITEM_INDICATOR = 'exclude='
+GAME_OBJECT_ID_INDICATOR = '--- !u!1 &'
 GUID_INDICATOR = 'guid: '
+GAME_OBJECT_INDICATOR = '  m_GameObject: {fileID: '
 PARENT_INDICATOR = '  m_Father: {fileID: '
 ACTIVE_INDICATOR = '  m_IsActive: '
 MESH_INDICATOR = '  m_Mesh: '
@@ -36,7 +38,6 @@ INTERCHANGE_MANAGER = unreal.InterchangeManager.get_interchange_manager_scripted
 EDITOR = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
 EDITOR_UTILITY = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
 SUBOBJECT_DATA = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
-EXCLUDE_ITEM_INDICATOR = 'exclude='
 excludeItems = []
 blueprintAsset = None
 
@@ -144,34 +145,14 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	blueprintFactory = unreal.BlueprintFactory()
 	assetName = scriptAssetPath[scriptAssetPath.rfind('/') + 1 :].replace('.cpp', '')
 	blueprintFactory.set_editor_property('parent_class', unreal.load_class(None, '/Script/BareUEProject.' + assetName))
-	assetName += '_Blueprint'
+	assetName += '_Script'
 	destinationPath = '/Game/' + assetName
 	unreal.EditorAssetLibrary.delete_asset(destinationPath + '/' + assetName)
-	blueprintAsset = ASSET_TOOLS.create_asset(assetName, destinationPath, None, blueprintFactory)
+	scriptBlueprintAsset = ASSET_TOOLS.create_asset(assetName, destinationPath, None, blueprintFactory)
 	destinationPath += '/' + assetName
 	ASSET_REGISTRY.scan_files_synchronous([destinationPath])
 	unreal.EditorAssetSubsystem().save_asset(destinationPath)
-	# rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
-	# classType = unreal.StaticMeshComponent
-	# subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset))
-	# SUBOBJECT_DATA.rename_subobject(subHandle, unreal.Text('Test'))
-	# blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
-	# classType = unreal.StaticMeshComponent
-	# params = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)
-	# subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(params)
-	# if not failReason.is_empty():
-	# 	raise Exception('ERROR from SUBOBJECT_DATA.add_new_subobject: {failReason}')
-	# SUBOBJECT_DATA.attach_subobject(rootData, subHandle)
-	# subData = blueprintLibrary.get_data(subHandle)
-	# subComponent = blueprintLibrary.get_object(subData)
-	# assetPath = '/Game/'
-	# asset = unreal.EditorAssetLibrary.load_asset(assetPath)
-	# if asset is not None:
-	# 	subComponent.set_editor_property('static_mesh', asset)
-	# location, isValid = unreal.StringLibrary.conv_string_to_vector('(X=-208.000000,Y=-1877.000000,Z=662.000000)')
-	# subComponent.set_editor_property('relative_location', location)
-	blueprint = unreal.load_object(None, destinationPath)
-	blueprintActor = unreal.EditorLevelLibrary.spawn_actor_from_object(blueprint, location, rotation)
+	blueprintActor = unreal.EditorLevelLibrary.spawn_actor_from_object(scriptBlueprintAsset, location, rotation)
 	attachRule = unreal.AttachmentRule.KEEP_WORLD
 	if parent != None:
 		blueprintActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
@@ -179,7 +160,21 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		staticMeshActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.StaticMeshActor.static_class(), location, rotation)
 		blueprintActor.set_editor_property('root_component', staticMeshActor.static_mesh_component)
 		staticMeshActor.set_actor_scale3d(size)
-	LEVEL_EDITOR.save_current_level()
+	if blueprintAsset != None:
+		rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
+		assetName = assetName.replace('_Script', '')
+		classType = unreal.load_class(None, '/Script/BareUEProject.' + assetName)
+		blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
+		subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(rootData, classType, blueprintAsset)
+		if not failReason.is_empty():
+			raise Exception('ERROR from SUBOBJECT_DATA.add_new_subobject: {failReason}')
+		didAttach = SUBOBJECT_DATA.attach_subobject(rootData, subHandle)
+		subData = blueprintLibrary.get_data(subHandle)
+		subComponent = blueprintLibrary.get_object(subData)
+		subComponent.set_editor_property('relative_location', location)
+		unreal.EditorAssetSubsystem().save_asset(destinationPath)
+	else:
+		LEVEL_EDITOR.save_current_level()
 	return blueprintActor
 
 def LoadObject (assetPath : str) -> unreal.Object:
@@ -202,8 +197,8 @@ def LoadScript (assetPath : str) -> unreal.Object:
 	destinationPath = '/Script/BareUEProject.' + assetName
 	return unreal.load_object(None, destinationPath)
 
-def MakeLevel (sceneFileText : str):
-	sceneFileLines = sceneFileText.split('\n')
+def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
+	sceneOrPrefabFileLines = sceneOrPrefabFileText.split('\n')
 	currentTypes = []
 	currentType = ''
 	transformsIdsDict = {}
@@ -224,10 +219,10 @@ def MakeLevel (sceneFileText : str):
 	orthographicSize = -1
 	nearClipPlane = -1
 	farClipPlane = -1
-	for i in range(len(sceneFileLines)):
-		line = sceneFileLines[i]
-		if i == len(sceneFileLines) - 1 or line.endswith(':'):
-			if i == len(sceneFileLines) - 1 or line.startswith('GameObject') or line.startswith('SceneRoots'):
+	for i in range(len(sceneOrPrefabFileLines)):
+		line = sceneOrPrefabFileLines[i]
+		if i == len(sceneOrPrefabFileLines) - 1 or line.endswith(':'):
+			if i == len(sceneOrPrefabFileLines) - 1 or line.startswith('GameObject') or line.startswith('SceneRoots'):
 				actors = []
 				components = []
 				if 'Camera' in currentTypes:
@@ -260,9 +255,8 @@ def MakeLevel (sceneFileText : str):
 				prefabsPaths.clear()
 			currentType = line[: len(line) - 1]
 			currentTypes.append(currentType)
-		elif line.startswith(YAML_ELEMENT_ID_INDICATOR):
-			indexOfAmpersand = line.find('&', len(YAML_ELEMENT_ID_INDICATOR))
-			elementId = line[indexOfAmpersand + 1 :]
+		elif line.startswith(GAME_OBJECT_ID_INDICATOR):
+			elementId = line[len(GAME_OBJECT_ID_INDICATOR) + 1 :]
 		elif line.startswith('  '):
 			if currentType == 'MeshFilter':
 				if line.startswith(MESH_INDICATOR):
@@ -360,17 +354,31 @@ for prefabFilePath in prefabFilesPaths:
 	if not isExcluded:
 		prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
 		prefabName = prefabName.replace('.prefab', '')
+		prefabName += '_Prefab'
 		prefabName = '/Game/' + prefabName + '/' + prefabName
 		unreal.EditorAssetLibrary.delete_asset(prefabName)
-		LEVEL_EDITOR.new_level(prefabName)
+		blueprintFactory = unreal.BlueprintFactory()
+		destinationPath = '/Game/' + prefabName
+		unreal.EditorAssetLibrary.delete_asset(destinationPath + '/' + prefabName)
+		blueprintAsset = ASSET_TOOLS.create_asset(prefabName, destinationPath, None, blueprintFactory)
+		destinationPath += '/' + prefabName
+		ASSET_REGISTRY.scan_files_synchronous([destinationPath])
+		unreal.EditorAssetSubsystem().save_asset(destinationPath)
 		prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
-		MakeLevel (prefabFileText)
+		MakeLevelOrPrefab (prefabFileText)
+blueprintAsset = None
 sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
 for sceneFilePath in sceneFilesPaths:
-	sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
-	sceneName = sceneName.replace('.unity', '')
-	sceneName = '/Game/' + sceneName + '/' + sceneName
-	unreal.EditorAssetLibrary.delete_asset(sceneName)
-	LEVEL_EDITOR.new_level(sceneName)
-	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
-	MakeLevel (sceneFileText)
+	isExcluded = False
+	for excludeItem in excludeItems:
+		if excludeItem in sceneFilePath:
+			isExcluded = True
+			break
+	if not isExcluded:
+		sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
+		sceneName = sceneName.replace('.unity', '')
+		sceneName = '/Game/' + sceneName + '/' + sceneName
+		unreal.EditorAssetLibrary.delete_asset(sceneName)
+		LEVEL_EDITOR.new_level(sceneName)
+		sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+		MakeLevelOrPrefab (sceneFileText)

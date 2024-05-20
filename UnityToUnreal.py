@@ -116,7 +116,7 @@ def ConvertPythonFileToCpp (filePath):
 					referenceString = filePathMembersNamesDict[variableName]
 					if referenceString.endswith('.prefab"'):
 						referenceString = referenceString.replace('.prefab"', '')
-						referenceString = referenceString[referenceString.rfind('/') + 1 :] + '_Blueprint'
+						referenceString = referenceString[referenceString.rfind('/') + 1 :] + '_Script'
 						referenceString = '/Game/' + referenceString + '/' + referenceString + '.' + referenceString
 						outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = "' + referenceString + '";\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
 		else:
