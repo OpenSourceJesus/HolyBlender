@@ -17,6 +17,7 @@ CLASS_MEMBER_INDICATOR = '#💠'
 mainClassNames = []
 excludeItems = []
 membersDict = {}
+filePathMembersNamesDict = {}
 
 for arg in sys.argv:
 	if arg.startswith(INPUT_PATH_INDICATOR):
@@ -52,6 +53,7 @@ os.system('make build_UnityToUnreal')
 def ConvertPythonFileToCpp (filePath):
 	global membersDict
 	global mainClassNames
+	global filePathMembersNames
 	lines = []
 	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
 		if line.startswith('import ') or line.startswith('from '):
@@ -101,14 +103,22 @@ def ConvertPythonFileToCpp (filePath):
 			indexOfNewLine = headerFileText.rfind('\n', 0, indexOfVariableName)
 			headerFileText = headerFileText[: indexOfNewLine] + '\n\tUPROPERTY(EditAnywhere)' + headerFileText[indexOfNewLine :]
 			indexOfEquals = line.find('=', indexOfColon + 1)
+			variableName += '_' + mainClassName
+			value = membersDict.get(variableName, None)
+			mainConstructor = '::A' + mainClassName + '() {'
+			indexOfMainConstructor = outputFileText.find(mainConstructor)
 			if indexOfEquals != -1:
-				variableName += '_' + mainClassName
-				mainConstructor = '::A' + mainClassName + '() {'
-				indexOfMainConstructor = outputFileText.find(mainConstructor)
-				value = membersDict.get(variableName, None)
 				if value == None:
 					value = line[indexOfEquals + 1 :]
 				outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = ' + value + ';\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
+			else:
+				for memberName in filePathMembersNamesDict:
+					referenceString = filePathMembersNamesDict[variableName]
+					if referenceString.endswith('.prefab"'):
+						referenceString = referenceString.replace('.prefab"', '')
+						referenceString = referenceString[referenceString.rfind('/') + 1 :] + '_Blueprint'
+						referenceString = '/Game/' + referenceString + '/' + referenceString + '.' + referenceString
+						outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = "' + referenceString + '";\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
 		else:
 			break
 	outputFileLines = outputFileText.split('\n')
@@ -117,9 +127,7 @@ def ConvertPythonFileToCpp (filePath):
 		if line != '':
 			for mainClassName in mainClassNames:
 				if line.startswith('A' + mainClassName):
-					# indexOfSpace = line.find(' ')
-					# line = line[: indexOfSpace] + '*' + line[indexOfSpace :]
-					line = line.replace('A' + mainClassName, 'APrefab*')
+					line = line.replace('A' + mainClassName, 'FString')
 					outputFileLines[i] = line
 					break
 			mainClassName = os.path.split(outputFilePath)[-1].split('.')[0]
@@ -156,9 +164,8 @@ def ConvertPythonFileToCpp (filePath):
 		if variableType.startswith('A'):
 			variableType = variableType[1 :]
 			if variableType in mainClassNames:
-				# headerFileText = headerFileText[: indexOfSpace] + '*' + headerFileText[indexOfSpace :]
 				headerFileText = RemoveStartEnd(headerFileText, indexOfNewLine + 1, indexOfSpace)
-				headerFileText = headerFileText[: indexOfNewLine + 1] + 'APrefab*' + headerFileText[indexOfNewLine + 1 :]
+				headerFileText = headerFileText[: indexOfNewLine + 1] + 'FString' + headerFileText[indexOfNewLine + 1 :]
 	open(outputFilePath.replace('.py', '.cpp'), 'wb').write(outputFileText.encode('utf-8'))
 	open(outputFilePath.replace('.py', '.h'), 'wb').write(headerFileText.encode('utf-8'))
 	command = [ 'cat', outputFilePath.replace('.py', '.cpp') ]
@@ -237,10 +244,10 @@ for sceneFilePath in sceneFilesPaths:
 						indexOfGuid = line.find(GUID_INDICATOR)
 						indexOfComma = line.rfind(',')
 						guid = line[indexOfGuid + len(GUID_INDICATOR) : indexOfComma]
-						print('YAY' + guid)
 						filePath = fileGuidsDict.get(guid, None)
 						if filePath != None:
-							value = 'TSharedPtr<APrefab>(&APrefab("' + filePath + '")).Get()'
+							value = '"' + filePath + '"'
+							filePathMembersNamesDict[memberName] = value
 					membersDict[memberName] = value
 for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)

@@ -7,7 +7,10 @@
 #include "Camera/PlayerCameraManager.h"
 #include "Templates/SharedPointer.h"
 #include "Utils.h"
-#include "Prefab.h"
+#include "UObject/UObjectGlobals.h"
+#include "Templates/Casts.h"
+#include "UObject/SoftObjectPath.h"
+#include <iostream>
 
 // Sets default values
 ꗈ1::ꗈ1()
@@ -43,4 +46,15 @@ void ꗈ1::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	ꗈ4
+}
+
+AActor* ꗈ1::SpawnActor (FString assetPath, FVector location, FRotator rotation)
+{
+	FSoftObjectPath assetRef(assetPath);
+	UBlueprint* blueprint = Cast<UBlueprint>(assetRef.TryLoad());
+	FActorSpawnParameters spawnParameters;
+	spawnParameters.Owner = this;
+	spawnParameters.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	AActor* output = GetWorld()->SpawnActor(blueprint->GeneratedClass, TSharedPtr<const FVector>(&location).Get(), TSharedPtr<const FRotator>(&rotation).Get(), spawnParameters);
+	return output;
 }

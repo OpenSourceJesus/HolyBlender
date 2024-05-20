@@ -27,5 +27,5 @@ public:
 	FVector ScreenToWorldPoint (FVector2D screenPoint);
 	FVector GetMousePositionWorld ();
 	float GetFacingAngle (FVector v);
-	AActor* SpawnActor (AActor actor, FVector position, FRotator rotation);
+	AActor* SpawnActor (FString assetPath, FVector position, FRotator rotation);
 };
