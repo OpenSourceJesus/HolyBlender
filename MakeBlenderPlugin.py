@@ -123,6 +123,58 @@ MonoBehaviour:
   m_SoftShadowQuality: 0'''
 # SCRIPT_META_TEMPLATE = '''fileFormatVersion: 2
 # guid: '''
+MESH_FILTER_TEMPLATE = '''--- !u!33 &ꗈ0
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Mesh: {fileID: 2779447591269876719, guid: ꗈ2, type: 3}'''
+MESH_RENDERER_TEMPLATE = '''--- !u!23 &ꗈ0
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}'''
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
 lastId = 5
 
@@ -166,15 +218,20 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 		for textBlock in bpy.data.texts:
 			text = textBlock.as_string()
 			fileExportPath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs'
-			_fileExportPath = fileExportPath[: fileExportPath.find('/')]
-			while _fileExportPath != fileExportPath:
-				if _fileExportPath != '' and not os.path.isdir(_fileExportPath):
-					os.mkdir(_fileExportPath)
-				indexOfSlash = fileExportPath.find('/', len(_fileExportPath) + 1)
-				if indexOfSlash == -1:
-					break
-				_fileExportPath = fileExportPath[: indexOfSlash]
+			MakeFolderForFile (fileExportPath)
 			open(fileExportPath, 'wb').write(text.encode('utf-8'))
+		meshesDict = {}
+		for mesh in bpy.data.meshes:
+			meshesDict[mesh.name] = []
+		for obj in bpy.context.scene.objects:
+			if obj.type == 'MESH' and obj.data.name in meshesDict:
+				meshesDict[obj.data.name].append(obj.name)
+				fileExportPath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+				MakeFolderForFile (fileExportPath)
+				bpy.ops.object.select_all(action='DESELECT')
+				bpy.context.view_layer.objects.active = obj
+				obj.select_set(True)
+				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
 		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath, '-quit' ]
 		
 		subprocess.check_call(command)
@@ -234,6 +291,27 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 				light = light.replace(REPLACE_INDICATOR + '9', str(lightObject.spot_size * (1.0 - lightObject.spot_blend)))
 				gameObjectsAndComponentsText += light + '\n'
 				lastId += 1
+			elif obj.type == 'MESH':
+				meshFilter = MESH_FILTER_TEMPLATE
+				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
+				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				meshMetaText = ''
+				for key in meshesDict:
+					objectNames = meshesDict[key]
+					if obj.name in objectNames:
+						meshMetaText = open(projectExportPath + '/Assets/Art/Models/' + key + '.fbx.meta', 'rb').read().decode('utf-8')
+						break
+				guidIndicator = 'guid: '
+				indexAfterGuidIndicator = meshMetaText.find(guidIndicator) + len(guidIndicator)
+				meshGuid = meshMetaText[indexAfterGuidIndicator : meshMetaText.find('\n', indexAfterGuidIndicator)]
+				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', meshGuid)
+				gameObjectsAndComponentsText += meshFilter + '\n'
+				lastId += 1
+				meshRenderer = MESH_RENDERER_TEMPLATE
+				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
+				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				gameObjectsAndComponentsText += meshRenderer + '\n'
+				lastId += 1
 			for textBlock in bpy.data.texts:
 				if textBlock.name == obj.name:
 					# scriptMeta = SCRIPT_META_TEMPLATE
@@ -268,6 +346,16 @@ classes = [
 	TEXT_EDITOR_OT_BevyExportButton,
 	TEXT_EDITOR_OT_UnityExportButton
 ]
+
+def MakeFolderForFile (path : str):
+	_path = path[: path.find('/')]
+	while _path != path:
+		if _path != '' and not os.path.isdir(_path):
+			os.mkdir(_path)
+		indexOfSlash = path.find('/', len(_path) + 1)
+		if indexOfSlash == -1:
+			break
+		_path = path[: indexOfSlash]
 
 def DrawUnityImportField (self, context):
 	self.layout.prop(context.world, 'unity_project_import_path')
