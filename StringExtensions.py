@@ -33,17 +33,17 @@ def IndexOfMatchingRightCurlyBrace (string : str, charIndex : int):
 	return -1
 
 def IndexOfMatchingRightParenthesis (string : str, charIndex : int):
-	curlyBraceTier = 1
-	indexOfCurlyBrace = charIndex
-	while indexOfCurlyBrace != -1:
-		indexOfCurlyBrace = IndexOfAny(string, [ '(', ')' ], indexOfCurlyBrace + 1)
-		if indexOfCurlyBrace != -1:
-			if string[indexOfCurlyBrace] == '(':
-				curlyBraceTier += 1
+	parenthesisTier = 1
+	indexOfParenthesis = charIndex
+	while indexOfParenthesis != -1:
+		indexOfParenthesis = IndexOfAny(string, [ '(', ')' ], indexOfParenthesis + 1)
+		if indexOfParenthesis != -1:
+			if string[indexOfParenthesis] == '(':
+				parenthesisTier += 1
 			else:
-				curlyBraceTier -= 1
-				if curlyBraceTier == 0:
-					return indexOfCurlyBrace
+				parenthesisTier -= 1
+				if parenthesisTier == 0:
+					return indexOfParenthesis
 	return -1
 
 def IndexOfMatchingLeftParenthesis (string : str, charIndex : int):

@@ -165,7 +165,8 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		assetName = assetName.replace('_Script', '')
 		classType = unreal.load_class(None, '/Script/BareUEProject.' + assetName)
 		blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
-		subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(rootData, classType, blueprintAsset)
+		addSubobjectParameters = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)
+		subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(addSubobjectParameters)
 		if not failReason.is_empty():
 			raise Exception('ERROR from SUBOBJECT_DATA.add_new_subobject: {failReason}')
 		didAttach = SUBOBJECT_DATA.attach_subobject(rootData, subHandle)
@@ -355,13 +356,12 @@ for prefabFilePath in prefabFilesPaths:
 		prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
 		prefabName = prefabName.replace('.prefab', '')
 		prefabName += '_Prefab'
-		prefabName = '/Game/' + prefabName + '/' + prefabName
-		unreal.EditorAssetLibrary.delete_asset(prefabName)
-		blueprintFactory = unreal.BlueprintFactory()
 		destinationPath = '/Game/' + prefabName
-		unreal.EditorAssetLibrary.delete_asset(destinationPath + '/' + prefabName)
+		unreal.EditorAssetLibrary.delete_asset(destinationPath)
+		destinationPath += '/' + prefabName + '.' + prefabName
+		blueprintFactory = unreal.BlueprintFactory()
+		blueprintFactory.set_editor_property('parent_class', unreal.Actor)
 		blueprintAsset = ASSET_TOOLS.create_asset(prefabName, destinationPath, None, blueprintFactory)
-		destinationPath += '/' + prefabName
 		ASSET_REGISTRY.scan_files_synchronous([destinationPath])
 		unreal.EditorAssetSubsystem().save_asset(destinationPath)
 		prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')

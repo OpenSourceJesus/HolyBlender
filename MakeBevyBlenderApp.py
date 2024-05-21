@@ -428,27 +428,24 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		instantiateIndicator = 'Instantiate('
 		indexOfInstantiate = outputFileText.find(instantiateIndicator)
 		if indexOfInstantiate != -1:
-			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
-			instantiateCommand = outputFileText[indexOfInstantiate : indexOfRightParenthesis + 1]
-			if instantiateCommand == '':
-				break
+			indexOfSemicolon = outputFileText.find(';', indexOfInstantiate)
+			# indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
+			instantiateCommand = outputFileText[indexOfInstantiate : indexOfSemicolon]
 			indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
 			position = ''
 			rotation = ''
-			if indexOfEndOfWhatToInstantiate > indexOfRightParenthesis:
-				indexOfEndOfWhatToInstantiate = indexOfRightParenthesis
+			if indexOfEndOfWhatToInstantiate > indexOfSemicolon:
+				indexOfEndOfWhatToInstantiate = indexOfSemicolon
 			elif indexOfEndOfWhatToInstantiate != -1:
 				indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate + 1)
 				indexOfRotation = outputFileText.find(',', indexOfPosition + 1)
 				position = outputFileText[indexOfPosition + 1 : indexOfRotation]
-				rotation = outputFileText[indexOfRotation + 1 : indexOfRightParenthesis]
+				rotation = outputFileText[indexOfRotation + 1 : indexOfSemicolon]
 			# whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
 			whatToInstantiate = '''Camera2dBundle {
 					..default()
 				}'''
 			newInstantiateCommand = 'let mut spawned = commands.spawn(' + whatToInstantiate + ').id();'
-			print('YAY' + position + 'YAY2')
-			print('YAY' + rotation + 'YAY2')
 			if position != '':
 				# newInstantiateCommand += ', ' + position + ', ' + rotation
 				newInstantiateCommand += 'spawned.translation = ' + position + ';'
@@ -459,7 +456,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	while indexOfGameObjectFind != -1:
 		indexOfGameObjectFind = outputFileText.find(GAME_OBJECT_FIND_INDICATOR)
 		if indexOfGameObjectFind != -1:
-			indexOfRightParenthesis = outputFileText.IndexOfMatchingRightParenthesis(indexOfGameObjectFind + GAME_OBJECT_FIND_INDICATOR.Length)
+			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfGameObjectFind + GAME_OBJECT_FIND_INDICATOR.Length)
 			gameObjectFind = outputFileText.SubstringStartEnd(indexOfGameObjectFind, indexOfRightParenthesis)
 			print('YAY' + gameObjectFind)
 			whatToFind = gameObjectFind.SubstringStartEnd(GAME_OBJECT_FIND_INDICATOR.Length, gameObjectFind.Length - 2)
