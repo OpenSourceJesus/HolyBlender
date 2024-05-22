@@ -262,6 +262,8 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 			gameObjectId = lastId
 			lastId += 1
 			transform = TRANSFORM_TEMPLATE
+			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.y))
+			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.z))
 			transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
 			transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			previousObjectRotationMode = obj.rotation_mode
@@ -275,8 +277,6 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.y))
 			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.z))
 			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
-			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.y))
-			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.z))
 			gameObjectsAndComponentsText += transform + '\n'
 			transformIds.append(lastId)
 			lastId += 1
