@@ -235,8 +235,10 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 				obj.select_set(True)
 				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
 		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
+
 		os.system('cp ' + os.path.expanduser('~/Unity2Many/GetUnityProjectInfo.cs') + ' ' + projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
 		os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
+
 		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath, '-quit', '-executeMethod', 'GetUnityProjectInfo.Do', os.path.expanduser(context.scene.world.unity_project_export_path) ]
 		
 		subprocess.check_call(command)
@@ -262,10 +264,13 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 			transform = TRANSFORM_TEMPLATE
 			transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
 			transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			previousObjectRotationMode = obj.rotation_mode
+			obj.rotation_mode = 'QUATERNION'
 			transform = transform.replace(REPLACE_INDICATOR + '2', str(obj.rotation_quaternion.x))
 			transform = transform.replace(REPLACE_INDICATOR + '3', str(obj.rotation_quaternion.y))
 			transform = transform.replace(REPLACE_INDICATOR + '4', str(obj.rotation_quaternion.z))
 			transform = transform.replace(REPLACE_INDICATOR + '5', str(obj.rotation_quaternion.w))
+			obj.rotation_mode = previousObjectRotationMode
 			transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
 			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.y))
 			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.z))
