@@ -5,9 +5,6 @@ UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
 def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
 
-def ExcludeFile (relativePath):
-	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '\" />\n')
-
 if not os.path.isdir('CSharpToPython'):
 	os.system('git clone https://github.com/OpenSourceJesus/CSharpToPython --depth=1')
 if not os.path.isdir('py2many'):
@@ -44,5 +41,4 @@ ExcludeFolder ('obj')
 ExcludeFolder ('CSharpToPython/src/CSharpToPython.Tests')
 ExcludeFolder ('stride')
 ExcludeFolder ('BareStrideProject')
-ExcludeFile ('GetUnityProjectInfo.cs')
 open(filePath, 'w').writelines(fileLines)

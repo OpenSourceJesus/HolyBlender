@@ -178,6 +178,39 @@ MeshRenderer:
   m_AdditionalVertexStreams: {fileID: 0}'''
 COMPONENT_TEMPLATE = '  - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
+GET_UNITY_PROJECT_INFO_SCRIPT = '''using System;
+using System.IO;
+using UnityEngine;
+using UnityEditor;
+using Object = UnityEngine.Object;
+
+public class GetUnityProjectInfo : MonoBehaviour
+{
+	public static void Do ()
+	{
+		string[] args = Environment.GetCommandLineArgs();
+		string outputText = "";
+		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".fbx");
+		foreach (string filePath in filePaths)
+		{
+			int indexOfAssets = filePath.IndexOf("Assets");
+			string relativeFilePath = filePath.Substring(indexOfAssets);
+			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
+			foreach (Object obj in objects)
+			{
+				if (obj.GetType() == typeof(Mesh))
+				{
+					string guid;
+					long fileId;
+					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
+						outputText += '-' + filePath + ' ' + fileId + ' ' + guid + ',';
+				}
+			}
+		}
+		UnityEngine.Debug.Log(outputText);
+		File.WriteAllText("/tmp/Unity2Many Data (BlenderToUnity)", outputText);
+	}
+}'''
 lastId = 5
 
 class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
@@ -236,11 +269,11 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 				obj.select_set(True)
 				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
 		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
+		open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
 
-		os.system('cp ' + os.path.expanduser('~/Unity2Many/GetUnityProjectInfo.cs') + ' ' + projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
 		os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
 
-		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath, '-quit', '-executeMethod', 'GetUnityProjectInfo.Do', os.path.expanduser(context.scene.world.unity_project_export_path) ]
+		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', os.path.expanduser(context.scene.world.unity_project_export_path) ]
 		
 		subprocess.check_call(command)
 
@@ -314,8 +347,8 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
 				fileId = dataText[indexOfFileId : indexOfEndOfFileId]
-				indexOfNewLine = dataText.find('\n', indexOfEndOfFileId + 1)
-				meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfNewLine]
+				indexOfComma = dataText.find(',', indexOfEndOfFileId + 1)
+				meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfComma]
 				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
 				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
 				gameObjectsAndComponentsText += meshFilter + '\n'
@@ -337,7 +370,7 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 					script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
 					script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 					# script = script.replace(REPLACE_INDICATOR + '2', str(lastId - 1))
-					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs.meta', 'rb').read().decode('utf-8')
+					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
 					guidIndicator = 'guid: '
 					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
 					script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
