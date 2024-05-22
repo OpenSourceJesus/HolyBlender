@@ -218,10 +218,11 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 		global lastId
 		projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
 		for textBlock in bpy.data.texts:
-			text = textBlock.as_string()
-			fileExportPath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs'
-			MakeFolderForFile (fileExportPath)
-			open(fileExportPath, 'wb').write(text.encode('utf-8'))
+			if textBlock.name.endswith('.cs'):
+				text = textBlock.as_string()
+				fileExportPath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name
+				MakeFolderForFile (fileExportPath)
+				open(fileExportPath, 'wb').write(text.encode('utf-8'))
 		meshesDict = {}
 		for mesh in bpy.data.meshes:
 			meshesDict[mesh.name] = []
@@ -327,7 +328,7 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 				componentIds.append(lastId)
 				lastId += 1
 			for textBlock in bpy.data.texts:
-				if textBlock.name == obj.name:
+				if textBlock.name.replace('.cs', '') == obj.name:
 					# scriptMeta = SCRIPT_META_TEMPLATE
 					# scriptMeta += str(lastId)
 					# lastId += 1
@@ -362,10 +363,41 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 		
 		subprocess.check_call(command)
 
+class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
+	bl_idname = 'unreal.translate'
+	bl_label = 'Translate To Unreal'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		for textBlock in bpy.data.texts:
+			if textBlock.name.endswith('.cs'):
+				filePath = '/tmp/' + textBlock.name
+				open(filePath, 'wb').write(context.text.as_string().encode('utf-8'))
+				ConvertCSFileToCPP (filePath)
+
+class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
+	bl_idname = 'bevy.translate'
+	bl_label = 'Translate To Bevy'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		for textBlock in bpy.data.texts:
+			if textBlock.name.endswith('.cs'):
+				filePath = '/tmp/' + textBlock.name
+				open(filePath, 'wb').write(context.text.as_string().encode('utf-8'))
+
 classes = [
 	TEXT_EDITOR_OT_UnrealExportButton,
 	TEXT_EDITOR_OT_BevyExportButton,
-	TEXT_EDITOR_OT_UnityExportButton
+	TEXT_EDITOR_OT_UnityExportButton,
+	TEXT_EDITOR_OT_UnrealTranslateButton,
+	TEXT_EDITOR_OT_BevyTranslateButton,
 ]
 
 def MakeFolderForFile (path : str):
@@ -377,6 +409,118 @@ def MakeFolderForFile (path : str):
 		if indexOfSlash == -1:
 			break
 		_path = path[: indexOfSlash]
+
+def ConvertPythonFileToCpp (filePath):
+	# global mainClassNames
+	# global filePathMembersNames
+	lines = []
+	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
+		if line.startswith('import ') or line.startswith('from '):
+			print('Skipping line:', line)
+			continue
+		lines.append(line)
+	text = '\n'.join(lines)
+	open(filePath, 'wb').write(text.encode('utf-8'))
+	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
+	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
+	# for arg in sys.argv:
+	# 	command.append(arg)
+	command.append(UNITY_PROJECT_PATH)
+	print(command)
+	
+	subprocess.check_call(command)
+
+	outputFileText = open(outputFilePath.replace('.py', '.cpp'), 'rb').read().decode('utf-8')
+	for mainClassName in mainClassNames:
+		indexOfMainClassName = 0
+		while indexOfMainClassName != -1:
+			indexOfMainClassName = outputFileText.find(mainClassName, indexOfMainClassName + len(mainClassName))
+			if indexOfMainClassName != -1 and outputFileText[indexOfMainClassName - 1 : indexOfMainClassName] != 'A' and not IsInString_CS(outputFileText, indexOfMainClassName):
+				outputFileText = outputFileText[: indexOfMainClassName] + 'A' + outputFileText[indexOfMainClassName :]
+		equalsNullIndicator = '= nullptr'
+		indexOfEqualsNull = 0
+		while indexOfEqualsNull != -1:
+			indexOfEqualsNull = outputFileText.find(equalsNullIndicator, indexOfEqualsNull + len(equalsNullIndicator))
+			if indexOfEqualsNull != -1:
+				indexOfSpace = outputFileText.rfind(' ', 0, indexOfEqualsNull - 1)
+				indexOfMainClassName = outputFileText.rfind(mainClassName, 0, indexOfSpace)
+				if indexOfMainClassName == indexOfSpace - len(mainClassName):
+					outputFileText = Remove(outputFileText, indexOfEqualsNull, len(equalsNullIndicator))
+	pythonFileText = open(outputFilePath, 'rb').read().decode('utf-8')
+	pythonFileLines = pythonFileText.split('\n')
+	headerFileText = open(outputFilePath.replace('.py', '.h'), 'rb').read().decode('utf-8')
+	for i in range(len(pythonFileLines) - 1, -1, -1):
+		line = pythonFileLines[i]
+		if not line.startswith(' '):
+			line = line.replace(' ', '')
+			indexOfColon = line.find(':')
+			variableName = line[: indexOfColon]
+			mainClassName = os.path.split(outputFilePath)[-1].split('.')[0]
+			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
+			headerFileText = headerFileText.replace(variableName, variableName + '_' + mainClassName)
+			indexOfVariableName = headerFileText.find(variableName)
+			indexOfNewLine = headerFileText.rfind('\n', 0, indexOfVariableName)
+			headerFileText = headerFileText[: indexOfNewLine] + '\n\tUPROPERTY(EditAnywhere)' + headerFileText[indexOfNewLine :]
+			indexOfEquals = line.find('=', indexOfColon + 1)
+			variableName += '_' + mainClassName
+			mainConstructor = '::A' + mainClassName + '() {'
+			indexOfMainConstructor = outputFileText.find(mainConstructor)
+			if indexOfEquals != -1:
+				value = line[indexOfEquals + 1 :]
+				outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = ' + value + ';\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
+			else:
+				for memberName in filePathMembersNamesDict:
+					referenceString = filePathMembersNamesDict[variableName]
+					if referenceString.endswith('.prefab"'):
+						referenceString = referenceString.replace('.prefab"', '')
+						referenceString = referenceString[referenceString.rfind('/') + 1 :] + '_Script'
+						referenceString = '/Game/' + referenceString + '/' + referenceString + '.' + referenceString
+						outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = "' + referenceString + '";\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
+		else:
+			break
+	outputFileLines = outputFileText.split('\n')
+	for i in range(len(outputFileLines)):
+		line = outputFileLines[i]
+		line = line.replace(' ', '')
+		indexOfX = 0
+		while indexOfX != -1:
+			indexOfX = line.find('.X', indexOfX + 1)
+			if indexOfX != -1:
+				indexOfEquals = line.find('=', indexOfX)
+				if indexOfEquals != -1 and indexOfEquals <= indexOfX + 3:
+					outputFileLines[i] = line[: indexOfEquals + 1] + '-' + line[indexOfEquals + 1 :]
+	outputFileText = '\n'.join(outputFileLines)
+	open(outputFilePath.replace('.py', '.cpp'), 'wb').write(outputFileText.encode('utf-8'))
+	open(outputFilePath.replace('.py', '.h'), 'wb').write(headerFileText.encode('utf-8'))
+	command = [ 'cat', outputFilePath.replace('.py', '.cpp') ]
+	print(command)
+
+	subprocess.check_call(command)
+
+def ConvertCSFileToCPP (filePath):
+	assert os.path.isfile(filePath)
+	command = [
+		'dotnet',
+		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
+		'includeFile=' + filePath,
+		'unreal=true',
+		'output=/tmp',
+	]
+	# for arg in sys.argv:
+	# 	command.append(arg)
+	command.append(os.path.expanduser(bpy.types.World.unity_project_import_path))
+	print(command)
+
+	subprocess.check_call(command)
+
+	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
+	outputFilePath = outputFilePath.replace('.cs', '.py')
+	print(outputFilePath)
+	assert os.path.isfile(outputFilePath)
+
+	os.system('cat ' + outputFilePath)
+
+	ConvertPythonFileToCpp (outputFilePath)
 
 def DrawUnityImportField (self, context):
 	self.layout.prop(context.world, 'unity_project_import_path')
@@ -401,6 +545,12 @@ def DrawBevyExportButton (self, context):
 
 def DrawUnityExportButton (self, context):
 	self.layout.operator('unity.export', icon='CONSOLE')
+
+def DrawUnrealTranslateButton (self, context):
+	self.layout.operator('unreal.translate', icon='CONSOLE')
+
+def DrawBevyTranslateButton (self, context):
+	self.layout.operator('bevy.translate', icon='CONSOLE')
 
 def register ():
 	for cls in classes:
@@ -430,24 +580,28 @@ def register ():
 		description = 'My description',
 		default = ''
 	)
-	bpy.types.TEXT_HT_footer.append(DrawUnrealExportButton)
-	bpy.types.TEXT_HT_footer.append(DrawBevyExportButton)
-	bpy.types.TEXT_HT_footer.append(DrawUnityExportButton)
+	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
+	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityImportField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportPathField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportField)
+	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportButton)
+	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
+	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
 
 def unregister ():
-	bpy.types.TEXT_HT_footer.remove(DrawUnrealExportButton)
-	bpy.types.TEXT_HT_footer.remove(DrawBevyExportButton)
-	bpy.types.TEXT_HT_footer.remove(DrawUnityExportButton)
+	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
+	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityImportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportPathField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportField)
+	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportButton)
+	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportButton)
+	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportButton)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 

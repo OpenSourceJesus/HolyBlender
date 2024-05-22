@@ -1,7 +1,12 @@
 import os
 
+UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
+
 def ExcludeFolder (relativePath):
-	fileLines.insert(12, '\t\t<Compile Remove=\"' + os.getcwd() + '/' + relativePath + '/**\" />\n')
+	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
+
+def ExcludeFile (relativePath):
+	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '\" />\n')
 
 if not os.path.isdir('CSharpToPython'):
 	os.system('git clone https://github.com/OpenSourceJesus/CSharpToPython --depth=1')
@@ -23,6 +28,7 @@ rm Program.cs
 dotnet add package Microsoft.CodeAnalysis
 dotnet add package Microsoft.CodeAnalysis.CSharp
 dotnet add package IronPython
+dotnet add package System.Resources.Extensions
 mkdir -p assets''')
 if not os.path.isdir('src'):
 	os.system('''cargo init
@@ -31,11 +37,12 @@ if not os.path.isdir('src'):
 		cargo add bevy_gltf_components
 		cargo add bevy_registry_export
 		cargo add bevy_gltf_blueprints''')
-filePath = os.getcwd() + '/Unity2Many.csproj'
+filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
 fileLines = open(filePath, "r").readlines()
 ExcludeFolder ('BareUEProject')
 ExcludeFolder ('obj')
 ExcludeFolder ('CSharpToPython/src/CSharpToPython.Tests')
 ExcludeFolder ('stride')
 ExcludeFolder ('BareStrideProject')
+ExcludeFile ('GetUnityProjectInfo.cs')
 open(filePath, 'w').writelines(fileLines)

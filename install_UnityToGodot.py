@@ -1,13 +1,17 @@
 import os
 
-def ExcludeFolder (relativePath):
-	contents.insert(12, "\t\t<Compile Remove=\"" + os.getcwd() + "/" + relativePath + "/**\" />\n")
+UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
 
-filePath = os.getcwd() + "/Unity2Many.csproj"
-with open(filePath, "r") as file:
-	contents = file.readlines()
+def ExcludeFolder (relativePath):
+	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
+
+def ExcludeFile (relativePath):
+	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '\" />\n')
+
+filePath = UNITY_2_MANY_PATH + "/Unity2Many.csproj"
+fileLines = open(filePath, "r").readlines()
 ExcludeFolder ("BareUEProject")
 ExcludeFolder ("obj")
 ExcludeFolder ("CSharpToPython/src/CSharpToPython.Tests")
-with open(filePath, "w") as file:
-	file.writelines(contents)
+ExcludeFile ('GetUnityProjectInfo.cs')
+open(actorClassPath, 'wb').writelines(fileLines)
