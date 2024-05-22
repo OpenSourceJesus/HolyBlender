@@ -1,3 +1,6 @@
+using System.IO;
+using System.Collections.Generic;
+
 public static class SystemExtensions
 {
 	public static string[] GetAllFilePathsInFolder (string folderPath, string fileExtension)

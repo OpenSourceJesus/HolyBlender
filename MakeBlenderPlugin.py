@@ -15,8 +15,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: ꗈ1}
+ꗈ2
   m_Layer: 0
-  m_Name: ꗈ2
+  m_Name: ꗈ3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -130,7 +131,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: ꗈ1}
-  m_Mesh: {fileID: 2779447591269876719, guid: ꗈ2, type: 3}'''
+  m_Mesh: {fileID: ꗈ2, guid: ꗈ3, type: 3}'''
 MESH_RENDERER_TEMPLATE = '''--- !u!23 &ꗈ0
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -175,6 +176,7 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}'''
+COMPONENT_TEMPLATE = '  - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
 lastId = 5
 
@@ -232,7 +234,10 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 				bpy.context.view_layer.objects.active = obj
 				obj.select_set(True)
 				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
-		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath, '-quit' ]
+		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
+		os.system('cp ' + os.path.expanduser('~/Unity2Many/GetUnityProjectInfo.cs') + ' ' + projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
+		os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
+		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath, '-quit', '-executeMethod', 'GetUnityProjectInfo.Do', os.path.expanduser(context.scene.world.unity_project_export_path) ]
 		
 		subprocess.check_call(command)
 
@@ -246,26 +251,27 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 		gameObjectsAndComponentsText = ''
 		transformIds = []
 		for obj in bpy.data.objects:
+			componentIds = []
 			gameObject = GAME_OBJECT_TEMPLATE
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '2', obj.name)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', obj.name)
 			gameObjectsAndComponentsText += gameObject + '\n'
 			gameObjectId = lastId
 			lastId += 1
 			transform = TRANSFORM_TEMPLATE
 			transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
 			transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			transform = transform.replace(REPLACE_INDICATOR + '2', str(obj.rotation_quaternion[0]))
-			transform = transform.replace(REPLACE_INDICATOR + '3', str(obj.rotation_quaternion[1]))
-			transform = transform.replace(REPLACE_INDICATOR + '4', str(obj.rotation_quaternion[2]))
-			transform = transform.replace(REPLACE_INDICATOR + '5', str(obj.rotation_quaternion[3]))
-			transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location[0]))
-			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location[1]))
-			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location[2]))
-			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale[0]))
-			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale[1]))
-			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale[2]))
+			transform = transform.replace(REPLACE_INDICATOR + '2', str(obj.rotation_quaternion.x))
+			transform = transform.replace(REPLACE_INDICATOR + '3', str(obj.rotation_quaternion.y))
+			transform = transform.replace(REPLACE_INDICATOR + '4', str(obj.rotation_quaternion.z))
+			transform = transform.replace(REPLACE_INDICATOR + '5', str(obj.rotation_quaternion.w))
+			transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
+			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.y))
+			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.z))
+			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
+			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.y))
+			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.z))
 			gameObjectsAndComponentsText += transform + '\n'
 			transformIds.append(lastId)
 			lastId += 1
@@ -290,27 +296,30 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 				light = light.replace(REPLACE_INDICATOR + '8', str(lightObject.spot_size))
 				light = light.replace(REPLACE_INDICATOR + '9', str(lightObject.spot_size * (1.0 - lightObject.spot_blend)))
 				gameObjectsAndComponentsText += light + '\n'
+				componentIds.append(lastId)
 				lastId += 1
 			elif obj.type == 'MESH':
 				meshFilter = MESH_FILTER_TEMPLATE
 				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
 				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				meshMetaText = ''
-				for key in meshesDict:
-					objectNames = meshesDict[key]
-					if obj.name in objectNames:
-						meshMetaText = open(projectExportPath + '/Assets/Art/Models/' + key + '.fbx.meta', 'rb').read().decode('utf-8')
-						break
-				guidIndicator = 'guid: '
-				indexAfterGuidIndicator = meshMetaText.find(guidIndicator) + len(guidIndicator)
-				meshGuid = meshMetaText[indexAfterGuidIndicator : meshMetaText.find('\n', indexAfterGuidIndicator)]
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', meshGuid)
+				dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+				fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+				indexOfFile = dataText.find(fileIdIndicator)
+				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
+				fileId = dataText[indexOfFileId : indexOfEndOfFileId]
+				indexOfNewLine = dataText.find('\n', indexOfEndOfFileId + 1)
+				meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfNewLine]
+				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
+				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
 				gameObjectsAndComponentsText += meshFilter + '\n'
+				componentIds.append(lastId)
 				lastId += 1
 				meshRenderer = MESH_RENDERER_TEMPLATE
 				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
 				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 				gameObjectsAndComponentsText += meshRenderer + '\n'
+				componentIds.append(lastId)
 				lastId += 1
 			for textBlock in bpy.data.texts:
 				if textBlock.name == obj.name:
@@ -327,8 +336,15 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
 					script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 					gameObjectsAndComponentsText += script + '\n'
+					componentIds.append(lastId)
 					lastId += 1
 					break
+			indexOfComponentsList = gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
+			for componentId in componentIds:
+				component = COMPONENT_TEMPLATE
+				component = component.replace(REPLACE_INDICATOR, str(componentId))
+				gameObjectsAndComponentsText = gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + gameObjectsAndComponentsText[indexOfComponentsList :]
+				gameObjectsAndComponentsText = gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
 		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', gameObjectsAndComponentsText)
 		sceneRootsText = ''
 		for transformId in transformIds:
