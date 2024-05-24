@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use bevy_gltf_components::ComponentsFromGltfPlugin;
-use bevy_registry_export::*;
 use bevy::render::camera::RenderTarget;
 use bevy::window::WindowRef;
 use bevy::window::PrimaryWindow;
@@ -11,7 +10,6 @@ fn main() {
 		ꗈ0
 		.add_plugins((
 			DefaultPlugins,
-			ExportRegistryPlugin::default(),
 			ComponentsFromGltfPlugin::default()
 		))
 		.init_state::<MyStates>()

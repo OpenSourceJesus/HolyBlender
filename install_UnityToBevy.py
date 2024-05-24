@@ -37,7 +37,6 @@ if not os.path.isdir('src'):
 		cargo add bevy
 		cargo add bevy_asset_loader
 		cargo add bevy_gltf_components
-		cargo add bevy_registry_export
 		cargo add bevy_gltf_blueprints''')
 filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
 fileLines = open(filePath, "r").readlines()
