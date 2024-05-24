@@ -236,7 +236,7 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library', 'webgl' ]
+		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library' ]#, 'webgl' ]
 
 		subprocess.check_call(command)
 

@@ -41,14 +41,14 @@ NEAR_CLIP_PLANE_INDICATOR = '  near clip plane: '
 FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 CLASS_MEMBER_INDICATOR = '#💠'
 GAME_OBJECT_FIND_INDICATOR = 'GameObject.Find('
-COMPONENT_TEMPLATE = '''"TestBevyProject::ꗈ": {
+COMPONENT_TEMPLATE = '''"Unity2Many::ꗈ": {
 	"additionalProperties": false,
 	"isComponent": true,
 	"isResource": false,
 	"properties": {},
 	"required": [],
 	"short_name": "ꗈ",
-	"title": "TestBevyProject::ꗈ",
+	"title": "Unity2Many::ꗈ",
 	"type": "object",
 	"typeInfo": "Struct"
 }'''
@@ -62,20 +62,20 @@ COMPONENT_TEMPLATE = '''"TestBevyProject::ꗈ": {
 # 	projection: PerspectiveProjection { near: ꗈ7, far: ꗈ8, fov: ꗈ9.to_radians(), ..default() },
 # 	..default()
 # });'''
-MESH_TEMPLATE = '''commands.spawn((SceneBundle {
-	transform: Transform::from_xyz(ꗈ0, ꗈ1, ꗈ2).with_rotation(Quat::from_xyzw(ꗈ3, ꗈ4, ꗈ5, ꗈ6)),
-	scene: assetServer.load("ꗈ7"),
-		..default()
-	},
-	Name::new("ꗈ8"),
-));'''
+# MESH_TEMPLATE = '''commands.spawn((SceneBundle {
+# 	transform: Transform::from_xyz(ꗈ0, ꗈ1, ꗈ2).with_rotation(Quat::from_xyzw(ꗈ3, ꗈ4, ꗈ5, ꗈ6)),
+# 	scene: assetServer.load("ꗈ7"),
+# 		..default()
+# 	},
+# 	Name::new("ꗈ8"),
+# ));'''
 SYSTEM_ARGUMENTS = '''mut commands: Commands,
 assetServer: Res<AssetServer>,
 mut meshes : ResMut<Assets<Mesh>>,
 keys: Res<ButtonInput<KeyCode>>,
 mouseButtons: Res<ButtonInput<MouseButton>>,
 mut query: Query<&mut Transform, With<ꗈ>>,
-mut nameQuery: Query<&mut Name>,
+// mut nameQuery: Query<&mut Name>,
 time: Res<Time>,
 mut cursorEvent: EventReader<CursorMoved>,
 mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>,'''
@@ -244,7 +244,7 @@ def MakeLight (localPosition : list, localRotation : list, localSize : list, obj
 	elif lightType == 2:
 		lightType = 'POINT'
 	lightData = bpy.data.lights.new(name='Light data', type=lightType)
-	lightObject = bpy.data.objects.new('Light', lightData)
+	lightObject = bpy.data.objects.new(objectName, lightData)
 	bpy.context.collection.objects.link(lightObject)
 	bpy.context.view_layer.objects.active = lightObject
 	lightObject.location = Vector((localPosition[0], localPosition[1], -localPosition[2]))
@@ -275,6 +275,7 @@ def MakeSprite (localPosition : list, localRotation : list, localSize : list, ob
 		image = Image.open(textureAssetPath)
 		multiplySize = max(image.width, image.height) / pixelsPerUnit
 		importedObject.scale = Vector((localSize[0], localSize[1], -localSize[2])) * multiplySize
+		importedObject.name = objectName
 	return importedObject
 
 def MakeScript (localPosition : list, localRotation : list, localSize : list, objectName : str, scriptPath : str):
@@ -285,7 +286,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	global importStatementsText
 	global outputFileTextReplaceClauses
 	ConvertCSFileToRust (scriptPath)
-	MakeComponent (objectName, 'TestBevyProject::' + mainClassName)
+	MakeComponent (objectName, 'Unity2Many::' + mainClassName)
 	outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
 	if 'fn Update' in outputFileText:
 		# importStatementsText += 'use ' + mainClassName + '::*;\n'
@@ -478,7 +479,6 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		if indexOfStaticVariableIndicator != -1:
 			indexOfColon = outputFileText.find(':', indexOfStaticVariableIndicator + len(staticVariableIndicator))
 			variableName = outputFileText[indexOfStaticVariableIndicator + len(staticVariableIndicator) : indexOfColon]
-			print('YAY' + variableName)
 			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
 	addToOutputFileText += '\n\n' + outputFileText
 
@@ -487,11 +487,14 @@ def MakeComponent (objectName : str, componentType : str):
 	definition = typeInfos[componentType]
 	componentType = definition['title']
 	isComponent = definition['isComponent'] if 'isComponent' in definition else False
-	if isComponent:
+	if isComponent and objectName != '':
 		try:
+			obj = bpy.data.objects[objectName]
+			bpy.ops.object.select_all(action='DESELECT')
+			bpy.context.view_layer.objects.active = obj
+			obj.select_set(True)
 			addComponentOperator(component_type=componentType)
-			if objectName != '':
-				bpy.data.objects[objectName][mainClassName] = ''
+			obj[mainClassName] = ''
 			# if 'SomeProp' in bpy.context.object:
 			# 	print('Property found')
 			# value = bpy.data.scenes['Scene'].get('test_prop', 'fallback value')
@@ -500,9 +503,6 @@ def MakeComponent (objectName : str, componentType : str):
 			# del group['GameSettings']
 		finally:
 			pass
-
-# for typeInfo in typeInfos:
-# 	MakeComponent (typeInfo)
 
 def DeleteScene (scene = None):
 	if scene is None:
@@ -536,6 +536,7 @@ def SetVariableTypeAndRemovePrimitiveCastsFromOutputFile (variableType : str):
 				outputFileText = outputFileText.replace('(' + casted + ' as f32)', casted)
 
 def MakeSceneOrPrefab (sceneFilePath : str):
+	global mainClassName
 	# global membersDict
 	DeleteScene ()
 	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
@@ -565,18 +566,19 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 			if line.startswith('GameObject') or line.startswith('SceneRoots'):
 				components = []
 				if 'Camera' in currentTypes:
-					components.append(MakeCamera(localPosition, localRotation, localSize, '', horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
+					components.append(MakeCamera(localPosition, localRotation, localSize, objectName, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
 				if 'MeshRenderer' in currentTypes:
-					components.append(MakeMesh(localPosition, localRotation, localSize, '', meshAssetPath))
+					components.append(MakeMesh(localPosition, localRotation, localSize, objectName, meshAssetPath))
 				if 'Light' in currentTypes:
-					components.append(MakeLight(localPosition, localRotation, localSize, '', lightType, lightIntensity))
+					components.append(MakeLight(localPosition, localRotation, localSize, objectName, lightType, lightIntensity))
 				if 'SpriteRenderer' in currentTypes:
-					components.append(MakeSprite(localPosition, localRotation, localSize, '', textureAssetPath))
-				# if 'MonoBehaviour' in currentTypes:
-				# 	for scriptPath in currentScriptsPaths:
-				# 		if not scriptPath.endswith('/UniversalAdditionalCameraData.cs') and not scriptPath.endswith('/UniversalAdditionalLightData.cs'):
-				# 			scriptComponent = MakeScript([], [], [1, 1, 1], objectName, scriptPath)
-
+					components.append(MakeSprite(localPosition, localRotation, localSize, objectName, textureAssetPath))
+				if 'MonoBehaviour' in currentTypes:
+					for scriptPath in currentScriptsPaths:
+						if not scriptPath.endswith('/UniversalAdditionalCameraData.cs') and not scriptPath.endswith('/UniversalAdditionalLightData.cs'):
+							mainClassName = scriptPath[scriptPath.rfind('/') + 1 : scriptPath.rfind('.')]
+							MakeComponent (objectName, 'Unity2Many::' + mainClassName)
+							# scriptComponent = MakeScript([], [], [1, 1, 1], objectName, scriptPath)
 				# 			for component in components:
 				# 				component.attach_to(scriptComponent.root_component)
 				# 			components = [ scriptComponent ]
@@ -599,12 +601,7 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 				if line.startswith(MESH_INDICATOR):
 					indexOfGuid = line.find(GUID_INDICATOR)
 					meshAssetPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
-			elif currentType == 'GameObject':
-				if line.startswith(ACTIVE_INDICATOR):
-					pass
-				elif line.startswith(NAME_INDICATOR):
-					objectName = line[len(NAME_INDICATOR) :]
-			elif currentType == 'Transform':
+			if currentType == 'Transform':
 				if line.startswith(PARENT_INDICATOR):
 					parent = line[len(PARENT_INDICATOR) : -1]
 				elif line.startswith(LOCAL_POSITION_INDICATOR):
@@ -671,8 +668,13 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 					lightType = int(line[len(LIGHT_TYPE_INDICATOR) :])
 				elif line.startswith(LIGHT_INTENSITY_INDICATOR):
 					lightIntensity = int(line[len(LIGHT_INTENSITY_INDICATOR) :])
+			# elif currentType == 'GameObject':
+			elif line.startswith(ACTIVE_INDICATOR):
+				pass
+			elif line.startswith(NAME_INDICATOR):
+				objectName = line[len(NAME_INDICATOR) :]
 			# elif currentType == 'Camera':
-			if line.startswith(FOV_AXIS_INDICATOR):
+			elif line.startswith(FOV_AXIS_INDICATOR):
 				horizontalFov = line[len(FOV_AXIS_INDICATOR) :] == '1'
 			elif line.startswith(FOV_INDICATOR):
 				fov = float(line[len(FOV_INDICATOR) :])
@@ -685,7 +687,7 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 			elif line.startswith(FAR_CLIP_PLANE_INDICATOR):
 				farClipPlane = float(line[len(FAR_CLIP_PLANE_INDICATOR) :])
 			# elif currentType == 'SpriteRenderer':
-			if line.startswith(SPRITE_INDICATOR):
+			elif line.startswith(SPRITE_INDICATOR):
 				indexOfGuid = line.find(GUID_INDICATOR)
 				textureAssetPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
 
@@ -726,11 +728,10 @@ for prefabFilePath in prefabFilePaths:
 			break
 	if not isExcluded:
 		sceneName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
-		sceneName += '_Prefab'
-		sceneName = sceneName.replace('.unity', '.glb')
+		sceneName = sceneName.replace('.prefab', '_Prefab.glb')
 		MakeSceneOrPrefab (prefabFilePath)
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
-		bpy.ops.scene.new(type='NEW')
+		# bpy.ops.scene.new(type='NEW')
 sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
 for sceneFilePath in sceneFilesPaths:
 	isExcluded = False
@@ -743,8 +744,8 @@ for sceneFilePath in sceneFilesPaths:
 		sceneName = sceneName.replace('.unity', '.glb')
 		MakeSceneOrPrefab (sceneFilePath)
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
-		bpy.ops.scene.new(type='NEW')
-		outputFileTextReplaceClauses[2] += sceneName
+		# bpy.ops.scene.new(type='NEW')
+		outputFileTextReplaceClauses[2] = sceneName
 outputFileText = open(TEMPLATE_APP_PATH, 'rb').read().decode('utf-8')
 outputFileText = importStatementsText + outputFileText
 outputFileText = outputFileText.replace('ꗈ0', outputFileTextReplaceClauses[0])
