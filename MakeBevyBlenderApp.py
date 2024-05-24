@@ -759,5 +759,6 @@ if WEBGL_INDICATOR in sys.argv:
 	command.append('wasm32-unknown-unknown')
 print(command)
 
-# os.environ['WGPU_BACKEND'] = 'gl'
+os.environ['WGPU_BACKEND'] = 'gl'
+os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
 subprocess.check_call(command)

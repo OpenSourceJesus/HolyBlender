@@ -22,6 +22,8 @@ rustup default stable
 rustup target install wasm32-unknown-unknown
 cargo install wasm-server-runner
 rustup target add wasm32-unknown-unknown
+cargo add serde --features derive
+cargo add wasm-bindgen --features serde-serialize
 sudo apt install dotnet-sdk-8.0
 dotnet new console --force
 rm Program.cs
