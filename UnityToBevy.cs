@@ -1,7 +1,7 @@
+using System;
 using CSharpToPython;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using SourceCodeKind = Microsoft.Scripting.SourceCodeKind;
 
 public class UnityToBevy : Translator 
 {
@@ -9,7 +9,6 @@ public class UnityToBevy : Translator
 	// public new static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>() { { "IndexOf", "Find"} };
 	public static string pythonFileContents;
 	public const string BEVY_MODE_INDICATOR = "bevy=";
-	// static string BARE_BEVY_PROJECT_PATH = "/";
 	public static bool bevyMode;
 	public static string outputFilePath;
 	static string TEMPLATES_PATH = "/Templates";
@@ -37,8 +36,7 @@ public class UnityToBevy : Translator
 		Translator.typeConversionsDict = typeConversionsDict;
 		Translator.memberConversionsDict = memberConversionsDict;
 		Translator.removeTexts = removeTexts;
-		// BARE_BEVY_PROJECT_PATH = Environment.CurrentDirectory + BARE_BEVY_PROJECT_PATH;
-		TEMPLATES_PATH = Environment.CurrentDirectory + TEMPLATES_PATH;
+		TEMPLATES_PATH = UNITY_2_MANY_PATH + TEMPLATES_PATH;
 		base.Init (args);
 	}
 

@@ -55,7 +55,7 @@ public class UnityToUnreal : Translator
 		Translator.typeConversionsDict = typeConversionsDict;
 		Translator.memberConversionsDict = memberConversionsDict;
 		Translator.removeTexts = removeTexts;
-		// BARE_UNREAL_PROJECT_PATH = Environment.CurrentDirectory + BARE_UNREAL_PROJECT_PATH;
+		// BARE_UNREAL_PROJECT_PATH = UNITY_2_MANY_PATH + BARE_UNREAL_PROJECT_PATH;
 		base.Init (args);
 		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".cs");
 		foreach (string filePath in filePaths)

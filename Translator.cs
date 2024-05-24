@@ -34,6 +34,7 @@ public class Translator
 	public const string DEBUG_INDICATOR = "Debug: ";
 	public static int lineAtLastRunEnd;
 	public static List<string> excludeItemsPaths = new List<string>();
+	public static string UNITY_2_MANY_PATH = Environment.GetEnvironmentVariable("USERPROFILE");
 	static string inputFilePath;
 
 	public virtual void Init (string[] args)
@@ -55,7 +56,7 @@ public class Translator
 
 	public virtual void Do ()
 	{
-		string saveFilePath = Environment.CurrentDirectory + '/' + SAVE_FILE_NAME;
+		string saveFilePath = UNITY_2_MANY_PATH + '/' + SAVE_FILE_NAME;
 		if (File.Exists(saveFilePath))
 		{
 			string[] savedLines = File.ReadAllLines(saveFilePath);
@@ -309,9 +310,9 @@ public class Translator
 	{
 		string output = path.Replace('\\', '/');
 		if (output == ".")
-			output = Environment.CurrentDirectory;
+			output = UNITY_2_MANY_PATH;
 		else if (output.StartsWith("./"))
-			output = Environment.CurrentDirectory + '/' + output.Substring(2);
+			output = UNITY_2_MANY_PATH + '/' + output.Substring(2);
 		return output;
 	}
 }

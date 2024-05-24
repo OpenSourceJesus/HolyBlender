@@ -19,6 +19,9 @@ sudo apt -y install clang-format
 sudo snap install blender --classic
 sudo snap install rustup --classic
 rustup default stable
+rustup target install wasm32-unknown-unknown
+cargo install wasm-server-runner
+rustup target add wasm32-unknown-unknown
 sudo apt install dotnet-sdk-8.0
 dotnet new console --force
 rm Program.cs

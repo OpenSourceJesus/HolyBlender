@@ -24,13 +24,15 @@ fn main() {
 		.add_systems(Update, SetCursorPoint)
 		.add_event::<ScreenToWorldPointEvent>()
 		.add_systems(Update, ScreenToWorldPoint)
+		// .add_event::<SpawnedEntityEvent>()
+		// .add_systems(Update, SpawnedEntity)
 		ꗈ1
 		.run();
 }
 
 #[derive(AssetCollection, Resource)]
 struct LevelAssets {
-	#[asset(path = "Game.glb#Scene0")]
+	#[asset(path = "ꗈ2#Scene0")]
 	level: Handle<Scene>,
 }
 
@@ -42,10 +44,11 @@ fn StartLevel (
 	keys: Res<ButtonInput<KeyCode>>,
 	mouseButtons: Res<ButtonInput<MouseButton>>,
     mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>,
+	// mut spawnedEntityEvent: EventWriter<SpawnedEntityEvent>
 ) {
 	unsafe
 	{
-		ꗈ2
+		ꗈ3
 		commands.spawn((
 			SceneBundle {
 				scene: assets.level.clone(),
@@ -64,6 +67,19 @@ enum MyStates {
 	AssetLoading,
 	Next,
 }
+
+// #[derive(Event)]
+// struct SpawnedEntityEvent(Entity, Vec3, Quat);
+
+// fn SpawnEntity (mut commands: Commands, assetServer: Res<AssetServer>, assetPath : &str, position : Vec3, rotation : Quat) -> Entity
+// {
+// 	return commands.spawn((SceneBundle {
+// 		transform: Transform::from_translation(position).with_rotation(rotation),
+// 		scene: assetServer.load(&*assetPath),
+// 			..default()
+// 		},
+// 	)).id();
+// }
 
 static mut cursorPoint : Vec3 = Vec3::ZERO;
 

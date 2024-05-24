@@ -212,6 +212,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 	}
 }'''
 lastId = 5
+operatorContext = None
 
 class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -235,7 +236,7 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library' ]
+		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library' ]#, 'webgl' ]
 
 		subprocess.check_call(command)
 
@@ -405,10 +406,12 @@ class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
+		global operatorContext
+		operatorContext = context
 		for textBlock in bpy.data.texts:
 			if textBlock.name.endswith('.cs'):
 				filePath = '/tmp/' + textBlock.name
-				open(filePath, 'wb').write(context.text.as_string().encode('utf-8'))
+				open(filePath, 'wb').write(textBlock.as_string().encode('utf-8'))
 				ConvertCSFileToCPP (filePath)
 
 class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
@@ -444,8 +447,6 @@ def MakeFolderForFile (path : str):
 		_path = path[: indexOfSlash]
 
 def ConvertPythonFileToCpp (filePath):
-	# global mainClassNames
-	# global filePathMembersNames
 	lines = []
 	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
 		if line.startswith('import ') or line.startswith('from '):
@@ -541,7 +542,7 @@ def ConvertCSFileToCPP (filePath):
 	]
 	# for arg in sys.argv:
 	# 	command.append(arg)
-	command.append(os.path.expanduser(bpy.types.World.unity_project_import_path))
+	command.append(os.path.expanduser(operatorContext.scene.world.unity_project_import_path))
 	print(command)
 
 	subprocess.check_call(command)
