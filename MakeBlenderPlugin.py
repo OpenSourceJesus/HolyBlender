@@ -540,15 +540,12 @@ def ConvertPythonFileToCpp (filePath):
 
 	subprocess.check_call(command)
 	
-	textBlocksNames = []
 	for textBlock in bpy.data.texts:
-		textBlocksNames.append(textBlock.name)
-		if textBlock.name == cppFilePath[cppFilePath.rfind('/') + 1 :]:
+		if textBlock.name == cppFilePath[cppFilePath.rfind('/') + 1 :].replace('.cpp', '.cs'):
+			textBlock.name = textBlock.name.replace('.cs', '.cpp+.h')
 			textBlock.clear()
-			textBlock.write(outputFileText.encode('utf-8'))
-	if cppFilePath in textBlocksNames:
-		textBlock = bpy.data.texts.new(cppFilePath[cppFilePath.rfind('/') + 1 :])
-		textBlock.write(outputFileText.encode('utf-8'))
+			textBlock.write(outputFileText)
+			textBlock.write(headerFileText)
 
 def ConvertCSFileToCPP (filePath):
 	global mainClassNames
