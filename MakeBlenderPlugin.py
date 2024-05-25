@@ -1,4 +1,4 @@
-import bpy, subprocess, os, sys
+import bpy, subprocess, os, sys, webbrowser
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from SystemExtensions import *
@@ -244,8 +244,9 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library', 'webgl' ]
-
+		print(command)
 		subprocess.check_call(command)
+		webbrowser.open('http://localhost:1334')
 
 class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 	bl_idname = 'unity.export'
@@ -430,10 +431,13 @@ class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
+		global operatorContext
+		operatorContext = context
 		for textBlock in bpy.data.texts:
 			if textBlock.name.endswith('.cs'):
 				filePath = '/tmp/' + textBlock.name
-				open(filePath, 'wb').write(context.text.as_string().encode('utf-8'))
+				open(filePath, 'wb').write(textBlock.as_string().encode('utf-8'))
+				ConvertCSFileToRust (filePath)
 
 classes = [
 	TEXT_EDITOR_OT_UnrealExportButton,
@@ -453,7 +457,47 @@ def MakeFolderForFile (path : str):
 			break
 		_path = path[: indexOfSlash]
 
-def ConvertPythonFileToCpp (filePath):
+def ConvertCSFileToCPP (filePath):
+	global mainClassNames
+	global UNREAL_CODE_PATH
+	global UNREAL_CODE_PATH_SUFFIX
+	assert os.path.isfile(filePath)
+	UNREAL_CODE_PATH = os.path.expanduser(operatorContext.scene.world.unreal_project_path)
+	UNREAL_CODE_PATH_SUFFIX = '/Source/' + UNREAL_CODE_PATH[UNREAL_CODE_PATH.rfind('/') + 1 :]
+	UNREAL_CODE_PATH += UNREAL_CODE_PATH_SUFFIX
+	codeFilesPaths = GetAllFilePathsOfType(os.path.expanduser(operatorContext.scene.world.unity_project_import_path), '.cs')
+	for codeFilePath in codeFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in codeFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			mainClassNames.append(os.path.split(codeFilePath)[-1].split('.')[0])
+	command = [
+		'dotnet',
+		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
+		'includeFile=' + filePath,
+		'unreal=true',
+		'output=' + UNREAL_CODE_PATH,
+	]
+	# for arg in sys.argv:
+	# 	command.append(arg)
+	command.append(os.path.expanduser(operatorContext.scene.world.unity_project_import_path))
+	print(command)
+
+	subprocess.check_call(command)
+
+	outputFilePath = UNREAL_CODE_PATH + filePath[filePath.rfind('/') :]
+	outputFilePath = outputFilePath.replace('.cs', '.py')
+	print(outputFilePath)
+	assert os.path.isfile(outputFilePath)
+
+	os.system('cat ' + outputFilePath)
+
+	ConvertPythonFileToCPP (outputFilePath)
+
+def ConvertPythonFileToCPP (filePath):
 	global mainClassNames
 	lines = []
 	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
@@ -547,45 +591,68 @@ def ConvertPythonFileToCpp (filePath):
 			textBlock.write(outputFileText)
 			textBlock.write(headerFileText)
 
-def ConvertCSFileToCPP (filePath):
-	global mainClassNames
-	global UNREAL_CODE_PATH
-	global UNREAL_CODE_PATH_SUFFIX
+def ConvertCSFileToRust (filePath):
+	global mainClassName
+	mainClassName = filePath[filePath.rfind('/') + 1 : filePath.rfind('.')]
 	assert os.path.isfile(filePath)
-	UNREAL_CODE_PATH = os.path.expanduser(operatorContext.scene.world.unreal_project_path)
-	UNREAL_CODE_PATH_SUFFIX = '/Source/' + UNREAL_CODE_PATH[UNREAL_CODE_PATH.rfind('/') + 1 :]
-	UNREAL_CODE_PATH += UNREAL_CODE_PATH_SUFFIX
-	codeFilesPaths = GetAllFilePathsOfType(os.path.expanduser(operatorContext.scene.world.unity_project_import_path), '.cs')
-	for codeFilePath in codeFilesPaths:
-		isExcluded = False
-		for excludeItem in excludeItems:
-			if excludeItem in codeFilePath:
-				isExcluded = True
-				break
-		if not isExcluded:
-			mainClassNames.append(os.path.split(codeFilePath)[-1].split('.')[0])
+	MakeFolderForFile ('/tmp/src/main.rs')
+	data = 'output=/tmp\n' + filePath
+	open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 	command = [
 		'dotnet',
-		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
+		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
 		'includeFile=' + filePath,
-		'unreal=true',
-		'output=' + UNREAL_CODE_PATH,
+		'bevy=true',
+		'output=/tmp',
+		'outputFolder=/tmp'
 	]
 	# for arg in sys.argv:
 	# 	command.append(arg)
-	command.append(os.path.expanduser(operatorContext.scene.world.unity_project_import_path))
+	# command.append(UNITY_PROJECT_PATH)
 	print(command)
 
 	subprocess.check_call(command)
 
-	outputFilePath = UNREAL_CODE_PATH + filePath[filePath.rfind('/') :]
-	outputFilePath = outputFilePath.replace('.cs', '.py')
+	outputFilePath = '/tmp/main.py'
 	print(outputFilePath)
 	assert os.path.isfile(outputFilePath)
 
 	os.system('cat ' + outputFilePath)
 
-	ConvertPythonFileToCpp (outputFilePath)
+	ConvertPythonFileToRust (outputFilePath)
+
+def ConvertPythonFileToRust (filePath):
+	global mainClassName
+	lines = []
+	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
+		if line.startswith('import ') or line.startswith('from '):
+			print('Skipping line:', line)
+			continue
+		lines.append(line)
+	data = '\n'.join(lines)
+	open(filePath, 'wb').write(data.encode('utf-8'))
+	command = [ 'python3', 'py2many/py2many.py', '--rust=1', '--force', filePath, '--outdir=/tmp/src' ]
+	# for arg in sys.argv:
+	# 	command.append(arg)
+	command.append(os.path.expanduser(operatorContext.scene.world.unity_project_import_path))
+	print(command)
+	
+	subprocess.check_call(command)
+
+	outputFilePath = '/tmp/src/main.rs'
+	assert os.path.isfile(outputFilePath)
+	print(outputFilePath)
+
+	os.system('cat ' + outputFilePath)
+	
+	data = open('/tmp/Unity2Many Data (UnityToBevy)', 'rb').read().decode('utf-8')
+	filePath = data[data.find('\n') + 1 :]
+	for textBlock in bpy.data.texts:
+		if textBlock.name == filePath[filePath.rfind('/') + 1 :].replace('.rs', '.cs'):
+			textBlock.name = textBlock.name.replace('.cs', '.rs')
+			textBlock.clear()
+			outputFileText = open('/tmp/src/main.rs', 'rb').read().decode('utf-8')
+			textBlock.write(outputFileText)
 
 def DrawUnityImportField (self, context):
 	self.layout.prop(context.world, 'unity_project_import_path')
