@@ -71,8 +71,8 @@ public class UnityToUnreal : Translator
 		base.Do ();
 		File.Copy(TEMPLATES_PATH + "/Utils.h", outputFolderPath + "/Utils.h", true);
 		File.Copy(TEMPLATES_PATH + "/Utils.cpp", outputFolderPath + "/Utils.cpp", true);
-		File.Copy(TEMPLATES_PATH + "/Prefab.h", outputFolderPath + "/Prefab.h", true);
-		File.Copy(TEMPLATES_PATH + "/Prefab.cpp", outputFolderPath + "/Prefab.cpp", true);
+		// File.Copy(TEMPLATES_PATH + "/Prefab.h", outputFolderPath + "/Prefab.h", true);
+		// File.Copy(TEMPLATES_PATH + "/Prefab.cpp", outputFolderPath + "/Prefab.cpp", true);
 	}
 
 	public override string ConvertFile (string path)
