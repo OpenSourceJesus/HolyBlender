@@ -36,7 +36,7 @@ ExcludeFolder ('stride')
 ExcludeFolder ('BareStrideProject')
 open(filePath, 'w').writelines(fileLines)
 actorClassPath = os.path.expanduser('~/UnrealEngine/Engine/Source/Runtime/Engine/Private/Actor.cpp')
-fileLines = open(actorClassPath, 'wb').readliens()
+fileLines = open(actorClassPath, 'rb').readlines()
 i = 0
 while i < len(fileLines):
 	line = fileLines[i]

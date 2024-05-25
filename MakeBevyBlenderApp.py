@@ -481,6 +481,12 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			variableName = outputFileText[indexOfStaticVariableIndicator + len(staticVariableIndicator) : indexOfColon]
 			newValue = membersDict.get(variableName, None)
 			if newValue != None:
+				if newValue.startswith('"'):
+					indexOfVariableType = indexOfColon + 2
+					indexOfEndOfVariableType = outputFileText.find(' ', indexOfColon + 1)
+					variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
+					outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
+					outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
 				indexOfEquals = outputFileText.find('=', indexOfColon)
 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 				value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
