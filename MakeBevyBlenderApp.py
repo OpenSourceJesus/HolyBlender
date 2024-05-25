@@ -383,12 +383,12 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			if line.startswith(CLASS_MEMBER_INDICATOR):
 				indexOfColon = line.find(':')
 				memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
-				# memberValue = membersDict.get(memberName, None)
-				# if memberValue == None:
-				memberValue = line[indexOfColon + 1 :]
+				memberValue = membersDict.get(memberName + '_' + mainClassName, None)
+				if memberValue == None:
+					memberValue = line[indexOfColon + 1 :]
 				if IsNumber(memberValue) and '.' not in memberValue:
 					memberValue += '.0'
-					# membersDict[memberName] = memberValue
+					membersDict[memberName] = memberValue
 				indexOfMemberName = 0
 				while indexOfMemberName != -1:
 					indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
@@ -471,7 +471,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		outputFileText += CUSTOM_TYPE_INDICATOR.replace('ꗈ', mainClassName)
 		outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
 	# for memberName in membersDict:
-	# 	outputFileText = outputFileText.replace(memberName, memberName + mainClassName)
+	# 	outputFileText = outputFileText.replace(memberName, memberName + '_' + mainClassName)
 	indexOfStaticVariableIndicator = 0
 	while indexOfStaticVariableIndicator != -1:
 		staticVariableIndicator = 'static mut '
@@ -479,6 +479,13 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		if indexOfStaticVariableIndicator != -1:
 			indexOfColon = outputFileText.find(':', indexOfStaticVariableIndicator + len(staticVariableIndicator))
 			variableName = outputFileText[indexOfStaticVariableIndicator + len(staticVariableIndicator) : indexOfColon]
+			newValue = membersDict.get(variableName, None)
+			if newValue != None:
+				indexOfEquals = outputFileText.find('=', indexOfColon)
+				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+				value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+				outputFileText = Remove(outputFileText, indexOfEquals + 1, len(value))
+				outputFileText = outputFileText[: indexOfEquals + 1] + newValue + outputFileText[indexOfEquals + 1 :]
 			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
 	addToOutputFileText += '\n\n' + outputFileText
 
@@ -537,7 +544,7 @@ def SetVariableTypeAndRemovePrimitiveCastsFromOutputFile (variableType : str):
 
 def MakeSceneOrPrefab (sceneFilePath : str):
 	global mainClassName
-	# global membersDict
+	global membersDict
 	DeleteScene ()
 	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
 	sceneFileLines = sceneFileText.split('\n')
@@ -590,7 +597,7 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 				# parent = ''
 				currentTypes.clear()
 				currentScriptsPaths.clear()
-				# membersDict.clear()
+				membersDict.clear()
 			currentType = line[: len(line) - 1]
 			currentTypes.append(currentType)
 		elif line.startswith(YAML_ELEMENT_ID_INDICATOR):
@@ -653,16 +660,17 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
 					if scriptPath != None:
 						currentScriptsPaths.append(scriptPath)
-				elif not line.startswith('  m_'):
-					indexOfColon = line.find(': ')
-					memberName = line[2 : indexOfColon]
-					value = line[indexOfColon + 2 :]
-					if value.startswith('{'):
-						indexOfGuid = line.find(GUID_INDICATOR)
-						scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
-						if scriptPath != None:
-							value = scriptPath 
-					membersDict[memberName] = '"' + value + '"'
+				# elif not line.startswith('  m_'):
+				# 	indexOfColon = line.find(': ')
+				# 	memberName = line[2 : indexOfColon]
+				# 	value = line[indexOfColon + 2 :]
+				# 	if value.startswith('{'):
+				# 		indexOfGuid = line.find(GUID_INDICATOR)
+				# 		scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
+				# 		if scriptPath != None:
+				# 			value = scriptPath
+				# 		value = '"' + value  + '"'
+				# 	membersDict[memberName] = value
 			elif currentType == 'Light':
 				if line.startswith(LIGHT_TYPE_INDICATOR):
 					lightType = int(line[len(LIGHT_TYPE_INDICATOR) :])
@@ -691,24 +699,39 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 				indexOfGuid = line.find(GUID_INDICATOR)
 				textureAssetPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
 
-# sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
-# scriptsPaths = []
-# for sceneFilePath in sceneFilesPaths:
-# 	isExcluded = False
-# 	for excludeItem in excludeItems:
-# 		if excludeItem in sceneFilePath:
-# 			isExcluded = True
-# 			break
-# 	if isExcluded:
-# 		continue
-# 	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
-# 	sceneFileLines = sceneFileText.split('\n')
-# 	for line in sceneFileLines:
-# 		if line.startswith(SCRIPT_INDICATOR):
-# 			indexOfGuid = line.find(GUID_INDICATOR)
-# 			scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
-# 			if scriptPath != None:
-# 				scriptsPaths.append(scriptPath)
+sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
+scriptsPaths = []
+for sceneFilePath in sceneFilesPaths:
+	isExcluded = False
+	for excludeItem in excludeItems:
+		if excludeItem in sceneFilePath:
+			isExcluded = True
+			break
+	if isExcluded:
+		continue
+	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+	sceneFileLines = sceneFileText.split('\n')
+	currentType = ''
+	for line in sceneFileLines:
+		if line.endswith(':'):
+			currentType = line[: len(line) - 1]
+		elif line.startswith('  ') and currentType == 'MonoBehaviour':
+			if line.startswith(SCRIPT_INDICATOR):
+				indexOfGuid = line.find(GUID_INDICATOR)
+				scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
+				if scriptPath != None:
+					mainClassName = scriptPath[scriptPath.rfind('/') + 1 : scriptPath.rfind('.')]	
+			elif not line.startswith('  m_'):
+				indexOfColon = line.find(': ')
+				memberName = line[2 : indexOfColon] + '_' + mainClassName
+				value = line[indexOfColon + 2 :]
+				if value.startswith('{'):
+					indexOfGuid = line.find(GUID_INDICATOR)
+					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
+					if scriptPath != None:
+						value = scriptPath
+					value = '"' + value  + '"'
+				membersDict[memberName] = value
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 for codeFilePath in codeFilesPaths:
 	isExcluded = False
