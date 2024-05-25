@@ -4,7 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Prefab.h"
 #include "ꗈ0.generated.h"
 
 UCLASS()

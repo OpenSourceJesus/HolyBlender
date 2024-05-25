@@ -2,7 +2,6 @@ using CSharpToPython;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis.CSharp;
-using SourceCodeKind = Microsoft.Scripting.SourceCodeKind;
 
 public class UnityToUnreal : Translator 
 {

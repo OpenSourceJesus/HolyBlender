@@ -1,4 +1,7 @@
-import bpy, subprocess, os
+import bpy, subprocess, os, sys
+
+sys.path.append(os.path.expanduser('~/Unity2Many'))
+from SystemExtensions import *
 
 bl_info = {
 	'name': 'Blender Plugin',
@@ -211,8 +214,12 @@ public class GetUnityProjectInfo : MonoBehaviour
 		File.WriteAllText("/tmp/Unity2Many Data (BlenderToUnity)", outputText);
 	}
 }'''
+UNREAL_CODE_PATH = ''
+UNREAL_CODE_PATH_SUFFIX = '/Source/'
+excludeItems = [ '/Library' ]
 lastId = 5
 operatorContext = None
+mainClassNames = []
 
 class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -447,6 +454,7 @@ def MakeFolderForFile (path : str):
 		_path = path[: indexOfSlash]
 
 def ConvertPythonFileToCpp (filePath):
+	global mainClassNames
 	lines = []
 	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
 		if line.startswith('import ') or line.startswith('from '):
@@ -455,11 +463,11 @@ def ConvertPythonFileToCpp (filePath):
 		lines.append(line)
 	text = '\n'.join(lines)
 	open(filePath, 'wb').write(text.encode('utf-8'))
-	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
-	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
+	outputFilePath = UNREAL_CODE_PATH + filePath[filePath.rfind('/') :]
+	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + UNREAL_CODE_PATH ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
-	command.append(UNITY_PROJECT_PATH)
+	command.append(os.path.expanduser(operatorContext.scene.world.unreal_project_path))
 	print(command)
 	
 	subprocess.check_call(command)
@@ -524,21 +532,47 @@ def ConvertPythonFileToCpp (filePath):
 				if indexOfEquals != -1 and indexOfEquals <= indexOfX + 3:
 					outputFileLines[i] = line[: indexOfEquals + 1] + '-' + line[indexOfEquals + 1 :]
 	outputFileText = '\n'.join(outputFileLines)
-	open(outputFilePath.replace('.py', '.cpp'), 'wb').write(outputFileText.encode('utf-8'))
+	cppFilePath = outputFilePath.replace('.py', '.cpp')
+	open(cppFilePath, 'wb').write(outputFileText.encode('utf-8'))
 	open(outputFilePath.replace('.py', '.h'), 'wb').write(headerFileText.encode('utf-8'))
-	command = [ 'cat', outputFilePath.replace('.py', '.cpp') ]
+	command = [ 'cat', cppFilePath ]
 	print(command)
 
 	subprocess.check_call(command)
+	
+	textBlocksNames = []
+	for textBlock in bpy.data.texts:
+		textBlocksNames.append(textBlock.name)
+		if textBlock.name == cppFilePath[cppFilePath.rfind('/') + 1 :]:
+			textBlock.clear()
+			textBlock.write(outputFileText.encode('utf-8'))
+	if cppFilePath in textBlocksNames:
+		textBlock = bpy.data.texts.new(cppFilePath[cppFilePath.rfind('/') + 1 :])
+		textBlock.write(outputFileText.encode('utf-8'))
 
 def ConvertCSFileToCPP (filePath):
+	global mainClassNames
+	global UNREAL_CODE_PATH
+	global UNREAL_CODE_PATH_SUFFIX
 	assert os.path.isfile(filePath)
+	UNREAL_CODE_PATH = os.path.expanduser(operatorContext.scene.world.unreal_project_path)
+	UNREAL_CODE_PATH_SUFFIX = '/Source/' + UNREAL_CODE_PATH[UNREAL_CODE_PATH.rfind('/') + 1 :]
+	UNREAL_CODE_PATH += UNREAL_CODE_PATH_SUFFIX
+	codeFilesPaths = GetAllFilePathsOfType(os.path.expanduser(operatorContext.scene.world.unity_project_import_path), '.cs')
+	for codeFilePath in codeFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in codeFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			mainClassNames.append(os.path.split(codeFilePath)[-1].split('.')[0])
 	command = [
 		'dotnet',
 		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
 		'includeFile=' + filePath,
 		'unreal=true',
-		'output=/tmp',
+		'output=' + UNREAL_CODE_PATH,
 	]
 	# for arg in sys.argv:
 	# 	command.append(arg)
@@ -547,7 +581,7 @@ def ConvertCSFileToCPP (filePath):
 
 	subprocess.check_call(command)
 
-	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
+	outputFilePath = UNREAL_CODE_PATH + filePath[filePath.rfind('/') :]
 	outputFilePath = outputFilePath.replace('.cs', '.py')
 	print(outputFilePath)
 	assert os.path.isfile(outputFilePath)
