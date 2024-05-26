@@ -34,7 +34,7 @@ struct LevelAssets {
 	level: Handle<Scene>,
 }
 
-static mut sceneEntity : Entity = None;
+// static mut sceneEntity : Entity = None;
 
 fn StartLevel (
 	mut commands: Commands,
