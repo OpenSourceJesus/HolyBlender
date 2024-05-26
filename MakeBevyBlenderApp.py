@@ -521,8 +521,8 @@ def DeleteScene (scene = None):
 
 os.system('''cd Blender_bevy_components_workflow/tools
 python3 internal_generate_release_zips.py
-unzip bevy_components.zip -d ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons') + '''
-unzip gltf_auto_export.zip -d ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons'))
+unzip bevy_components.zip -d -N ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons') + '''
+unzip gltf_auto_export.zip -d  -N ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons'))
 
 bpy.ops.preferences.addon_enable(module='bevy_components')
 bpy.ops.preferences.addon_enable(module='gltf_auto_export')

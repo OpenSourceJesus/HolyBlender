@@ -49,13 +49,13 @@ fn StartLevel (
 	unsafe
 	{
 		ꗈ3
-		scene = commands.spawn((
+		commands.spawn((
 			SceneBundle {
 				scene: assets.level.clone(),
 				..default()
 			},
 			Name::new("Game"),
-		)).id();
+		));
 	}
 }
 
