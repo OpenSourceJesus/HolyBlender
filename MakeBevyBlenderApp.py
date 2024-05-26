@@ -519,10 +519,15 @@ def MakeComponent (objectName : str, componentType : str):
 def DeleteScene (scene = None):
 	if scene is None:
 		scene = bpy.context.scene
-	elif isinstance(scene, str):
-		scene = bpy.data.scenes[scene]
-	for object in scene.objects:
-		bpy.data.objects.remove(object, do_unlink=True)
+	for obj in scene.objects:
+		bpy.data.objects.remove(obj, do_unlink=True)
+
+	# bpy.ops.scene.new(type='EMPTY')
+	# for obj in bpy.context.scene.objects:
+	# 	obj.select_set(True)
+	# bpy.ops.object.delete()
+	# bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath)
+	# bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)
 
 os.system('''cd Blender_bevy_components_workflow/tools
 python3 internal_generate_release_zips.py
@@ -547,6 +552,7 @@ def SetVariableTypeAndRemovePrimitiveCastsFromOutputFile (variableType : str):
 				outputFileText = outputFileText.replace('(' + casted + ' as f32)', casted)
 
 def MakeSceneOrPrefab (sceneOrPrefabFilePath : str):
+	print('YAY' + sceneOrPrefabFilePath)
 	global mainClassName
 	global membersDict
 	DeleteScene ()
@@ -573,8 +579,8 @@ def MakeSceneOrPrefab (sceneOrPrefabFilePath : str):
 	farClipPlane = -1
 	objectName = ''
 	for line in sceneOrPrefabFileLines:
-		if line.endswith(':'):
-			if line.startswith('GameObject') or line.startswith('SceneRoots'):
+		if line.endswith(':') or line == '':
+			if line.startswith('GameObject') or line.startswith('SceneRoots') or line == '':
 				components = []
 				if 'Camera' in currentTypes:
 					components.append(MakeCamera(localPosition, localRotation, localSize, objectName, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
@@ -737,10 +743,9 @@ for sceneFilePath in sceneFilesPaths:
 		if excludeItem in sceneFilePath:
 			isExcluded = True
 			break
-	if isExcluded:
-		continue
-	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
-	AddToMembersDictAndAssetsPathsDict (sceneFileText)
+	if not isExcluded:
+		sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+		AddToMembersDictAndAssetsPathsDict (sceneFileText)
 prefabFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
 for prefabFilePath in prefabFilesPaths:
 	isExcluded = False
@@ -748,10 +753,9 @@ for prefabFilePath in prefabFilesPaths:
 		if excludeItem in prefabFilePath:
 			isExcluded = True
 			break
-	if isExcluded:
-		continue
-	prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
-	AddToMembersDictAndAssetsPathsDict (prefabFileText)
+	if not isExcluded:
+		prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
+		AddToMembersDictAndAssetsPathsDict (prefabFileText)
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 for codeFilePath in codeFilesPaths:
 	isExcluded = False
