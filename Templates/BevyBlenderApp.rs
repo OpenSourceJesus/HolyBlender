@@ -34,6 +34,8 @@ struct LevelAssets {
 	level: Handle<Scene>,
 }
 
+static mut sceneEntity : Entity = None;
+
 fn StartLevel (
 	mut commands: Commands,
 	assets: Res<LevelAssets>,
@@ -47,13 +49,13 @@ fn StartLevel (
 	unsafe
 	{
 		ꗈ3
-		commands.spawn((
+		scene = commands.spawn((
 			SceneBundle {
 				scene: assets.level.clone(),
 				..default()
 			},
 			Name::new("Game"),
-		));
+		)).id();
 	}
 }
 

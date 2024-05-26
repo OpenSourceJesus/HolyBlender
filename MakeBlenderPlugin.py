@@ -210,7 +210,6 @@ public class GetUnityProjectInfo : MonoBehaviour
 				}
 			}
 		}
-		UnityEngine.Debug.Log(outputText);
 		File.WriteAllText("/tmp/Unity2Many Data (BlenderToUnity)", outputText);
 	}
 }'''
@@ -230,6 +229,11 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
+		command = [ 'make', 'build_UnityToBevy' ]
+		print(command)
+
+		subprocess.check_call(command)
+
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath == '':
 			previousUnityExportPath = context.scene.world.unity_project_export_path
@@ -250,6 +254,11 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
+		command = [ 'make', 'build_UnityToBevy' ]
+		print(command)
+
+		subprocess.check_call(command)
+
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath == '':
 			previousUnityExportPath = context.scene.world.unity_project_export_path
@@ -353,7 +362,8 @@ def ExportToUnity (context):
 
 	os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
 
-	command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', os.path.expanduser(context.scene.world.unity_project_export_path) ]
+	command = [ os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
+	print(command)
 	
 	subprocess.check_call(command)
 
@@ -617,6 +627,7 @@ def ConvertCSFileToRust (filePath):
 	MakeFolderForFile ('/tmp/src/main.rs')
 	data = 'output=/tmp\n' + filePath
 	open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
+
 	command = [
 		'dotnet',
 		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
