@@ -93,8 +93,8 @@ importStatementsText = ''
 outputFileTextReplaceClauses = [ '', '', '', '' ]
 addToOutputFileText = ''
 mainClassName = ''
-translatedFiles = []
 membersDict = {}
+assetsPathsDict = {}
 
 data = ''
 for arg in sys.argv:
@@ -429,49 +429,6 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			outputFileText = outputFileText[: indexOfRightCurlyBrace + len(query)] + '}\n}\n' + outputFileText[indexOfRightCurlyBrace + len(query) :]
 			# else:
 			# 	pass
-	indexOfInstantiate = 0
-	while indexOfInstantiate != -1:
-		instantiateIndicator = 'Instantiate('
-		indexOfInstantiate = outputFileText.find(instantiateIndicator)
-		if indexOfInstantiate != -1:
-			indexOfSemicolon = outputFileText.find(';', indexOfInstantiate)
-			# indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
-			instantiateCommand = outputFileText[indexOfInstantiate : indexOfSemicolon]
-			indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
-			position = ''
-			rotation = ''
-			if indexOfEndOfWhatToInstantiate > indexOfSemicolon:
-				indexOfEndOfWhatToInstantiate = indexOfSemicolon
-			elif indexOfEndOfWhatToInstantiate != -1:
-				indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate) + 1
-				indexOfRotation = outputFileText.find(',', indexOfPosition) + 1
-				position = outputFileText[indexOfPosition : indexOfRotation - 1]
-				rotation = outputFileText[indexOfRotation : indexOfSemicolon]
-				rotation = Remove(rotation, len(rotation) - 1, 1)
-			whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
-			assetPath = 'Game.glb#Scene0'
-			if position == '':
-				position = 'Vec3::ZERO'
-				rotation = 'Quat::IDENTITY'
-			newInstantiateCommand = 'SpawnEntity(&mut commands, &assetServer, &"' + assetPath + '", ' + position + ', ' + rotation + ')'
-			outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
-	indexOfGameObjectFind = 0
-	while indexOfGameObjectFind != -1:
-		indexOfGameObjectFind = outputFileText.find(GAME_OBJECT_FIND_INDICATOR)
-		if indexOfGameObjectFind != -1:
-			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfGameObjectFind + len(GAME_OBJECT_FIND_INDICATOR))
-			gameObjectFind = outputFileText.SubstringStartEnd(indexOfGameObjectFind, indexOfRightParenthesis)
-			print('YAY' + gameObjectFind)
-			whatToFind = gameObjectFind.SubstringStartEnd(len(GAME_OBJECT_FIND_INDICATOR), len(gameObjectFind) - 2)
-			entitytFind = '\nunsafe\n{\nfor mut enitty in &mut nameQuery\n{if enitty == ' + whatToFind + '\n{'
-			outputLine = outputLine.Replace(gameObjectFind, entitytFind)
-	indexOfUpdateMethod = outputFileText.find('fn Update')
-	if indexOfUpdateMethod != -1:
-		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
-		outputFileText += CUSTOM_TYPE_INDICATOR.replace('ꗈ', mainClassName)
-		outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
-	# for memberName in membersDict:
-	# 	outputFileText = outputFileText.replace(memberName, memberName + '_' + mainClassName)
 	indexOfStaticVariableIndicator = 0
 	while indexOfStaticVariableIndicator != -1:
 		staticVariableIndicator = 'static mut '
@@ -500,10 +457,55 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 					indexOfVariableType = indexOfColon + 2
 					indexOfEndOfVariableType = outputFileText.find(' ', indexOfVariableType)
 					variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
-					print('YAY' + variableType)
 					outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
 					outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
 			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
+	indexOfInstantiate = 0
+	while indexOfInstantiate != -1:
+		instantiateIndicator = 'Instantiate('
+		indexOfInstantiate = outputFileText.find(instantiateIndicator)
+		if indexOfInstantiate != -1:
+			indexOfSemicolon = outputFileText.find(';', indexOfInstantiate)
+			# indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
+			instantiateCommand = outputFileText[indexOfInstantiate : indexOfSemicolon]
+			indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
+			position = ''
+			rotation = ''
+			if indexOfEndOfWhatToInstantiate > indexOfSemicolon:
+				indexOfEndOfWhatToInstantiate = indexOfSemicolon
+			elif indexOfEndOfWhatToInstantiate != -1:
+				indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate) + 1
+				indexOfRotation = outputFileText.find(',', indexOfPosition) + 1
+				position = outputFileText[indexOfPosition : indexOfRotation - 1]
+				rotation = outputFileText[indexOfRotation : indexOfSemicolon]
+				rotation = Remove(rotation, len(rotation) - 1, 1)
+			whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
+			assetPath = assetsPathsDict[whatToInstantiate]
+			assetPath = assetPath[assetPath.rfind('/') + 1 :]
+			assetPath = assetPath.replace('.prefab', '_Prefab')
+			assetPath += '.glb#Scene0'
+			if position == '':
+				position = 'Vec3::ZERO'
+				rotation = 'Quat::IDENTITY'
+			newInstantiateCommand = 'SpawnEntity(&mut commands, &assetServer, &"' + assetPath + '", ' + position + ', ' + rotation + ')'
+			outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
+	indexOfGameObjectFind = 0
+	while indexOfGameObjectFind != -1:
+		indexOfGameObjectFind = outputFileText.find(GAME_OBJECT_FIND_INDICATOR)
+		if indexOfGameObjectFind != -1:
+			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfGameObjectFind + len(GAME_OBJECT_FIND_INDICATOR))
+			gameObjectFind = outputFileText.SubstringStartEnd(indexOfGameObjectFind, indexOfRightParenthesis)
+			print('YAY' + gameObjectFind)
+			whatToFind = gameObjectFind.SubstringStartEnd(len(GAME_OBJECT_FIND_INDICATOR), len(gameObjectFind) - 2)
+			entitytFind = '\nunsafe\n{\nfor mut enitty in &mut nameQuery\n{if enitty == ' + whatToFind + '\n{'
+			outputLine = outputLine.Replace(gameObjectFind, entitytFind)
+	indexOfUpdateMethod = outputFileText.find('fn Update')
+	if indexOfUpdateMethod != -1:
+		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
+		outputFileText += CUSTOM_TYPE_INDICATOR.replace('ꗈ', mainClassName)
+	outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
+	# for memberName in membersDict:
+	# 	outputFileText = outputFileText.replace(memberName, memberName + '_' + mainClassName)
 	addToOutputFileText += '\n\n' + outputFileText
 
 def MakeComponent (objectName : str, componentType : str):
@@ -512,21 +514,7 @@ def MakeComponent (objectName : str, componentType : str):
 	componentType = definition['title']
 	isComponent = definition['isComponent'] if 'isComponent' in definition else False
 	if isComponent and objectName != '':
-		try:
-			obj = bpy.data.objects[objectName]
-			bpy.ops.object.select_all(action='DESELECT')
-			bpy.context.view_layer.objects.active = obj
-			obj.select_set(True)
-			addComponentOperator(component_type=componentType)
-			obj[mainClassName] = ''
-			# if 'SomeProp' in bpy.context.object:
-			# 	print('Property found')
-			# value = bpy.data.scenes['Scene'].get('test_prop', 'fallback value')
-			# group = bpy.data.groups.new('MyTestGroup')
-			# group['GameSettings'] = {'foo': 10, 'bar': 'spam', 'baz': {}}
-			# del group['GameSettings']
-		finally:
-			pass
+		addComponentOperator(component_type=componentType)
 
 def DeleteScene (scene = None):
 	if scene is None:
@@ -541,7 +529,6 @@ python3 internal_generate_release_zips.py
 unzip bevy_components.zip -d ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons') + '''
 unzip gltf_auto_export.zip -d ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons'))
 
-sceneName = ''
 bpy.ops.preferences.addon_enable(module='bevy_components')
 bpy.ops.preferences.addon_enable(module='gltf_auto_export')
 bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
@@ -559,12 +546,12 @@ def SetVariableTypeAndRemovePrimitiveCastsFromOutputFile (variableType : str):
 			if indexOfAssignment:
 				outputFileText = outputFileText.replace('(' + casted + ' as f32)', casted)
 
-def MakeSceneOrPrefab (sceneFilePath : str):
+def MakeSceneOrPrefab (sceneOrPrefabFilePath : str):
 	global mainClassName
 	global membersDict
 	DeleteScene ()
-	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
-	sceneFileLines = sceneFileText.split('\n')
+	sceneOrPrefabFileText = open(sceneOrPrefabFilePath, 'rb').read().decode('utf-8')
+	sceneOrPrefabFileLines = sceneOrPrefabFileText.split('\n')
 	currentTypes = []
 	currentType = ''
 	# transformsIdsDict = {}
@@ -585,7 +572,7 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 	nearClipPlane = -1
 	farClipPlane = -1
 	objectName = ''
-	for line in sceneFileLines:
+	for line in sceneOrPrefabFileLines:
 		if line.endswith(':'):
 			if line.startswith('GameObject') or line.startswith('SceneRoots'):
 				components = []
@@ -716,17 +703,9 @@ def MakeSceneOrPrefab (sceneFilePath : str):
 				indexOfGuid = line.find(GUID_INDICATOR)
 				textureAssetPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
 
-sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
-scriptsPaths = []
-for sceneFilePath in sceneFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in sceneFilePath:
-			isExcluded = True
-			break
-	if isExcluded:
-		continue
-	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+def AddToMembersDictAndAssetsPathsDict (sceneOrPrefabFilePath : str):
+	global membersDict
+	global assetsPathsDict
 	sceneFileLines = sceneFileText.split('\n')
 	currentType = ''
 	for line in sceneFileLines:
@@ -744,16 +723,35 @@ for sceneFilePath in sceneFilesPaths:
 				value = line[indexOfColon + 2 :]
 				if value.startswith('{'):
 					indexOfGuid = line.find(GUID_INDICATOR)
-					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
-					if scriptPath != None:
-						value = scriptPath
+					assetPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
+					if assetPath != None:
+						value = assetPath
+						assetsPathsDict[memberName] = assetPath
 					value = '"' + value  + '"'
-					# indexOfVariableType = indexOfColon + 2
-					# indexOfEndOfVariableType = outputFileText.find(' ', indexOfColon + 1)
-					# variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
-					# outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
-					# outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
 				membersDict[memberName] = value
+
+sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
+for sceneFilePath in sceneFilesPaths:
+	isExcluded = False
+	for excludeItem in excludeItems:
+		if excludeItem in sceneFilePath:
+			isExcluded = True
+			break
+	if isExcluded:
+		continue
+	sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+	AddToMembersDictAndAssetsPathsDict (sceneFileText)
+prefabFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
+for prefabFilePath in prefabFilesPaths:
+	isExcluded = False
+	for excludeItem in excludeItems:
+		if excludeItem in prefabFilePath:
+			isExcluded = True
+			break
+	if isExcluded:
+		continue
+	prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
+	AddToMembersDictAndAssetsPathsDict (prefabFileText)
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 for codeFilePath in codeFilesPaths:
 	isExcluded = False
@@ -761,7 +759,7 @@ for codeFilePath in codeFilesPaths:
 		if excludeItem in codeFilePath:
 			isExcluded = True
 			break
-	if not isExcluded:# and codeFilePath not in scriptsPaths:
+	if not isExcluded:
 		mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
 		MakeScript ([], [], [1, 1, 1], '', codeFilePath)
 prefabFilePaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
@@ -772,11 +770,10 @@ for prefabFilePath in prefabFilePaths:
 			isExcluded = True
 			break
 	if not isExcluded:
-		sceneName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
-		sceneName = sceneName.replace('.prefab', '_Prefab.glb')
+		prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
+		prefabName = prefabName.replace('.prefab', '_Prefab.glb')
 		MakeSceneOrPrefab (prefabFilePath)
-		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
-		# bpy.ops.scene.new(type='NEW')
+		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + prefabName, export_extras=True, export_cameras=True)
 sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
 for sceneFilePath in sceneFilesPaths:
 	isExcluded = False
@@ -789,7 +786,6 @@ for sceneFilePath in sceneFilesPaths:
 		sceneName = sceneName.replace('.unity', '.glb')
 		MakeSceneOrPrefab (sceneFilePath)
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
-		# bpy.ops.scene.new(type='NEW')
 		outputFileTextReplaceClauses[2] = sceneName
 outputFileText = open(TEMPLATE_APP_PATH, 'rb').read().decode('utf-8')
 outputFileText = importStatementsText + outputFileText

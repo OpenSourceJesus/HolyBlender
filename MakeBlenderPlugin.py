@@ -245,7 +245,9 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 	def execute (self, context):
 		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library', 'webgl' ]
 		print(command)
+
 		subprocess.check_call(command)
+		
 		webbrowser.open('http://localhost:1334')
 
 class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
