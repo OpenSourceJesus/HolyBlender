@@ -547,7 +547,7 @@ def ConvertPythonFileToCPP (filePath):
 	text = '\n'.join(lines)
 	open(filePath, 'wb').write(text.encode('utf-8'))
 	hasCorrectTextBlock = False
-	textBlockName = filePath[filePath.rfind('/') :]
+	textBlockName = filePath[filePath.rfind('/') + 1 :]
 	for textBlock in bpy.data.texts:
 		if textBlock.name == textBlockName:
 			hasCorrectTextBlock = True
@@ -557,7 +557,7 @@ def ConvertPythonFileToCPP (filePath):
 	textBlock = bpy.data.texts[textBlockName]
 	textBlock.clear()
 	textBlock.write(text)
-	outputFilePath = UNREAL_CODE_PATH + filePath[filePath.rfind('/') :]
+	outputFilePath = UNREAL_CODE_PATH + '/' + textBlockName
 	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + UNREAL_CODE_PATH ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
@@ -640,7 +640,6 @@ def ConvertCSFileToRust (filePath):
 	MakeFolderForFile ('/tmp/src/main.rs')
 	data = 'output=/tmp\n' + filePath
 	open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
-
 	command = [
 		'dotnet',
 		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
@@ -672,8 +671,20 @@ def ConvertPythonFileToRust (filePath):
 			print('Skipping line:', line)
 			continue
 		lines.append(line)
-	data = '\n'.join(lines)
-	open(filePath, 'wb').write(data.encode('utf-8'))
+	text = '\n'.join(lines)
+	open(filePath, 'wb').write(text.encode('utf-8'))
+	hasCorrectTextBlock = False
+	textBlockName = filePath[filePath.rfind('/') + 1 :]
+	for textBlock in bpy.data.texts:
+		if textBlock.name == textBlockName:
+			hasCorrectTextBlock = True
+			break
+	if not hasCorrectTextBlock:
+		bpy.data.texts.new(textBlockName)
+	textBlock = bpy.data.texts[textBlockName]
+	textBlock.clear()
+	textBlock.write(text)
+	outputFilePath = UNREAL_CODE_PATH + '/' + textBlockName
 	command = [ 'python3', 'py2many/py2many.py', '--rust=1', '--force', filePath, '--outdir=/tmp/src' ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
