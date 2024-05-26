@@ -453,7 +453,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			if position == '':
 				position = 'Vec3::ZERO'
 				rotation = 'Quat::IDENTITY'
-			newInstantiateCommand = 'SpawnEntity(commands, assetServer, "' + assetPath + '", ' + position + ', ' + rotation + ')'
+			newInstantiateCommand = 'SpawnEntity(&mut commands, &assetServer, &"' + assetPath + '", ' + position + ', ' + rotation + ')'
 			outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
 	indexOfGameObjectFind = 0
 	while indexOfGameObjectFind != -1:
@@ -492,6 +492,17 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 				value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
 				outputFileText = Remove(outputFileText, indexOfEquals + 1, len(value))
 				outputFileText = outputFileText[: indexOfEquals + 1] + newValue + outputFileText[indexOfEquals + 1 :]
+			else:
+				indexOfEquals = outputFileText.find('=', indexOfColon)
+				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+				value = outputFileText[indexOfEquals + 2 : indexOfSemicolon]
+				if value.startswith('"'):
+					indexOfVariableType = indexOfColon + 2
+					indexOfEndOfVariableType = outputFileText.find(' ', indexOfVariableType)
+					variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
+					print('YAY' + variableType)
+					outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
+					outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
 			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
 	addToOutputFileText += '\n\n' + outputFileText
 
@@ -737,6 +748,11 @@ for sceneFilePath in sceneFilesPaths:
 					if scriptPath != None:
 						value = scriptPath
 					value = '"' + value  + '"'
+					# indexOfVariableType = indexOfColon + 2
+					# indexOfEndOfVariableType = outputFileText.find(' ', indexOfColon + 1)
+					# variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
+					# outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
+					# outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
 				membersDict[memberName] = value
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 for codeFilePath in codeFilesPaths:

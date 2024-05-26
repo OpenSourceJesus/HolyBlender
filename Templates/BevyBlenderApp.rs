@@ -69,11 +69,11 @@ enum MyStates {
 // #[derive(Event)]
 // struct SpawnedEntityEvent(Entity, Vec3, Quat);
 
-fn SpawnEntity (mut commands: Commands, assetServer: Res<AssetServer>, assetPath : &str, position : Vec3, rotation : Quat) -> Entity
+fn SpawnEntity (commands: &mut Commands, assetServer: &Res<AssetServer>, assetPath : &'static str, position : Vec3, rotation : Quat) -> Entity
 {
 	return commands.spawn((SceneBundle {
 		transform: Transform::from_translation(position).with_rotation(rotation),
-		scene: assetServer.load(&*assetPath),
+		scene: assetServer.load(assetPath),
 			..default()
 		},
 	)).id();
