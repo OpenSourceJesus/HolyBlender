@@ -2,6 +2,7 @@ import bpy, subprocess, os, sys, webbrowser
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from SystemExtensions import *
+from StringExtensions import *
 
 bl_info = {
 	'name': 'Blender Plugin',
@@ -229,7 +230,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		command = [ 'make', 'build_UnityToBevy' ]
+		command = [ 'make', 'build_UnityToUnreal' ]
 		print(command)
 
 		subprocess.check_call(command)
@@ -294,6 +295,11 @@ class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		global operatorContext
+		command = [ 'make', 'build_UnityToUnreal' ]
+		print(command)
+
+		subprocess.check_call(command)
+		
 		operatorContext = context
 		for textBlock in bpy.data.texts:
 			if textBlock.name.endswith('.cs'):
@@ -311,6 +317,10 @@ class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		global operatorContext
+		command = [ 'make', 'build_UnityToBevy' ]
+		print(command)
+
+		subprocess.check_call(command)
 		operatorContext = context
 		for textBlock in bpy.data.texts:
 			if textBlock.name.endswith('.cs'):
@@ -536,6 +546,17 @@ def ConvertPythonFileToCPP (filePath):
 		lines.append(line)
 	text = '\n'.join(lines)
 	open(filePath, 'wb').write(text.encode('utf-8'))
+	hasCorrectTextBlock = False
+	textBlockName = filePath[filePath.rfind('/') :]
+	for textBlock in bpy.data.texts:
+		if textBlock.name == textBlockName:
+			hasCorrectTextBlock = True
+			break
+	if not hasCorrectTextBlock:
+		bpy.data.texts.new(textBlockName)
+	textBlock = bpy.data.texts[textBlockName]
+	textBlock.clear()
+	textBlock.write(text)
 	outputFilePath = UNREAL_CODE_PATH + filePath[filePath.rfind('/') :]
 	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + UNREAL_CODE_PATH ]
 	# for arg in sys.argv:
@@ -583,14 +604,6 @@ def ConvertPythonFileToCPP (filePath):
 			if indexOfEquals != -1:
 				value = line[indexOfEquals + 1 :]
 				outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = ' + value + ';\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
-			else:
-				for memberName in filePathMembersNamesDict:
-					referenceString = filePathMembersNamesDict[variableName]
-					if referenceString.endswith('.prefab"'):
-						referenceString = referenceString.replace('.prefab"', '')
-						referenceString = referenceString[referenceString.rfind('/') + 1 :] + '_Script'
-						referenceString = '/Game/' + referenceString + '/' + referenceString + '.' + referenceString
-						outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = "' + referenceString + '";\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
 		else:
 			break
 	outputFileLines = outputFileText.split('\n')
