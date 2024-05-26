@@ -517,17 +517,7 @@ def MakeComponent (objectName : str, componentType : str):
 		addComponentOperator(component_type=componentType)
 
 def DeleteScene (scene = None):
-	if scene is None:
-		scene = bpy.context.scene
-	for obj in scene.objects:
-		bpy.data.objects.remove(obj, do_unlink=True)
-
-	# bpy.ops.scene.new(type='EMPTY')
-	# for obj in bpy.context.scene.objects:
-	# 	obj.select_set(True)
-	# bpy.ops.object.delete()
-	# bpy.ops.wm.save_as_mainfile(filepath=bpy.data.filepath)
-	# bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)
+	bpy.ops.scene.new(type='NEW')
 
 os.system('''cd Blender_bevy_components_workflow/tools
 python3 internal_generate_release_zips.py

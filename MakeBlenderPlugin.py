@@ -230,7 +230,14 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToUnreal.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.unreal_project_path), 'exclude=/Library' ]
+		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		if importPath == '':
+			previousUnityExportPath = context.scene.world.unity_project_export_path
+			context.scene.world.unity_project_export_path = '/tmp/TestUnityProject'
+			ExportToUnity (context)
+			importPath = os.path.expanduser(context.scene.world.unity_project_export_path)
+			context.scene.world.unity_project_export_path = previousUnityExportPath
+		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToUnreal.py'), 'input=' + importPath, 'output=' + os.path.expanduser(context.scene.world.unreal_project_path), 'exclude=/Library' ]
 
 		subprocess.check_call(command)
 
@@ -243,7 +250,14 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + os.path.expanduser(context.scene.world.unity_project_import_path), 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library' ]#, 'webgl' ]
+		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		if importPath == '':
+			previousUnityExportPath = context.scene.world.unity_project_export_path
+			context.scene.world.unity_project_export_path = '/tmp/TestUnityProject'
+			ExportToUnity (context)
+			importPath = os.path.expanduser(context.scene.world.unity_project_export_path)
+			context.scene.world.unity_project_export_path = previousUnityExportPath
+		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library', 'webgl' ]
 		print(command)
 
 		subprocess.check_call(command)
@@ -259,153 +273,7 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		global lastId
-		projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
-		for textBlock in bpy.data.texts:
-			if textBlock.name.endswith('.cs'):
-				text = textBlock.as_string()
-				fileExportPath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name
-				MakeFolderForFile (fileExportPath)
-				open(fileExportPath, 'wb').write(text.encode('utf-8'))
-		meshesDict = {}
-		for mesh in bpy.data.meshes:
-			meshesDict[mesh.name] = []
-		for obj in bpy.context.scene.objects:
-			if obj.type == 'MESH' and obj.data.name in meshesDict:
-				meshesDict[obj.data.name].append(obj.name)
-				fileExportPath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
-				MakeFolderForFile (fileExportPath)
-				bpy.ops.object.select_all(action='DESELECT')
-				bpy.context.view_layer.objects.active = obj
-				obj.select_set(True)
-				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
-		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
-		open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
-
-		os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
-
-		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', os.path.expanduser(context.scene.world.unity_project_export_path) ]
-		
-		subprocess.check_call(command)
-
-		scenePath = bpy.data.filepath.replace('.blend', '.unity')
-		scenePath = scenePath[scenePath.rfind('/') + 1 :]
-		scenesFolderPath = projectExportPath + '/Assets/Scenes'
-		if not os.path.isdir(scenesFolderPath):
-			os.mkdir(scenesFolderPath)
-		scenePath = scenesFolderPath + '/' + scenePath
-		sceneTemplateText = open(os.path.expanduser('~/Unity2Many/Templates/Scene.unity'), 'rb').read().decode('utf-8')
-		gameObjectsAndComponentsText = ''
-		transformIds = []
-		for obj in bpy.data.objects:
-			componentIds = []
-			gameObject = GAME_OBJECT_TEMPLATE
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', obj.name)
-			gameObjectsAndComponentsText += gameObject + '\n'
-			gameObjectId = lastId
-			lastId += 1
-			transform = TRANSFORM_TEMPLATE
-			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.y))
-			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.z))
-			transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
-			transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			previousObjectRotationMode = obj.rotation_mode
-			obj.rotation_mode = 'QUATERNION'
-			transform = transform.replace(REPLACE_INDICATOR + '2', str(obj.rotation_quaternion.x))
-			transform = transform.replace(REPLACE_INDICATOR + '3', str(obj.rotation_quaternion.y))
-			transform = transform.replace(REPLACE_INDICATOR + '4', str(obj.rotation_quaternion.z))
-			transform = transform.replace(REPLACE_INDICATOR + '5', str(obj.rotation_quaternion.w))
-			obj.rotation_mode = previousObjectRotationMode
-			transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
-			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.y))
-			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.z))
-			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
-			gameObjectsAndComponentsText += transform + '\n'
-			transformIds.append(lastId)
-			lastId += 1
-			if obj.type == 'LIGHT':
-				light = LIGHT_TEMPLATE
-				light = light.replace(REPLACE_INDICATOR + '0', str(lastId))
-				light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				lightObject = bpy.data.lights[obj.name]
-				lightType = 2
-				if lightObject.type == 'SUN':
-					lightType = 1
-				elif lightObject.type == 'SPOT':
-					lightType = 0
-				elif lightObject.type == 'AREA':
-					lightType = 3
-				light = light.replace(REPLACE_INDICATOR + '2', str(lightType))
-				light = light.replace(REPLACE_INDICATOR + '3', str(lightObject.color[0]))
-				light = light.replace(REPLACE_INDICATOR + '4', str(lightObject.color[1]))
-				light = light.replace(REPLACE_INDICATOR + '5', str(lightObject.color[2]))
-				light = light.replace(REPLACE_INDICATOR + '6', str(lightObject.energy))
-				light = light.replace(REPLACE_INDICATOR + '7', str(10))
-				light = light.replace(REPLACE_INDICATOR + '8', str(lightObject.spot_size))
-				light = light.replace(REPLACE_INDICATOR + '9', str(lightObject.spot_size * (1.0 - lightObject.spot_blend)))
-				gameObjectsAndComponentsText += light + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-			elif obj.type == 'MESH':
-				meshFilter = MESH_FILTER_TEMPLATE
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-				fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
-				indexOfFile = dataText.find(fileIdIndicator)
-				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-				fileId = dataText[indexOfFileId : indexOfEndOfFileId]
-				indexOfComma = dataText.find(',', indexOfEndOfFileId + 1)
-				meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfComma]
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
-				gameObjectsAndComponentsText += meshFilter + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-				meshRenderer = MESH_RENDERER_TEMPLATE
-				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
-				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				gameObjectsAndComponentsText += meshRenderer + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-			for textBlock in bpy.data.texts:
-				if textBlock.name.replace('.cs', '') == obj.name:
-					# scriptMeta = SCRIPT_META_TEMPLATE
-					# scriptMeta += str(lastId)
-					# lastId += 1
-					# open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs.meta', 'wb').write(scriptMeta.encode('utf-8'))
-					script = SCRIPT_TEMPLATE
-					script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
-					script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-					# script = script.replace(REPLACE_INDICATOR + '2', str(lastId - 1))
-					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
-					guidIndicator = 'guid: '
-					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
-					script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
-					gameObjectsAndComponentsText += script + '\n'
-					componentIds.append(lastId)
-					lastId += 1
-					break
-			indexOfComponentsList = gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
-			for componentId in componentIds:
-				component = COMPONENT_TEMPLATE
-				component = component.replace(REPLACE_INDICATOR, str(componentId))
-				gameObjectsAndComponentsText = gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + gameObjectsAndComponentsText[indexOfComponentsList :]
-				gameObjectsAndComponentsText = gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
-		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', gameObjectsAndComponentsText)
-		sceneRootsText = ''
-		for transformId in transformIds:
-			sceneRoot = SCENE_ROOT_TEMPLATE
-			sceneRoot = sceneRoot.replace(REPLACE_INDICATOR, str(transformId))
-			sceneRootsText += sceneRoot + '\n'
-		sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
-		open(scenePath, 'wb').write(sceneText.encode('utf-8'))
-		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath ]
-		
-		subprocess.check_call(command)
+		ExportToUnity (context)
 
 class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
@@ -458,6 +326,155 @@ def MakeFolderForFile (path : str):
 		if indexOfSlash == -1:
 			break
 		_path = path[: indexOfSlash]
+
+def ExportToUnity (context):
+	global lastId
+	projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
+	for textBlock in bpy.data.texts:
+		if textBlock.name.endswith('.cs'):
+			text = textBlock.as_string()
+			fileExportPath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name
+			MakeFolderForFile (fileExportPath)
+			open(fileExportPath, 'wb').write(text.encode('utf-8'))
+	meshesDict = {}
+	for mesh in bpy.data.meshes:
+		meshesDict[mesh.name] = []
+	for obj in bpy.context.scene.objects:
+		if obj.type == 'MESH' and obj.data.name in meshesDict:
+			meshesDict[obj.data.name].append(obj.name)
+			fileExportPath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+			MakeFolderForFile (fileExportPath)
+			bpy.ops.object.select_all(action='DESELECT')
+			bpy.context.view_layer.objects.active = obj
+			obj.select_set(True)
+			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
+	MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
+	open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
+
+	os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
+
+	command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', os.path.expanduser(context.scene.world.unity_project_export_path) ]
+	
+	subprocess.check_call(command)
+
+	scenePath = bpy.data.filepath.replace('.blend', '.unity')
+	scenePath = scenePath[scenePath.rfind('/') + 1 :]
+	scenesFolderPath = projectExportPath + '/Assets/Scenes'
+	if not os.path.isdir(scenesFolderPath):
+		os.mkdir(scenesFolderPath)
+	scenePath = scenesFolderPath + '/' + scenePath
+	sceneTemplateText = open(os.path.expanduser('~/Unity2Many/Templates/Scene.unity'), 'rb').read().decode('utf-8')
+	gameObjectsAndComponentsText = ''
+	transformIds = []
+	for obj in bpy.data.objects:
+		componentIds = []
+		gameObject = GAME_OBJECT_TEMPLATE
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', obj.name)
+		gameObjectsAndComponentsText += gameObject + '\n'
+		gameObjectId = lastId
+		lastId += 1
+		transform = TRANSFORM_TEMPLATE
+		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.y))
+		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.z))
+		transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
+		transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		previousObjectRotationMode = obj.rotation_mode
+		obj.rotation_mode = 'QUATERNION'
+		transform = transform.replace(REPLACE_INDICATOR + '2', str(obj.rotation_quaternion.x))
+		transform = transform.replace(REPLACE_INDICATOR + '3', str(obj.rotation_quaternion.y))
+		transform = transform.replace(REPLACE_INDICATOR + '4', str(obj.rotation_quaternion.z))
+		transform = transform.replace(REPLACE_INDICATOR + '5', str(obj.rotation_quaternion.w))
+		obj.rotation_mode = previousObjectRotationMode
+		transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
+		transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.y))
+		transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.z))
+		transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
+		gameObjectsAndComponentsText += transform + '\n'
+		transformIds.append(lastId)
+		lastId += 1
+		if obj.type == 'LIGHT':
+			light = LIGHT_TEMPLATE
+			light = light.replace(REPLACE_INDICATOR + '0', str(lastId))
+			light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			lightObject = bpy.data.lights[obj.name]
+			lightType = 2
+			if lightObject.type == 'SUN':
+				lightType = 1
+			elif lightObject.type == 'SPOT':
+				lightType = 0
+			elif lightObject.type == 'AREA':
+				lightType = 3
+			light = light.replace(REPLACE_INDICATOR + '2', str(lightType))
+			light = light.replace(REPLACE_INDICATOR + '3', str(lightObject.color[0]))
+			light = light.replace(REPLACE_INDICATOR + '4', str(lightObject.color[1]))
+			light = light.replace(REPLACE_INDICATOR + '5', str(lightObject.color[2]))
+			light = light.replace(REPLACE_INDICATOR + '6', str(lightObject.energy))
+			light = light.replace(REPLACE_INDICATOR + '7', str(10))
+			light = light.replace(REPLACE_INDICATOR + '8', str(lightObject.spot_size))
+			light = light.replace(REPLACE_INDICATOR + '9', str(lightObject.spot_size * (1.0 - lightObject.spot_blend)))
+			gameObjectsAndComponentsText += light + '\n'
+			componentIds.append(lastId)
+			lastId += 1
+		elif obj.type == 'MESH':
+			meshFilter = MESH_FILTER_TEMPLATE
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+			fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+			indexOfFile = dataText.find(fileIdIndicator)
+			indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+			indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
+			fileId = dataText[indexOfFileId : indexOfEndOfFileId]
+			indexOfComma = dataText.find(',', indexOfEndOfFileId + 1)
+			meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfComma]
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
+			gameObjectsAndComponentsText += meshFilter + '\n'
+			componentIds.append(lastId)
+			lastId += 1
+			meshRenderer = MESH_RENDERER_TEMPLATE
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			gameObjectsAndComponentsText += meshRenderer + '\n'
+			componentIds.append(lastId)
+			lastId += 1
+		for textBlock in bpy.data.texts:
+			if textBlock.name.replace('.cs', '') == obj.name:
+				# scriptMeta = SCRIPT_META_TEMPLATE
+				# scriptMeta += str(lastId)
+				# lastId += 1
+				# open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs.meta', 'wb').write(scriptMeta.encode('utf-8'))
+				script = SCRIPT_TEMPLATE
+				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
+				script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				# script = script.replace(REPLACE_INDICATOR + '2', str(lastId - 1))
+				scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
+				guidIndicator = 'guid: '
+				scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
+				script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+				gameObjectsAndComponentsText += script + '\n'
+				componentIds.append(lastId)
+				lastId += 1
+				break
+		indexOfComponentsList = gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
+		for componentId in componentIds:
+			component = COMPONENT_TEMPLATE
+			component = component.replace(REPLACE_INDICATOR, str(componentId))
+			gameObjectsAndComponentsText = gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + gameObjectsAndComponentsText[indexOfComponentsList :]
+			gameObjectsAndComponentsText = gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
+	sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', gameObjectsAndComponentsText)
+	sceneRootsText = ''
+	for transformId in transformIds:
+		sceneRoot = SCENE_ROOT_TEMPLATE
+		sceneRoot = sceneRoot.replace(REPLACE_INDICATOR, str(transformId))
+		sceneRootsText += sceneRoot + '\n'
+	sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
+	open(scenePath, 'wb').write(sceneText.encode('utf-8'))
+	command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath ]
+	
+	subprocess.check_call(command)
 
 def ConvertCSFileToCPP (filePath):
 	global mainClassNames
