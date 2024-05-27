@@ -301,6 +301,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	outputFileText = outputFileText.replace('Vector3', 'Vec3')
 	outputFileText = outputFileText.replace('Vec3.zero', 'Vec3::ZERO')
 	outputFileText = outputFileText.replace('Vec3.forward', '-Vec3::Y')
+	outputFileText = outputFileText.replace('Vec3.up', '-Vec3::Z')
 	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec2')
 	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec3')
 	outputFileText = outputFileText.replace('.Normalize', '.normalize')
@@ -321,15 +322,15 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			indexOfEquals = outputFileText.find('=', indexOfTrsUp)
 			setValue = False
 			if indexOfEquals != -1:
-				betweenTrsUpAndEquals = outputFileText[indexOfTrsUp : indexOfEquals]
+				betweenTrsUpAndEquals = outputFileText[indexOfTrsUp + len(trsUpIndicator) : indexOfEquals]
 				if betweenTrsUpAndEquals.isspace() or betweenTrsUpAndEquals == '':
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(-' + value + ', -trs.forward())')
+					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(Vec3::from(up), ' + value + '.mul(-1.0))')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
-				outputFileText = outputFileText[: indexOfTrsUp] + '-trs.forward()' + outputFileText[indexOfTrsUp :]
+				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(forward).mul(-1.0)' + outputFileText[indexOfTrsUp :]
 	indexOfTrsForward = 0
 	while indexOfTrsForward != -1:
 		trsForwardIndicator = 'transform.forward'
@@ -338,15 +339,15 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			indexOfEquals = outputFileText.find('=', indexOfTrsForward)
 			setValue = False
 			if indexOfEquals != -1:
-				betweenTrsForwardAndEquals = outputFileText[indexOfTrsForward : indexOfEquals]
+				betweenTrsForwardAndEquals = outputFileText[indexOfTrsForward + len(trsForwardIndicator) : indexOfEquals]
 				if betweenTrsForwardAndEquals.isspace() or betweenTrsForwardAndEquals == '':
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(-trs.up(), -' + value + ')')
+					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(' + value + '.mul(-1.0), Vec3::from(forward))')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsForward, len(trsForwardIndicator))
-				outputFileText = outputFileText[: indexOfTrsForward] + '-trs.up()' + outputFileText[indexOfTrsForward :]
+				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(up).mul(-1.0)' + outputFileText[indexOfTrsUp :]
 	indexOfAtan2 = 0
 	while indexOfAtan2 != -1:
 		atan2Indicator = 'Mathf.Atan2('
@@ -458,7 +459,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			# if outputFileText[indexOfPublicMethodIndicator :].startswith('Update' + mainClassName):
 			indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_ARGUMENTS))
 			indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
-			query = '\nunsafe\n{\nfor mut trs in &mut query\n{'
+			query = '\nunsafe\n{\nfor mut trs in &mut query\n{\nlet right = trs.right();\nlet up = trs.up();\nlet forward = trs.forward();\n'
 			outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + query + outputFileText[indexOfLeftCurlyBrace + 1 :]
 			outputFileText = outputFileText[: indexOfRightCurlyBrace + len(query)] + '}\n}\n' + outputFileText[indexOfRightCurlyBrace + len(query) :]
 			# else:

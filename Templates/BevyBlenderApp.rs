@@ -4,6 +4,7 @@ use bevy_gltf_components::ComponentsFromGltfPlugin;
 use bevy::render::camera::RenderTarget;
 use bevy::window::WindowRef;
 use bevy::window::PrimaryWindow;
+use std::ops::Mul;
 
 fn main() {
 	let app = App::new()
