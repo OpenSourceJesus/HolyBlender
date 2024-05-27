@@ -322,11 +322,11 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			setValue = False
 			if indexOfEquals != -1:
 				betweenTrsUpAndEquals = outputFileText[indexOfTrsUp : indexOfEquals]
-				if betweenTrsUpAndEquals.isspace():
+				if betweenTrsUpAndEquals.isspace() or betweenTrsUpAndEquals == '':
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(-' + value + ', trs.forward())')
+					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(-' + value + ', -trs.forward())')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
 				outputFileText = outputFileText[: indexOfTrsUp] + '-trs.forward()' + outputFileText[indexOfTrsUp :]
@@ -339,11 +339,11 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			setValue = False
 			if indexOfEquals != -1:
 				betweenTrsForwardAndEquals = outputFileText[indexOfTrsForward : indexOfEquals]
-				if betweenTrsForwardAndEquals.isspace():
+				if betweenTrsForwardAndEquals.isspace() or betweenTrsForwardAndEquals == '':
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(trs.up(), -' + value + ')')
+					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(-trs.up(), -' + value + ')')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsForward, len(trsForwardIndicator))
 				outputFileText = outputFileText[: indexOfTrsForward] + '-trs.up()' + outputFileText[indexOfTrsForward :]
@@ -532,7 +532,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			print('YAY' + gameObjectFind)
 			whatToFind = gameObjectFind.SubstringStartEnd(len(GAME_OBJECT_FIND_INDICATOR), len(gameObjectFind) - 2)
 			entitytFind = '\nunsafe\n{\nfor mut enitty in &mut nameQuery\n{if enitty == ' + whatToFind + '\n{'
-			outputLine = outputLine.Replace(gameObjectFind, entitytFind)
+			outputLine = outputLine.replace(gameObjectFind, entitytFind)
 	indexOfUpdateMethod = outputFileText.find('fn Update')
 	if indexOfUpdateMethod != -1:
 		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
@@ -579,7 +579,6 @@ def SetVariableTypeAndRemovePrimitiveCastsFromOutputFile (variableType : str):
 				outputFileText = outputFileText.replace('(' + casted + ' as f32)', casted)
 
 def MakeSceneOrPrefab (sceneOrPrefabFilePath : str):
-	print('YAY' + sceneOrPrefabFilePath)
 	global mainClassName
 	global membersDict
 	DeleteScene ()
