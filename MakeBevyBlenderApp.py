@@ -330,6 +330,23 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
 				outputFileText = outputFileText[: indexOfTrsUp] + '-trs.forward()' + outputFileText[indexOfTrsUp :]
+	indexOfTrsForward = 0
+	while indexOfTrsForward != -1:
+		trsForwardIndicator = 'transform.forward'
+		indexOfTrsForward = outputFileText.find(trsForwardIndicator, indexOfTrsForward + 1)
+		if indexOfTrsForward != -1:
+			indexOfEquals = outputFileText.find('=', indexOfTrsForward)
+			setValue = False
+			if indexOfEquals != -1:
+				betweenTrsForwardAndEquals = outputFileText[indexOfTrsForward : indexOfEquals]
+				if betweenTrsForwardAndEquals.isspace():
+					setValue = True
+					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(trs.up(), -' + value + ')')
+			if not setValue:
+				outputFileText = Remove(outputFileText, indexOfTrsForward, len(trsForwardIndicator))
+				outputFileText = outputFileText[: indexOfTrsForward] + '-trs.up()' + outputFileText[indexOfTrsForward :]
 	indexOfAtan2 = 0
 	while indexOfAtan2 != -1:
 		atan2Indicator = 'Mathf.Atan2('
