@@ -2,10 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Kismet/GameplayStatics.h"
-#include "PackedLevelActor/PackedLevelActor.h"
-#include "Prefab.h"
-#include "Bullet.h"
 
 class BAREUEPROJECT_API Utils
 {
@@ -21,8 +17,6 @@ public:
 	{
 		return (T) level->Actors[0];
 	}
-	static FString _assetPath;
-	ABullet* actor2;
 	// template<typename T> static void GetAllActors (UWorld* world, TArray<T*>& output)
 	// {
 	// 	for (TActorIterator<T> actor(world); actor; ++ actor)
