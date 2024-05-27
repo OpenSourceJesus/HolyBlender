@@ -313,6 +313,23 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	outputFileText = outputFileText.replace('&self', '')
 	outputFileText = outputFileText.replace('self.', '')
 	outputFileText = outputFileText.replace('self', '')
+	indexOfTrsUp = 0
+	while indexOfTrsUp != -1:
+		trsUpIndicator = 'transform.up'
+		indexOfTrsUp = outputFileText.find(trsUpIndicator, indexOfTrsUp + 1)
+		if indexOfTrsUp != -1:
+			indexOfEquals = outputFileText.find('=', indexOfTrsUp)
+			setValue = False
+			if indexOfEquals != -1:
+				betweenTrsUpAndEquals = outputFileText[indexOfTrsUp : indexOfEquals]
+				if betweenTrsUpAndEquals.isspace():
+					setValue = True
+					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(-' + value + ', trs.forward())')
+			if not setValue:
+				outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
+				outputFileText = outputFileText[: indexOfTrsUp] + '-trs.forward()' + outputFileText[indexOfTrsUp :]
 	indexOfAtan2 = 0
 	while indexOfAtan2 != -1:
 		atan2Indicator = 'Mathf.Atan2('
