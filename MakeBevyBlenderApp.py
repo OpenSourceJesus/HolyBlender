@@ -239,10 +239,14 @@ def MakeMesh (localPosition : list, localRotation : list, localSize : list, obje
 		importedObject.scale = (localSize[0], localSize[1], -localSize[2])
 
 def MakeLight (localPosition : list, localRotation : list, localSize : list, objectName : str, lightType : int, lightIntensity : float):
-	if lightType == 1:
+	if lightType == 0:
+		lightType = 'SPOT'
+	elif lightType == 1:
 		lightType = 'SUN'
 	elif lightType == 2:
 		lightType = 'POINT'
+	else:
+		lightType = 'AREA'
 	lightData = bpy.data.lights.new(name='Light data', type=lightType)
 	lightObject = bpy.data.objects.new(objectName, lightData)
 	bpy.context.collection.objects.link(lightObject)
@@ -549,6 +553,10 @@ def MakeComponent (objectName : str, componentType : str):
 	componentType = definition['title']
 	isComponent = definition['isComponent'] if 'isComponent' in definition else False
 	if isComponent and objectName != '':
+		obj = bpy.data.objects[objectName]
+		bpy.ops.object.select_all(action='DESELECT')
+		bpy.context.view_layer.objects.active = obj
+		obj.select_set(True)
 		addComponentOperator(component_type=componentType)
 
 def DeleteScene (scene = None):
@@ -712,7 +720,7 @@ def MakeSceneOrPrefab (sceneOrPrefabFilePath : str):
 				if line.startswith(LIGHT_TYPE_INDICATOR):
 					lightType = int(line[len(LIGHT_TYPE_INDICATOR) :])
 				elif line.startswith(LIGHT_INTENSITY_INDICATOR):
-					lightIntensity = int(line[len(LIGHT_INTENSITY_INDICATOR) :])
+					lightIntensity = float(line[len(LIGHT_INTENSITY_INDICATOR) :])
 			# elif currentType == 'GameObject':
 			elif line.startswith(ACTIVE_INDICATOR):
 				pass

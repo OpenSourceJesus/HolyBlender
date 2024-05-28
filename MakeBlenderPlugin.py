@@ -357,14 +357,22 @@ def ExportToUnity (context):
 			bpy.context.view_layer.objects.active = obj
 			obj.select_set(True)
 			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
-	unityVersionExists = os.path.isdir(os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'))
-	if unityVersionExists:
+			print('YAY' + obj.name)
+	unityVersionsPath = os.path.expanduser('~/Unity/Hub/Editor/')
+	unityVersions = os.listdir(unityVersionsPath)
+	unityVersionPath = ''
+	for unityVersion in unityVersions:
+		_unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
+		if os.path.isdir(_unityVersionPath):
+			unityVersionPath = _unityVersionPath
+			break
+	if unityVersionPath != '':
 		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
 		open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
 
 		os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
 
-		command = [ os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
+		command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
 		print(command)
 		
 		subprocess.check_call(command)
@@ -406,6 +414,7 @@ def ExportToUnity (context):
 		gameObjectsAndComponentsText += transform + '\n'
 		transformIds.append(lastId)
 		lastId += 1
+		guidIndicator = 'guid: '
 		if obj.type == 'LIGHT':
 			light = LIGHT_TEMPLATE
 			light = light.replace(REPLACE_INDICATOR + '0', str(lastId))
@@ -433,8 +442,7 @@ def ExportToUnity (context):
 			meshFilter = MESH_FILTER_TEMPLATE
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			guidIndicator = 'guid: '
-			if unityVersionExists:
+			if unityVersionPath != '':
 				dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 				fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
 				indexOfFile = dataText.find(fileIdIndicator)
@@ -469,7 +477,7 @@ def ExportToUnity (context):
 				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
 				script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 				# script = script.replace(REPLACE_INDICATOR + '2', str(lastId - 1))
-				if unityVersionExists:
+				if unityVersionPath != '':
 					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
 					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
 				else:
@@ -495,8 +503,8 @@ def ExportToUnity (context):
 		sceneRootsText += sceneRoot + '\n'
 	sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
 	open(scenePath, 'wb').write(sceneText.encode('utf-8'))
-	if unityVersionExists:
-		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath ]
+	if unityVersionPath != '':
+		command = [ unityVersionPath, '-createProject', projectExportPath ]
 		
 		subprocess.check_call(command)
 
@@ -715,11 +723,11 @@ def ConvertPythonFileToRust (filePath):
 def DrawUnityImportField (self, context):
 	self.layout.prop(context.world, 'unity_project_import_path')
 
-def DrawUnityExportPathField (self, context):
+def DrawUnityExportField (self, context):
 	self.layout.prop(context.world, 'unity_project_export_path')
 
-def DrawUnityExportVersionField (self, context):
-	self.layout.prop(context.world, 'unity_export_version')
+# def DrawUnityExportVersionField (self, context):
+# 	self.layout.prop(context.world, 'unity_export_version')
 
 def DrawUnrealExportField (self, context):
 	self.layout.prop(context.world, 'unreal_project_path')
@@ -755,11 +763,11 @@ def register ():
 		description = 'My description',
 		default = '/tmp/TestUnityProject'
 	)
-	bpy.types.World.unity_export_version = bpy.props.StringProperty(
-		name = 'Unity export version',
-		description = 'My description',
-		default = ''
-	)
+	# bpy.types.World.unity_export_version = bpy.props.StringProperty(
+	# 	name = 'Unity export version',
+	# 	description = 'My description',
+	# 	default = ''
+	# )
 	bpy.types.World.unreal_project_path = bpy.props.StringProperty(
 		name = 'Unreal project path',
 		description = 'My description',
@@ -773,8 +781,8 @@ def register ():
 	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityImportField)
-	bpy.types.WORLD_PT_context_world.append(DrawUnityExportPathField)
-	bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
+	bpy.types.WORLD_PT_context_world.append(DrawUnityExportField)
+	# bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportButton)
@@ -785,8 +793,8 @@ def unregister ():
 	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityImportField)
-	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportPathField)
-	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)
+	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportField)
+	# bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportButton)
