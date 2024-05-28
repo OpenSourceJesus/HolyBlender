@@ -1,4 +1,4 @@
-import bpy, subprocess, os, sys, webbrowser
+import bpy, subprocess, os, sys, webbrowser, hashlib
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from SystemExtensions import *
@@ -485,8 +485,13 @@ def ExportToUnity (context):
 			light = light.replace(REPLACE_INDICATOR + '5', str(lightObject.color[2]))
 			light = light.replace(REPLACE_INDICATOR + '6', str(lightObject.energy))
 			light = light.replace(REPLACE_INDICATOR + '7', str(10))
-			light = light.replace(REPLACE_INDICATOR + '8', str(lightObject.spot_size))
-			light = light.replace(REPLACE_INDICATOR + '9', str(lightObject.spot_size * (1.0 - lightObject.spot_blend)))
+			spotSize = 0
+			innerSpotAngle = 0
+			if lightType == 0:
+				spotSize = lightObject.spot_size
+				innerSpotAngle = spotSize * (1.0 - lightObject.spot_blend)
+			light = light.replace(REPLACE_INDICATOR + '8', str(spotSize))
+			light = light.replace(REPLACE_INDICATOR + '9', str(innerSpotAngle))
 			gameObjectsAndComponentsText += light + '\n'
 			componentIds.append(lastId)
 			lastId += 1
@@ -505,9 +510,9 @@ def ExportToUnity (context):
 				meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfComma]
 			else:
 				fileId = ''
-				meshGuid = str(lastId)
-				lastId += 1
-				open(projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx' + '.meta', 'wb').write((guidIndicator + meshGuid).encode('utf-8'))
+				filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
+				meshGuid = str(hashlib.md5(filePath.encode('utf-8')).digest())
+				open(filePath, 'wb').write((guidIndicator + meshGuid).encode('utf-8'))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
 			gameObjectsAndComponentsText += meshFilter + '\n'
@@ -553,9 +558,9 @@ def ExportToUnity (context):
 					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
 					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
 				else:
-					scriptGuid = str(lastId)
-					lastId += 1
-					open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
+					filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta'
+					scriptGuid = str(hashlib.md5(filePath.encode('utf-8')).digest())
+					open(filePath, 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
 				script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 				gameObjectsAndComponentsText += script + '\n'
 				componentIds.append(lastId)
