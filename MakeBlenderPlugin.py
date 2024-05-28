@@ -357,15 +357,17 @@ def ExportToUnity (context):
 			bpy.context.view_layer.objects.active = obj
 			obj.select_set(True)
 			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
-	MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
-	open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
+	unityVersionExists = os.path.isdir(os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'))
+	if unityVersionExists:
+		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
+		open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
 
-	os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
+		os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
 
-	command = [ os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
-	print(command)
-	
-	subprocess.check_call(command)
+		command = [ os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
+		print(command)
+		
+		subprocess.check_call(command)
 
 	scenePath = bpy.data.filepath.replace('.blend', '.unity')
 	scenePath = scenePath[scenePath.rfind('/') + 1 :]
@@ -431,14 +433,21 @@ def ExportToUnity (context):
 			meshFilter = MESH_FILTER_TEMPLATE
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-			fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
-			indexOfFile = dataText.find(fileIdIndicator)
-			indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-			indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-			fileId = dataText[indexOfFileId : indexOfEndOfFileId]
-			indexOfComma = dataText.find(',', indexOfEndOfFileId + 1)
-			meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfComma]
+			guidIndicator = 'guid: '
+			if unityVersionExists:
+				dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+				fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+				indexOfFile = dataText.find(fileIdIndicator)
+				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
+				fileId = dataText[indexOfFileId : indexOfEndOfFileId]
+				indexOfComma = dataText.find(',', indexOfEndOfFileId + 1)
+				meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfComma]
+			else:
+				fileId = ''
+				meshGuid = str(lastId)
+				lastId += 1
+				open(projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx' + '.meta', 'wb').write((guidIndicator + meshGuid).encode('utf-8'))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
 			gameObjectsAndComponentsText += meshFilter + '\n'
@@ -460,9 +469,13 @@ def ExportToUnity (context):
 				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
 				script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 				# script = script.replace(REPLACE_INDICATOR + '2', str(lastId - 1))
-				scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
-				guidIndicator = 'guid: '
-				scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
+				if unityVersionExists:
+					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
+					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
+				else:
+					scriptGuid = str(lastId)
+					lastId += 1
+					open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
 				script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 				gameObjectsAndComponentsText += script + '\n'
 				componentIds.append(lastId)
@@ -482,9 +495,10 @@ def ExportToUnity (context):
 		sceneRootsText += sceneRoot + '\n'
 	sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
 	open(scenePath, 'wb').write(sceneText.encode('utf-8'))
-	command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath ]
-	
-	subprocess.check_call(command)
+	if unityVersionExists:
+		command = [os.path.expanduser('~/Unity/Hub/Editor/' + context.scene.world.unity_export_version + '/Editor/Unity'), '-createProject', projectExportPath ]
+		
+		subprocess.check_call(command)
 
 def ConvertCSFileToCPP (filePath):
 	global mainClassNames

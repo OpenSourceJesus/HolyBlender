@@ -327,7 +327,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(Vec3::from(up), ' + value + '.mul(-1.0))')
+					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(Vec3::from(up).mul(-1.0), ' + value + '.mul(-1.0))')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
 				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(forward).mul(-1.0)' + outputFileText[indexOfTrsUp :]
@@ -344,7 +344,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(' + value + '.mul(-1.0), Vec3::from(forward))')
+					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(' + value + '.mul(-1.0), Vec3::from(forward).mul(-1.0))')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsForward, len(trsForwardIndicator))
 				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(up).mul(-1.0)' + outputFileText[indexOfTrsUp :]
