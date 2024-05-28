@@ -356,16 +356,17 @@ def ExportToUnity (context):
 			bpy.ops.object.select_all(action='DESELECT')
 			bpy.context.view_layer.objects.active = obj
 			obj.select_set(True)
-			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True)
+			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True)
 			print('YAY' + obj.name)
 	unityVersionsPath = os.path.expanduser('~/Unity/Hub/Editor/')
-	unityVersions = os.listdir(unityVersionsPath)
 	unityVersionPath = ''
-	for unityVersion in unityVersions:
-		_unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
-		if os.path.isdir(_unityVersionPath):
-			unityVersionPath = _unityVersionPath
-			break
+	if os.path.isdir(unityVersionsPath):
+		unityVersions = os.listdir(unityVersionsPath)
+		for unityVersion in unityVersions:
+			_unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
+			if os.path.isdir(_unityVersionPath):
+				unityVersionPath = _unityVersionPath
+				break
 	if unityVersionPath != '':
 		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
 		open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
