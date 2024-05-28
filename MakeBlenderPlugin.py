@@ -180,6 +180,57 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}'''
+CAMERA_TEMPLATE = '''--- !u!20 &ꗈ0
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: ꗈ2
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: ꗈ3
+  far clip plane: ꗈ4
+  field of view: ꗈ5
+  orthographic: ꗈ6
+  orthographic size: ꗈ7
+  m_Depth: 0
+  m_CullingMask:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022'''
 COMPONENT_TEMPLATE = '  - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
 GET_UNITY_PROJECT_INFO_SCRIPT = '''using System;
@@ -214,6 +265,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 		File.WriteAllText("/tmp/Unity2Many Data (BlenderToUnity)", outputText);
 	}
 }'''
+PI = 3.141592653589793
 UNREAL_CODE_PATH = ''
 UNREAL_CODE_PATH_SUFFIX = '/Source/'
 excludeItems = [ '/Library' ]
@@ -465,6 +517,26 @@ def ExportToUnity (context):
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			gameObjectsAndComponentsText += meshRenderer + '\n'
+			componentIds.append(lastId)
+			lastId += 1
+		elif obj.type == 'CAMERA':
+			camera = CAMERA_TEMPLATE
+			camera = camera.replace(REPLACE_INDICATOR + '0', str(lastId))
+			camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			cameraObject = bpy.data.cameras[obj.name]
+			fovAxisMode = 0
+			if cameraObject.sensor_fit == 'HORIZONTAL':
+				fovAxisMode = 1
+			camera = camera.replace(REPLACE_INDICATOR + '2', str(fovAxisMode))
+			camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObject.clip_start))
+			camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObject.clip_end))
+			camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObject.angle * (180.0 / PI)))
+			isOrthographic = 0
+			if cameraObject.type == 'ORTHO':
+				isOrthographic = 1
+			camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
+			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale))
+			gameObjectsAndComponentsText += camera + '\n'
 			componentIds.append(lastId)
 			lastId += 1
 		for textBlock in bpy.data.texts:
