@@ -120,6 +120,10 @@ for i in range(len(codeFilesPaths)):
 		componentText += ','
 	registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
 registryText = registryText.replace('ꗈ', '')
+if not os.path.isdir(ASSETS_PATH):
+	os.mkdir(ASSETS_PATH)
+if not os.path.isdir(CODE_PATH):
+	os.mkdir(CODE_PATH)
 open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
 registry = bpy.context.window_manager.components_registry
 registry.schemaPath = REGISTRY_PATH
