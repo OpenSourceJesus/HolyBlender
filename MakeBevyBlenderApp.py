@@ -140,8 +140,7 @@ def ConvertCSFileToRust (filePath):
 		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
 		'includeFile=' + filePath,
 		'bevy=true',
-		'output=/tmp',
-		'outputFolder=/tmp'
+		'output=/tmp'
 	]
 	# for arg in sys.argv:
 	# 	command.append(arg)

@@ -728,6 +728,7 @@ def ConvertCSFileToRust (filePath):
 	mainClassName = filePath[filePath.rfind('/') + 1 : filePath.rfind('.')]
 	assert os.path.isfile(filePath)
 	MakeFolderForFile ('/tmp/src/main.rs')
+	MakeFolderForFile ('/tmp/assets/registry.json')
 	data = 'output=/tmp\n' + filePath
 	open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 	command = [
@@ -735,8 +736,7 @@ def ConvertCSFileToRust (filePath):
 		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
 		'includeFile=' + filePath,
 		'bevy=true',
-		'output=/tmp',
-		'outputFolder=/tmp'
+		'output=/tmp'
 	]
 	# for arg in sys.argv:
 	# 	command.append(arg)
