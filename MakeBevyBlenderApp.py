@@ -52,41 +52,29 @@ COMPONENT_TEMPLATE = '''"Unity2Many::ꗈ": {
 	"type": "object",
 	"typeInfo": "Struct"
 }'''
-# CAMERA_2D_TEMPLATE = '''commands.spawn(Camera2dBundle {
-# 	// transform: Transform::from_xyz(ꗈ0, ꗈ1, ꗈ2).with_rotation(Quat::from_xyzw(ꗈ3, ꗈ4, ꗈ5, ꗈ6)),
-# 	projection: OrthographicProjection { near: ꗈ7, far: ꗈ8, scale: ꗈ9, ..default() },
-# 	..default()
-# });'''
-# CAMERA_3D_TEMPLATE = '''commands.spawn(Camera3dBundle {
-# 	// transform: Transform::from_xyz(ꗈ0, ꗈ1, ꗈ2).with_rotation(Quat::from_xyzw(ꗈ3, ꗈ4, ꗈ5, ꗈ6)),
-# 	projection: PerspectiveProjection { near: ꗈ7, far: ꗈ8, fov: ꗈ9.to_radians(), ..default() },
-# 	..default()
-# });'''
-# MESH_TEMPLATE = '''commands.spawn((SceneBundle {
-# 	transform: Transform::from_xyz(ꗈ0, ꗈ1, ꗈ2).with_rotation(Quat::from_xyzw(ꗈ3, ꗈ4, ꗈ5, ꗈ6)),
-# 	scene: assetServer.load("ꗈ7"),
-# 		..default()
-# 	},
-# 	Name::new("ꗈ8"),
-# ));'''
 SYSTEM_ARGUMENTS = '''mut commands: Commands,
 assetServer: Res<AssetServer>,
 mut meshes : ResMut<Assets<Mesh>>,
 keys: Res<ButtonInput<KeyCode>>,
 mouseButtons: Res<ButtonInput<MouseButton>>,
 mut query: Query<&mut Transform, With<ꗈ>>,
-// mut nameQuery: Query<&mut Name>,
 time: Res<Time>,
 mut cursorEvent: EventReader<CursorMoved>,
-mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>,'''
-# mut spawnedEntityEvent: EventWriter<SpawnedEntityEvent>'''
-# SPAWNED_ENTITY_EVENT = '''fn SpawnedEntity (mut spawnedEntityEvent: EventReader<SpawnedEntityEvent>)
-# {
-
-# }'''
+mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>'''
 CUSTOM_TYPE_INDICATOR = '''#[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
 struct ꗈ;'''
+REMOVE_COMPONENT_TEMPLATE = '''fn RemoveComponent (mut commands: Commands, query: Query<Entity, With<ꗈ1>>, EventReader<RemoveComponentEvent>)
+{
+	for entity in query
+	{
+		if entity.name == entityName:
+		{
+			commands.entity(entity).remove::<ꗈ1>();
+			return;
+		}
+	}
+}'''
 PI = 3.141592653589793
 outputFileText = ''
 importStatementsText = ''
@@ -153,7 +141,6 @@ def ConvertCSFileToRust (filePath):
 	]
 	# for arg in sys.argv:
 	# 	command.append(arg)
-	# command.append(UNITY_PROJECT_PATH)
 	print(command)
 
 	subprocess.check_call(command)
@@ -201,29 +188,11 @@ def MakeCamera (localPosition : list, localRotation : list, localSize : list, ob
 	localRotation.z += PI
 	localRotation = localRotation.to_quaternion()
 	cameraObject.rotation_quaternion = localRotation
-	cameraText = ''
 	if isOrthographic:
-		# cameraText = CAMERA_2D_TEMPLATE
 		cameraData.type = 'ORTHO'
 		cameraData.ortho_scale = orthographicSize * 4
 		if not horizontalFov:
 			cameraData.ortho_scale *= bpy.context.scene.render.resolution_x / bpy.context.scene.render.resolution_y
-	# else:
-	# 	cameraText = CAMERA_3D_TEMPLATE
-	# cameraText = cameraText.replace('ꗈ0', str(cameraObject.location.x))
-	# cameraText = cameraText.replace('ꗈ1', str(cameraObject.location.y))
-	# cameraText = cameraText.replace('ꗈ2', str(-cameraObject.location.z))
-	# cameraText = cameraText.replace('ꗈ3', str(localRotation.x))
-	# cameraText = cameraText.replace('ꗈ4', str(localRotation.y))
-	# cameraText = cameraText.replace('ꗈ5', str(localRotation.z))
-	# cameraText = cameraText.replace('ꗈ6', str(localRotation.w))
-	# cameraText = cameraText.replace('ꗈ7', str(nearClipPlane))
-	# cameraText = cameraText.replace('ꗈ8', str(farClipPlane))
-	# if isOrthographic:
-	# 	cameraText = cameraText.replace('ꗈ9', str(orthographicSize))
-	# else:
-	# 	cameraText = cameraText.replace('ꗈ9', str(fov))
-	outputFileTextReplaceClauses[3] += cameraText
 
 def MakeMesh (localPosition : list, localRotation : list, localSize : list, objectName : str, meshAssetPath : str):
 	oldObjects = set(bpy.context.scene.objects)
@@ -294,9 +263,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
 	if 'fn Update' in outputFileText:
 		# importStatementsText += 'use ' + mainClassName + '::*;\n'
-		# outputFileTextReplaceClauses[1] += '.add_systems(Update, ' + mainClassName + '::' + mainClassName + '::Update)'
 		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
-	# open(BEVY_PROJECT_PATH + '/' + mainClassName + '.rs', 'wb').write(outputFileText.encode('utf-8'))
 	# outputFileText = 'pub mod ' + mainClassName + '\n{\n' + outputFileText + '\n}'
 	outputFileText = outputFileText.replace('fn Start', 'fn Start' + mainClassName)
 	outputFileText = outputFileText.replace('Time.deltaTime', 'time.delta_seconds()')
@@ -331,7 +298,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(Vec3::from(up).mul(-1.0), ' + value + '.mul(-1.0))')
+					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(' + value + '.mul(-1.0), Vec3::from(up))')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
 				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(forward).mul(-1.0)' + outputFileText[indexOfTrsUp :]
@@ -348,7 +315,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 					setValue = True
 					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(' + value + '.mul(-1.0), Vec3::from(forward).mul(-1.0))')
+					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(Vec3::from(forward), ' + value + '.mul(-1.0))')
 			if not setValue:
 				outputFileText = Remove(outputFileText, indexOfTrsForward, len(trsForwardIndicator))
 				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(up).mul(-1.0)' + outputFileText[indexOfTrsUp :]
@@ -427,21 +394,15 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 					memberValue = line[indexOfColon + 1 :]
 				if IsNumber(memberValue) and '.' not in memberValue:
 					memberValue += '.0'
-					membersDict[memberName] = memberValue
+					membersDict[memberName + '_' + mainClassName] = memberValue
 				indexOfMemberName = 0
 				while indexOfMemberName != -1:
 					indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
 					if indexOfMemberName != -1:
-						# newMainClassContents = newMainClassContents[: indexOfMemberName + len(memberName)] + mainClassName + newMainClassContents[indexOfMemberName + len(memberName) :]
 						indexOfSemicolon = newMainClassContents.find(';', indexOfMemberName)
 						newMainClassContents = newMainClassContents[: indexOfSemicolon] + ' = ' + memberValue + newMainClassContents[indexOfSemicolon :]
 			else:
 				break
-		# mainClassMembersDeclarations = newMainClassContents.split(';')
-		# for mainClassMembersDeclaration in mainClassMembersDeclarations:
-		# 	mainClassMemberName = mainClassMembersDeclaration[len('static ') : mainClassMembersDeclaration.find(':')]
-		# 	if mainClassMemberName != '':
-		# 		newMainClassContents = newMainClassContents.replace(mainClassMemberName, mainClassMemberName + mainClassName)
 		outputFileText = outputFileText.replace(mainClassContents, newMainClassContents)
 	mainMethodIndicator = 'pub fn main() {'
 	indexOfMainMethod = outputFileText.find(mainMethodIndicator)
@@ -455,19 +416,11 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		if indexOfPublicMethodIndicator != -1:
 			indexOfLeftParenthesis = outputFileText.find('(', indexOfPublicMethodIndicator)
 			outputFileText = outputFileText[: indexOfLeftParenthesis + 1] + SYSTEM_ARGUMENTS.replace('ꗈ', mainClassName) + outputFileText[indexOfLeftParenthesis + 1 :]
-			# indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_ARGUMENTS))
-			# indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
-			# unsafeIndicator = '\nunsafe\n{'
-			# outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + unsafeIndicator + outputFileText[indexOfLeftCurlyBrace + 1 :]
-			# outputFileText = outputFileText[: indexOfRightCurlyBrace + len(unsafeIndicator)] + '}\n' + outputFileText[indexOfRightCurlyBrace + len(unsafeIndicator) :]
-			# if outputFileText[indexOfPublicMethodIndicator :].startswith('Update' + mainClassName):
 			indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_ARGUMENTS))
 			indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
 			query = '\nunsafe\n{\nfor mut trs in &mut query\n{\nlet right = trs.right();\nlet up = trs.up();\nlet forward = trs.forward();\n'
 			outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + query + outputFileText[indexOfLeftCurlyBrace + 1 :]
 			outputFileText = outputFileText[: indexOfRightCurlyBrace + len(query)] + '}\n}\n' + outputFileText[indexOfRightCurlyBrace + len(query) :]
-			# else:
-			# 	pass
 	indexOfStaticVariableIndicator = 0
 	while indexOfStaticVariableIndicator != -1:
 		staticVariableIndicator = 'static mut '
@@ -505,7 +458,6 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		indexOfInstantiate = outputFileText.find(instantiateIndicator)
 		if indexOfInstantiate != -1:
 			indexOfSemicolon = outputFileText.find(';', indexOfInstantiate)
-			# indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfInstantiate + len(instantiateIndicator))
 			instantiateCommand = outputFileText[indexOfInstantiate : indexOfSemicolon]
 			indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
 			position = ''
@@ -519,14 +471,19 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 				rotation = outputFileText[indexOfRotation : indexOfSemicolon]
 				rotation = Remove(rotation, len(rotation) - 1, 1)
 			whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
-			assetPath = assetsPathsDict[whatToInstantiate]
-			assetPath = assetPath[assetPath.rfind('/') + 1 :]
-			assetPath = assetPath.replace('.prefab', '_Prefab')
-			assetPath += '.glb#Scene0'
+			assetName = assetsPathsDict[whatToInstantiate]
+			assetName = assetName[assetName.rfind('/') + 1 :]
+			assetName = assetName.replace('.prefab', '_Prefab')
+			assetPath = assetName + '.glb#Scene0'
 			if position == '':
 				position = 'Vec3::ZERO'
 				rotation = 'Quat::IDENTITY'
+			indexOfEquals = outputFileText.rfind('=', indexOfInstantiate)
 			newInstantiateCommand = 'SpawnEntity(&mut commands, &assetServer, &"' + assetPath + '", ' + position + ', ' + rotation + ')'
+			if indexOfEquals != -1:
+				betweenEqualsAndInstantiate = outputFileText[indexOfEquals : indexOfInstantiate]
+				if not betweenEqualsAndInstantiate.isspace() and betweenEqualsAndInstantiate != '':
+					newInstantiateCommand = 'let entity_' + assetName + ' = ' + newInstantiateCommand
 			outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
 	indexOfGameObjectFind = 0
 	while indexOfGameObjectFind != -1:
@@ -543,8 +500,6 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
 		outputFileText += CUSTOM_TYPE_INDICATOR.replace('ꗈ', mainClassName)
 	outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
-	# for memberName in membersDict:
-	# 	outputFileText = outputFileText.replace(memberName, memberName + '_' + mainClassName)
 	addToOutputFileText += '\n\n' + outputFileText
 
 def MakeComponent (objectName : str, componentType : str):
@@ -705,17 +660,6 @@ def MakeSceneOrPrefab (sceneOrPrefabFilePath : str):
 					scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
 					if scriptPath != None:
 						currentScriptsPaths.append(scriptPath)
-				# elif not line.startswith('  m_'):
-				# 	indexOfColon = line.find(': ')
-				# 	memberName = line[2 : indexOfColon]
-				# 	value = line[indexOfColon + 2 :]
-				# 	if value.startswith('{'):
-				# 		indexOfGuid = line.find(GUID_INDICATOR)
-				# 		scriptPath = fileGuidsDict.get(line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')], None)
-				# 		if scriptPath != None:
-				# 			value = scriptPath
-				# 		value = '"' + value  + '"'
-				# 	membersDict[memberName] = value
 			elif currentType == 'Light':
 				if line.startswith(LIGHT_TYPE_INDICATOR):
 					lightType = int(line[len(LIGHT_TYPE_INDICATOR) :])
@@ -834,10 +778,13 @@ outputFileText = outputFileText.replace('ꗈ2', outputFileTextReplaceClauses[2])
 outputFileText = outputFileText.replace('ꗈ3', outputFileTextReplaceClauses[3])
 outputFileText += addToOutputFileText
 open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
-command = [ 'cargo', 'run' ]#, '--features', 'bevy/dynamic_linking' ]
+command = [ 'cargo', 'run' ]
 if WEBGL_INDICATOR in sys.argv:
 	command.append('--target')
 	command.append('wasm32-unknown-unknown')
+else:
+	command.append('--features')
+	command.append('bevy/dynamic_linking')
 print(command)
 
 os.environ['WGPU_BACKEND'] = 'gl'

@@ -23,8 +23,6 @@ fn main() {
 		.add_systems(Update, SetCursorPoint)
 		.add_event::<ScreenToWorldPointEvent>()
 		.add_systems(Update, ScreenToWorldPoint)
-		// .add_event::<SpawnedEntityEvent>()
-		// .add_systems(Update, SpawnedEntity)
 		ꗈ1
 		.run();
 }
@@ -35,8 +33,6 @@ struct LevelAssets {
 	level: Handle<Scene>,
 }
 
-// static mut sceneEntity : Entity = None;
-
 fn StartLevel (
 	mut commands: Commands,
 	assets: Res<LevelAssets>,
@@ -45,7 +41,6 @@ fn StartLevel (
 	keys: Res<ButtonInput<KeyCode>>,
 	mouseButtons: Res<ButtonInput<MouseButton>>,
     mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>,
-	// mut spawnedEntityEvent: EventWriter<SpawnedEntityEvent>
 ) {
 	unsafe
 	{
@@ -69,8 +64,8 @@ enum MyStates {
 	Next,
 }
 
-// #[derive(Event)]
-// struct SpawnedEntityEvent(Entity, Vec3, Quat);
+#[derive(Event)]
+struct RemoveComponentEvent(&'static str);
 
 fn SpawnEntity (commands: &mut Commands, assetServer: &Res<AssetServer>, assetPath : &'static str, position : Vec3, rotation : Quat) -> Entity
 {

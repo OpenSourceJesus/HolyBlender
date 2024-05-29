@@ -553,7 +553,6 @@ def ExportToUnity (context):
 				script = SCRIPT_TEMPLATE
 				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
 				script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				# script = script.replace(REPLACE_INDICATOR + '2', str(lastId - 1))
 				if unityVersionPath != '':
 					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
 					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
@@ -739,7 +738,6 @@ def ConvertCSFileToRust (filePath):
 	]
 	# for arg in sys.argv:
 	# 	command.append(arg)
-	# command.append(UNITY_PROJECT_PATH)
 	print(command)
 
 	subprocess.check_call(command)
