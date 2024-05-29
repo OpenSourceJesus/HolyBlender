@@ -434,6 +434,8 @@ def ExportToUnity (context):
 	scenesFolderPath = projectExportPath + '/Assets/Scenes'
 	if not os.path.isdir(scenesFolderPath):
 		os.mkdir(scenesFolderPath)
+	if scenePath == '':
+		scenePath = 'Test.unity'
 	scenePath = scenesFolderPath + '/' + scenePath
 	sceneTemplateText = open(os.path.expanduser('~/Unity2Many/Templates/Scene.unity'), 'rb').read().decode('utf-8')
 	gameObjectsAndComponentsText = ''
