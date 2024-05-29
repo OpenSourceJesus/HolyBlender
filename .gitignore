@@ -3,16 +3,9 @@
 /obj
 /src
 /UnityToUnreal
-/UnityToBevy
 /UnityToStride
 /UnityToGodot
-/CSharpToPython
-/py2many
 /BareUEProject
 /BareStrideProject
-/Blender_bevy_components_workflow
 /.vscode
-Unity2Many.csproj
-Cargo.toml
-Cargo.lock
-/assets/registry.json
+/assets
