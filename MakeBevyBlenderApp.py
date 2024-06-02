@@ -4,17 +4,13 @@ from mathutils import *
 
 sys.path.append('/usr/lib/python3/dist-packages')
 sys.path.append('/usr/local/lib/python3.12/dist-packages')
-from PIL import Image
-
-# sys.path.append(os.path.expanduser('~/Unity2Many/pymaging'))
-# from pymaging.image import Image
-
-# sys.path.append(os.path.expanduser('~/Unity2Many/pymaging-png'))
-# from pymaging_png import png
-
-# from wand.image import Image
-
+sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 sys.path.append(os.path.expanduser('~/Unity2Many'))
+try:
+	from PIL import Image
+except:
+	from wand.image import Image
+
 from GetUnityProjectInfo import *
 from SystemExtensions import *
 
@@ -211,8 +207,10 @@ def MakeSprite (localPosition : list, localRotation : list, localSize : list, ob
 		localRotation = localRotation.to_quaternion()
 		importedObject.rotation_mode = 'QUATERNION'
 		importedObject.rotation_quaternion += localRotation
-		image = Image.open(textureAssetPath)
-		# image = Image.open_from_path(textureAssetPath)
+		try:
+			image = Image.open(textureAssetPath)
+		except:
+			image = Image(filename=textureAssetPath)
 		multiplySize = max(image.width, image.height) / pixelsPerUnit
 		importedObject.scale = Vector((localSize[0], localSize[1], -localSize[2])) * multiplySize
 		importedObject.name = objectName

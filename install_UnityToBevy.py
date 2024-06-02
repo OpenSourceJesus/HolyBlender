@@ -11,13 +11,11 @@ if not os.path.isdir(UNITY_2_MANY_PATH + '/py2many'):
 	os.system('git clone https://github.com/OpenSourceJesus/py2many --depth=1')
 if not os.path.isdir(UNITY_2_MANY_PATH + '/Blender_bevy_components_workflow'):
 	os.system('git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1')
-if not os.path.isdir(UNITY_2_MANY_PATH + '/pymaging'):
-	os.system('git clone https://github.com/ojii/pymaging --depth=1')
-os.system('''# sudo apt -y install g++ pkg-config libx11-dev libasound2-dev libudev-dev libxkbcommon-x11-0
-# sudo apt -y install python3-numpy
-# sudo apt install python3-setuptools
+os.system('''sudo apt install libmagickwand-dev
+sudo apt install pip
+cp -r ~/.local/lib/python3.12/site-packages/wand ''' + UNITY_2_MANY_PATH + '''/wand
+pip install Wand --break-system-packages
 sudo apt -y install python3-toposort
-# sudo apt -y install clang-format
 sudo snap install blender --classic
 sudo snap install rustup --classic
 rustup default stable
