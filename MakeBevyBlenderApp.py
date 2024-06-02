@@ -3,10 +3,20 @@ from math import radians
 from mathutils import *
 
 sys.path.append('/usr/lib/python3/dist-packages')
+sys.path.append('/usr/local/lib/python3.12/dist-packages')
 from PIL import Image
+
+# sys.path.append(os.path.expanduser('~/Unity2Many/pymaging'))
+# from pymaging.image import Image
+
+# sys.path.append(os.path.expanduser('~/Unity2Many/pymaging-png'))
+# from pymaging_png import png
+
+# from wand.image import Image
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from GetUnityProjectInfo import *
+from SystemExtensions import *
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
@@ -83,53 +93,6 @@ addToOutputFileText = ''
 mainClassName = ''
 membersDict = {}
 assetsPathsDict = {}
-
-data = ''
-for arg in sys.argv:
-	if arg.startswith(INPUT_PATH_INDICATOR):
-		UNITY_PROJECT_PATH = os.path.expanduser(arg[len(INPUT_PATH_INDICATOR) :])
-	elif arg.startswith(OUTPUT_PATH_INDICATOR):
-		BEVY_PROJECT_PATH = os.path.expanduser(arg[len(OUTPUT_PATH_INDICATOR) :])
-		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
-		CODE_PATH = BEVY_PROJECT_PATH + '/src'
-		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
-		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
-		data += arg + '\n'
-open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
-codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
-registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
-i = 0
-while i < len(codeFilesPaths):
-	codeFilePath = codeFilesPaths[i]
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in codeFilePath:
-			isExcluded = True
-			break
-	if isExcluded:
-		codeFilesPaths.pop(i)
-		i -= 1
-	i += 1
-for i in range(len(codeFilesPaths)):
-	codeFilePath = codeFilesPaths[i]
-	mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
-	indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
-	componentText = COMPONENT_TEMPLATE
-	componentText = componentText.replace('ꗈ', mainClassName)
-	if i < len(codeFilesPaths) - 1:
-		componentText += ','
-	registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
-registryText = registryText.replace('ꗈ', '')
-if not os.path.isdir(ASSETS_PATH):
-	os.mkdir(ASSETS_PATH)
-if not os.path.isdir(CODE_PATH):
-	os.mkdir(CODE_PATH)
-open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
-registry = bpy.context.window_manager.components_registry
-registry.schemaPath = REGISTRY_PATH
-bpy.ops.object.reload_registry()
-typeInfos = registry.type_infos
-addComponentOperator = bpy.ops.object.add_bevy_component
 
 def ConvertCSFileToRust (filePath):
 	global mainClassName
@@ -249,6 +212,7 @@ def MakeSprite (localPosition : list, localRotation : list, localSize : list, ob
 		importedObject.rotation_mode = 'QUATERNION'
 		importedObject.rotation_quaternion += localRotation
 		image = Image.open(textureAssetPath)
+		# image = Image.open_from_path(textureAssetPath)
 		multiplySize = max(image.width, image.height) / pixelsPerUnit
 		importedObject.scale = Vector((localSize[0], localSize[1], -localSize[2])) * multiplySize
 		importedObject.name = objectName
@@ -523,15 +487,6 @@ def DeleteScene (scene = None):
 	for obj in scene.objects:
 		bpy.data.objects.remove(obj, do_unlink=True)
 
-os.system('''cd Blender_bevy_components_workflow/tools
-python3 internal_generate_release_zips.py
-unzip bevy_components.zip -d -N ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons') + '''
-unzip gltf_auto_export.zip -d  -N ''' + os.path.expanduser('~/.config/blender/4.1/scripts/addons'))
-
-bpy.ops.preferences.addon_enable(module='bevy_components')
-bpy.ops.preferences.addon_enable(module='gltf_auto_export')
-bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
-
 def SetVariableTypeAndRemovePrimitiveCastsFromOutputFile (variableType : str):
 	global outputFileText
 	castIndicator = ' as f32)'
@@ -717,6 +672,73 @@ def AddToMembersDictAndAssetsPathsDict (sceneOrPrefabFilePath : str):
 						assetsPathsDict[memberName] = assetPath
 					value = '"' + value  + '"'
 				membersDict[memberName] = value
+
+data = ''
+for arg in sys.argv:
+	if arg.startswith(INPUT_PATH_INDICATOR):
+		UNITY_PROJECT_PATH = os.path.expanduser(arg[len(INPUT_PATH_INDICATOR) :])
+	elif arg.startswith(OUTPUT_PATH_INDICATOR):
+		BEVY_PROJECT_PATH = os.path.expanduser(arg[len(OUTPUT_PATH_INDICATOR) :])
+		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
+		CODE_PATH = BEVY_PROJECT_PATH + '/src'
+		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
+		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
+		data += arg + '\n'
+open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
+
+os.system('cd ' + BEVY_PROJECT_PATH + '''
+	cargo init
+	cargo add bevy
+	cargo add bevy_asset_loader
+	cargo add bevy_gltf_components
+	cargo add bevy_gltf_blueprints''')
+
+codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
+registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
+i = 0
+while i < len(codeFilesPaths):
+	codeFilePath = codeFilesPaths[i]
+	isExcluded = False
+	for excludeItem in excludeItems:
+		if excludeItem in codeFilePath:
+			isExcluded = True
+			break
+	if isExcluded:
+		codeFilesPaths.pop(i)
+		i -= 1
+	i += 1
+for i in range(len(codeFilesPaths)):
+	codeFilePath = codeFilesPaths[i]
+	mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
+	indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
+	componentText = ',\n' + COMPONENT_TEMPLATE
+	componentText = componentText.replace('ꗈ', mainClassName)
+	registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
+registryText = registryText.replace('ꗈ', '')
+if not os.path.isdir(ASSETS_PATH):
+	os.mkdir(ASSETS_PATH)
+if not os.path.isdir(CODE_PATH):
+	os.mkdir(CODE_PATH)
+addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
+if not os.path.isdir(addonsPath):
+	MakeFolderForFile (addonsPath + '/')
+
+os.system('cd ' + os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools') + '''
+	python3 internal_generate_release_zips.py''')
+if not os.path.isdir(addonsPath + '/bevy_components'):
+	os.system('unzip bevy_components.zip -d ' + addonsPath)
+if not os.path.isdir(addonsPath + '/gltf_auto_export'):
+	os.system('unzip gltf_auto_export.zip -d ' + addonsPath)
+
+bpy.ops.preferences.addon_enable(module='bevy_components')
+bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
+open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
+registry = bpy.context.window_manager.components_registry
+registry.schemaPath = REGISTRY_PATH
+bpy.ops.object.reload_registry()
+typeInfos = registry.type_infos
+addComponentOperator = bpy.ops.object.add_bevy_component
 
 sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
 for sceneFilePath in sceneFilesPaths:

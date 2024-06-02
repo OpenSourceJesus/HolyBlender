@@ -13,3 +13,13 @@ def GetAllFilePathsOfType (rootFolderPath : str, fileExtension : str) -> list[st
 				output.append(fullPath)
 		del foldersRemaining[0]
 	return output
+
+def MakeFolderForFile (path : str):
+	_path = path[: path.find('/')]
+	while _path != path:
+		if _path != '' and not os.path.isdir(_path):
+			os.mkdir(_path)
+		indexOfSlash = path.find('/', len(_path) + 1)
+		if indexOfSlash == -1:
+			break
+		_path = path[: indexOfSlash]

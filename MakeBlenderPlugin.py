@@ -289,7 +289,10 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 			ExportToUnity (context)
 			importPath = os.path.expanduser(context.scene.world.unity_project_export_path)
 			context.scene.world.unity_project_export_path = previousUnityExportPath
-		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToUnreal.py'), 'input=' + importPath, 'output=' + os.path.expanduser(context.scene.world.unreal_project_path), 'exclude=/Library' ]
+		unrealExportPath = os.path.expanduser(context.scene.world.unreal_project_path)
+		if not os.path.isdir(unrealExportPath):
+			os.mkdir(unrealExportPath)
+		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToUnreal.py'), 'input=' + importPath, 'output=' + unrealExportPath, 'exclude=/Library' ]
 
 		subprocess.check_call(command)
 
@@ -309,7 +312,10 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 			ExportToUnity (context)
 			importPath = os.path.expanduser(context.scene.world.unity_project_export_path)
 			context.scene.world.unity_project_export_path = previousUnityExportPath
-		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + os.path.expanduser(context.scene.world.bevy_project_path), 'exclude=/Library', 'webgl' ]
+		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
+		if not os.path.isdir(bevyExportPath):
+			os.mkdir(bevyExportPath)
+		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
 		print(command)
 
 		subprocess.check_call(command)
@@ -378,19 +384,11 @@ classes = [
 	TEXT_EDITOR_OT_BevyTranslateButton,
 ]
 
-def MakeFolderForFile (path : str):
-	_path = path[: path.find('/')]
-	while _path != path:
-		if _path != '' and not os.path.isdir(_path):
-			os.mkdir(_path)
-		indexOfSlash = path.find('/', len(_path) + 1)
-		if indexOfSlash == -1:
-			break
-		_path = path[: indexOfSlash]
-
 def ExportToUnity (context):
 	global lastId
 	projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
+	if not os.path.isdir(projectExportPath):
+		os.mkdir(projectExportPath)
 	for textBlock in bpy.data.texts:
 		if textBlock.name.endswith('.cs'):
 			text = textBlock.as_string()
