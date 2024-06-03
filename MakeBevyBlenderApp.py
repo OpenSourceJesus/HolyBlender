@@ -689,7 +689,12 @@ os.system('cd ' + BEVY_PROJECT_PATH + '''
 	cargo add bevy
 	cargo add bevy_asset_loader
 	cargo add bevy_gltf_components
-	cargo add bevy_gltf_blueprints''')
+	cargo add bevy_gltf_blueprints
+	rustup target install wasm32-unknown-unknown
+	cargo install wasm-server-runner
+	rustup target add wasm32-unknown-unknown
+	cargo add serde --features derive
+	cargo add wasm-bindgen --features serde-serialize''')
 
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
@@ -801,6 +806,10 @@ outputFileText = outputFileText.replace('ꗈ2', outputFileTextReplaceClauses[2])
 outputFileText = outputFileText.replace('ꗈ3', outputFileTextReplaceClauses[3])
 outputFileText += addToOutputFileText
 open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
+
+
+os.environ['WGPU_BACKEND'] = 'gl'
+os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
 command = [ 'cargo', 'run' ]
 if WEBGL_INDICATOR in sys.argv:
 	command.append('--target')
@@ -810,6 +819,4 @@ else:
 	command.append('bevy/dynamic_linking')
 print(command)
 
-os.environ['WGPU_BACKEND'] = 'gl'
-os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
-subprocess.check_call(command)
+os.system('cd ' + BEVY_PROJECT_PATH + '\n' + ' '.join(command))

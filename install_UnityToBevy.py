@@ -11,19 +11,13 @@ if not os.path.isdir(UNITY_2_MANY_PATH + '/py2many'):
 	os.system('git clone https://github.com/OpenSourceJesus/py2many --depth=1')
 if not os.path.isdir(UNITY_2_MANY_PATH + '/Blender_bevy_components_workflow'):
 	os.system('git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1')
-os.system('''sudo apt install libmagickwand-dev
-sudo apt install pip
+os.system('''sudo apt install pip
 cp -r ~/.local/lib/python3.12/site-packages/wand ''' + UNITY_2_MANY_PATH + '''/wand
 pip install Wand --break-system-packages
 sudo apt -y install python3-toposort
 sudo snap install blender --classic
 sudo snap install rustup --classic
 rustup default stable
-rustup target install wasm32-unknown-unknown
-cargo install wasm-server-runner
-rustup target add wasm32-unknown-unknown
-cargo add serde --features derive
-cargo add wasm-bindgen --features serde-serialize
 sudo apt -y install dotnet-sdk-8.0
 dotnet new console --force
 rm Program.cs
