@@ -282,7 +282,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		InstallAndBuildTool ('UnityToUnreal')
+		BuildTool ('UnityToUnreal')
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath == '':
 			previousUnityExportPath = context.scene.world.unity_project_export_path
@@ -306,7 +306,7 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		InstallAndBuildTool ('UnityToBevy')
+		BuildTool ('UnityToBevy')
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath == '':
 			previousUnityExportPath = context.scene.world.unity_project_export_path
@@ -345,7 +345,7 @@ class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		global operatorContext
-		InstallAndBuildTool ('UnityToUnreal')
+		BuildTool ('UnityToUnreal')
 		operatorContext = context
 		for textBlock in bpy.data.texts:
 			if textBlock.name.endswith('.cs'):
@@ -363,7 +363,7 @@ class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		global operatorContext
-		InstallAndBuildTool ('UnityToBevy')
+		BuildTool ('UnityToBevy')
 		operatorContext = context
 		for textBlock in bpy.data.texts:
 			if textBlock.name.endswith('.cs'):
@@ -579,11 +579,11 @@ def ExportToUnity (context):
 		
 		subprocess.check_call(command)
 
-def InstallAndBuildTool (toolName : str):
-	command = [ 'make', 'install_' + toolName ]
-	print(command)
+def BuildTool (toolName : str):
+	# command = [ 'make', 'install_' + toolName ]
+	# print(command)
 
-	subprocess.check_call(command)
+	# subprocess.check_call(command)
 
 
 	command = [ 'make', 'build_' + toolName ]
