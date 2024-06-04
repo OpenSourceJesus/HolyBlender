@@ -59,38 +59,38 @@ Light:
   m_InnerSpotAngle: ꗈ9
   m_CookieSize: 10
   m_Shadows:
-    m_Type: 0
-    m_Resolution: -1
-    m_CustomResolution: -1
-    m_Strength: 1
-    m_Bias: 0.05
-    m_NormalBias: 0.4
-    m_NearPlane: 0.2
-    m_CullingMatrixOverride:
-      e00: 1
-      e01: 0
-      e02: 0
-      e03: 0
-      e10: 0
-      e11: 1
-      e12: 0
-      e13: 0
-      e20: 0
-      e21: 0
-      e22: 1
-      e23: 0
-      e30: 0
-      e31: 0
-      e32: 0
-      e33: 1
-    m_UseCullingMatrixOverride: 0
+	m_Type: 0
+	m_Resolution: -1
+	m_CustomResolution: -1
+	m_Strength: 1
+	m_Bias: 0.05
+	m_NormalBias: 0.4
+	m_NearPlane: 0.2
+	m_CullingMatrixOverride:
+	  e00: 1
+	  e01: 0
+	  e02: 0
+	  e03: 0
+	  e10: 0
+	  e11: 1
+	  e12: 0
+	  e13: 0
+	  e20: 0
+	  e21: 0
+	  e22: 1
+	  e23: 0
+	  e30: 0
+	  e31: 0
+	  e32: 0
+	  e33: 1
+	m_UseCullingMatrixOverride: 0
   m_Cookie: {fileID: 0}
   m_DrawHalo: 0
   m_Flare: {fileID: 0}
   m_RenderMode: 0
   m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
+	serializedVersion: 2
+	m_Bits: 4294967295
   m_RenderingLayerMask: 1
   m_Lightmapping: 4
   m_LightShadowCasterMode: 0
@@ -160,8 +160,8 @@ MeshRenderer:
   m_Materials:
   - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
   m_StaticBatchInfo:
-    firstSubMesh: 0
-    subMeshCount: 0
+	firstSubMesh: 0
+	subMeshCount: 0
   m_StaticBatchRoot: {fileID: 0}
   m_ProbeAnchor: {fileID: 0}
   m_LightProbeVolumeOverride: {fileID: 0}
@@ -206,11 +206,11 @@ Camera:
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
-    serializedVersion: 2
-    x: 0
-    y: 0
-    width: 1
-    height: 1
+	serializedVersion: 2
+	x: 0
+	y: 0
+	width: 1
+	height: 1
   near clip plane: ꗈ3
   far clip plane: ꗈ4
   field of view: ꗈ5
@@ -218,8 +218,8 @@ Camera:
   orthographic size: ꗈ7
   m_Depth: 0
   m_CullingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
+	serializedVersion: 2
+	m_Bits: 4294967295
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -272,6 +272,8 @@ excludeItems = [ '/Library' ]
 lastId = 5
 operatorContext = None
 mainClassNames = []
+attachScriptDropdownOptions = []
+attachedScriptsDict = {}
 
 class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -539,27 +541,27 @@ def ExportToUnity (context):
 			gameObjectsAndComponentsText += camera + '\n'
 			componentIds.append(lastId)
 			lastId += 1
-		for textBlock in bpy.data.texts:
-			if textBlock.name.replace('.cs', '') == obj.name:
-				# scriptMeta = SCRIPT_META_TEMPLATE
-				# scriptMeta += str(lastId)
-				# lastId += 1
-				# open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs.meta', 'wb').write(scriptMeta.encode('utf-8'))
-				script = SCRIPT_TEMPLATE
-				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
-				script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				if unityVersionPath != '':
-					scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
-					scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
-				else:
-					filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta'
-					scriptGuid = str(hashlib.md5(filePath.encode('utf-8')).digest())
-					open(filePath, 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
-				script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
-				gameObjectsAndComponentsText += script + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-				break
+		attachedScripts = attachedScriptsDict.get(obj.name, [])
+		for textBlock in attachedScripts:
+			# scriptMeta = SCRIPT_META_TEMPLATE
+			# scriptMeta += str(lastId)
+			# lastId += 1
+			# open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs.meta', 'wb').write(scriptMeta.encode('utf-8'))
+			script = SCRIPT_TEMPLATE
+			script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
+			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			if unityVersionPath != '':
+				scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
+				scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
+			else:
+				filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta'
+				scriptGuid = str(hashlib.md5(filePath.encode('utf-8')).digest())
+				open(filePath, 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
+			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+			gameObjectsAndComponentsText += script + '\n'
+			componentIds.append(lastId)
+			lastId += 1
+			break
 		indexOfComponentsList = gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
 		for componentId in componentIds:
 			component = COMPONENT_TEMPLATE
@@ -580,12 +582,6 @@ def ExportToUnity (context):
 		subprocess.check_call(command)
 
 def BuildTool (toolName : str):
-	# command = [ 'make', 'install_' + toolName ]
-	# print(command)
-
-	# subprocess.check_call(command)
-
-
 	command = [ 'make', 'build_' + toolName ]
 	print(command)
 
@@ -832,7 +828,56 @@ def DrawUnrealTranslateButton (self, context):
 def DrawBevyTranslateButton (self, context):
 	self.layout.operator('bevy.translate', icon='CONSOLE')
 
+def DrawAttachScriptDropdown (self, context):
+	self.layout.prop(context.object, 'attach_script_dropdown')
+
+def DrawAttachedScriptsText (self, context):
+	self.layout.prop(context.edit_text, 'attached_to_objects')
+
+def AttachScript (self, context):
+	global attachedScriptsDict
+	attachedScripts = attachedScriptsDict.get(self, [])
+	attachedScripts.append(bpy.context.object.attach_script_dropdown)
+	attachedScriptsDict[self] = attachedScripts
+
+def Update ():
+	global attachedScriptsDict
+	global attachScriptDropdownOptions
+	attachScriptDropdownOptions.clear()
+	i = 0
+	defaultScript = None
+	for textBlock in bpy.data.texts:
+		if i == 0:
+			defaultScript = textBlock.name
+		attachScriptDropdownOptions.append((textBlock.name, textBlock.name, '', '', i))
+		i += 1
+	if defaultScript != None:
+		bpy.types.Object.attach_script_dropdown = bpy.props.EnumProperty(
+			items = attachScriptDropdownOptions,
+			name = 'Attach script',
+			description = 'My description',
+			default = defaultScript,
+			update = AttachScript
+		)
+		attachedScriptsText = ''
+		for obj in attachedScriptsDict:
+			if bpy.context.object.attach_script_dropdown in attachedScriptsDict[obj]:
+				attachedScriptsText += obj.name + ', '
+		attachedScriptsText = attachedScriptsText[: -2]
+		bpy.types.Text.attached_to_objects = bpy.props.StringProperty(
+			name = 'Attached to objects: ',
+			description = 'My description',
+			default = attachedScriptsText
+		)
+		# bpy.context.edit_text.attached_to_objects = attachedScriptsText
+		bpy.types.TEXT_HT_footer.remove(DrawAttachedScriptsText)
+		bpy.types.TEXT_HT_footer.append(DrawAttachedScriptsText)
+	bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
+	bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
+	return 0.1
+
 def register ():
+	global attachScriptDropdownOptions
 	for cls in classes:
 		bpy.utils.register_class(cls)
 	bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
@@ -870,6 +915,7 @@ def register ():
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
+	bpy.app.timers.register(Update)
 
 def unregister ():
 	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
@@ -882,6 +928,7 @@ def unregister ():
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportButton)
+	bpy.app.timers.unregister(Update)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 
