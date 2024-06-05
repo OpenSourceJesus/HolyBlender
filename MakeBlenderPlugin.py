@@ -128,6 +128,14 @@ MonoBehaviour:
   m_SoftShadowQuality: 0'''
 # SCRIPT_META_TEMPLATE = '''fileFormatVersion: 2
 # guid: '''
+# MATERIAL_META_TEMPLATE = '''fileFormatVersion: 2
+# guid: ꗈ
+# NativeFormatImporter:
+#   externalObjects: {}
+#   mainObjectFileID: 2100000
+#   userData: 
+#   assetBundleName: 
+#   assetBundleVariant: '''
 MESH_FILTER_TEMPLATE = '''--- !u!33 &ꗈ0
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -135,7 +143,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: ꗈ1}
-  m_Mesh: {fileID: ꗈ2, guid: ꗈ3, type: 3}'''
+  m_Mesh: {fileID: 10202, guid: ꗈ2, type: 3}'''
 MESH_RENDERER_TEMPLATE = '''--- !u!23 &ꗈ0
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -158,7 +166,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 10303, guid: 0000000000000000f000000000000000, type: 0}
+  - {fileID: 10303, guid: ꗈ2, type: 0}
   m_StaticBatchInfo:
 	firstSubMesh: 0
 	subMeshCount: 0
@@ -233,38 +241,6 @@ Camera:
   m_StereoSeparation: 0.022'''
 COMPONENT_TEMPLATE = '  - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
-GET_UNITY_PROJECT_INFO_SCRIPT = '''using System;
-using System.IO;
-using UnityEngine;
-using UnityEditor;
-using Object = UnityEngine.Object;
-
-public class GetUnityProjectInfo : MonoBehaviour
-{
-	public static void Do ()
-	{
-		string[] args = Environment.GetCommandLineArgs();
-		string outputText = "";
-		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".fbx");
-		foreach (string filePath in filePaths)
-		{
-			int indexOfAssets = filePath.IndexOf("Assets");
-			string relativeFilePath = filePath.Substring(indexOfAssets);
-			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
-			foreach (Object obj in objects)
-			{
-				if (obj.GetType() == typeof(Mesh))
-				{
-					string guid;
-					long fileId;
-					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						outputText += '-' + filePath + ' ' + fileId + ' ' + guid + ',';
-				}
-			}
-		}
-		File.WriteAllText("/tmp/Unity2Many Data (BlenderToUnity)", outputText);
-	}
-}'''
 PI = 3.141592653589793
 UNREAL_CODE_PATH = ''
 UNREAL_CODE_PATH_SUFFIX = '/Source/'
@@ -413,17 +389,6 @@ def ExportToUnity (context):
 			if os.path.isfile(_unityVersionPath):
 				unityVersionPath = _unityVersionPath
 				break
-	if unityVersionPath != '':
-		MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
-		open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
-
-		os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
-
-		command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
-		print(command)
-		
-		subprocess.check_call(command)
-
 	scenePath = bpy.data.filepath.replace('.blend', '.unity')
 	scenePath = scenePath[scenePath.rfind('/') + 1 :]
 	scenesFolderPath = projectExportPath + '/Assets/Scenes'
@@ -496,28 +461,36 @@ def ExportToUnity (context):
 			meshFilter = MESH_FILTER_TEMPLATE
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			if unityVersionPath != '':
-				dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-				fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
-				indexOfFile = dataText.find(fileIdIndicator)
-				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-				fileId = dataText[indexOfFileId : indexOfEndOfFileId]
-				indexOfComma = dataText.find(',', indexOfEndOfFileId + 1)
-				meshGuid = dataText[indexOfEndOfFileId + 1 : indexOfComma]
-			else:
-				fileId = ''
-				filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
-				meshGuid = str(hashlib.md5(filePath.encode('utf-8')).digest())
-				open(filePath, 'wb').write((guidIndicator + meshGuid).encode('utf-8'))
-			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
-			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
+			filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
+			meshGuid = GetGuid(filePath)
+			open(filePath, 'wb').write((guidIndicator + meshGuid).encode('utf-8'))
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', meshGuid)
 			gameObjectsAndComponentsText += meshFilter + '\n'
 			componentIds.append(lastId)
 			lastId += 1
+			material = open(os.path.expanduser('~/Unity2Many/Templates/Material.mat'), 'rb').read().decode('utf-8')
+			materialColor = obj.active_material.diffuse_color
+			material = material.replace(REPLACE_INDICATOR + '0', obj.active_material.name)
+			material = material.replace(REPLACE_INDICATOR + '1', str(materialColor[0]))
+			material = material.replace(REPLACE_INDICATOR + '2', str(materialColor[1]))
+			material = material.replace(REPLACE_INDICATOR + '3', str(materialColor[2]))
+			material = material.replace(REPLACE_INDICATOR + '4', str(materialColor[3]))
+			filePath = projectExportPath + '/Assets/Art/Materials/' + obj.active_material.name + '.mat'
+			MakeFolderForFile (filePath)
+			open(filePath, 'wb').write(material.encode('utf-8'))
+			filePath += '.meta'
+			materialGuid = GetGuid(filePath)
+			# open(filePath, 'wb').write(MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
+			open(filePath, 'wb').write((guidIndicator + materialGuid).encode('utf-8'))
+			# print('YAY' + obj.data.name)
+			# filePath = projectExportPath + '/Assets/Art/Models/Materials/' + obj.data.name + '-Material.mat.meta'
+			# materialMetaText = open(filePath, 'rb').read().decode('utf-8')
+			# indexOfGuid = materialMetaText.find(guidIndicator)
+			# materialGuid = materialMetaText[indexOfGuid : materialMetaText.find('\n', indexOfGuid)]
 			meshRenderer = MESH_RENDERER_TEMPLATE
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '2', materialGuid)
 			gameObjectsAndComponentsText += meshRenderer + '\n'
 			componentIds.append(lastId)
 			lastId += 1
@@ -550,13 +523,9 @@ def ExportToUnity (context):
 			script = SCRIPT_TEMPLATE
 			script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
 			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			if unityVersionPath != '':
-				scriptMetaText = open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta', 'rb').read().decode('utf-8')
-				scriptGuid = scriptMetaText[scriptMetaText.find(guidIndicator) + len(guidIndicator) :]
-			else:
-				filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta'
-				scriptGuid = str(hashlib.md5(filePath.encode('utf-8')).digest())
-				open(filePath, 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
+			filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta'
+			scriptGuid = GetGuid(filePath)
+			open(filePath, 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
 			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 			gameObjectsAndComponentsText += script + '\n'
 			componentIds.append(lastId)
@@ -586,6 +555,9 @@ def BuildTool (toolName : str):
 	print(command)
 
 	subprocess.check_call(command)
+
+def GetGuid (filePath : str):
+	return hashlib.md5(filePath.encode('utf-8')).hexdigest()
 
 def ConvertCSFileToCPP (filePath):
 	global mainClassNames
@@ -878,6 +850,7 @@ def Update ():
 
 def register ():
 	global attachScriptDropdownOptions
+	# bpy.types.View3DShading.color_type = 'OBJECT'
 	for cls in classes:
 		bpy.utils.register_class(cls)
 	bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
