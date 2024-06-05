@@ -126,16 +126,123 @@ MonoBehaviour:
   m_LightCookieSize: {x: 1, y: 1}
   m_LightCookieOffset: {x: 0, y: 0}
   m_SoftShadowQuality: 0'''
-# SCRIPT_META_TEMPLATE = '''fileFormatVersion: 2
-# guid: '''
-# MATERIAL_META_TEMPLATE = '''fileFormatVersion: 2
-# guid: ꗈ
-# NativeFormatImporter:
-#   externalObjects: {}
-#   mainObjectFileID: 2100000
-#   userData: 
-#   assetBundleName: 
-#   assetBundleVariant: '''
+SCRIPT_META_TEMPLATE = '''fileFormatVersion: 2
+guid: '''
+MATERIAL_META_TEMPLATE = '''fileFormatVersion: 2
+guid: ꗈ
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: '''
+MESH_META_TEMPLATE = '''fileFormatVersion: 2
+guid: ꗈ
+ModelImporter:
+  serializedVersion: 22200
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: '''
 MESH_FILTER_TEMPLATE = '''--- !u!33 &ꗈ0
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -463,7 +570,7 @@ def ExportToUnity (context):
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
-			open(filePath, 'wb').write((guidIndicator + meshGuid).encode('utf-8'))
+			open(filePath, 'wb').write(MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', meshGuid)
 			gameObjectsAndComponentsText += meshFilter + '\n'
 			componentIds.append(lastId)
@@ -480,13 +587,7 @@ def ExportToUnity (context):
 			open(filePath, 'wb').write(material.encode('utf-8'))
 			filePath += '.meta'
 			materialGuid = GetGuid(filePath)
-			# open(filePath, 'wb').write(MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
-			open(filePath, 'wb').write((guidIndicator + materialGuid).encode('utf-8'))
-			# print('YAY' + obj.data.name)
-			# filePath = projectExportPath + '/Assets/Art/Models/Materials/' + obj.data.name + '-Material.mat.meta'
-			# materialMetaText = open(filePath, 'rb').read().decode('utf-8')
-			# indexOfGuid = materialMetaText.find(guidIndicator)
-			# materialGuid = materialMetaText[indexOfGuid : materialMetaText.find('\n', indexOfGuid)]
+			open(filePath, 'wb').write(MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
 			meshRenderer = MESH_RENDERER_TEMPLATE
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
@@ -516,16 +617,14 @@ def ExportToUnity (context):
 			lastId += 1
 		attachedScripts = attachedScriptsDict.get(obj.name, [])
 		for textBlock in attachedScripts:
-			# scriptMeta = SCRIPT_META_TEMPLATE
-			# scriptMeta += str(lastId)
-			# lastId += 1
-			# open(projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.cs.meta', 'wb').write(scriptMeta.encode('utf-8'))
 			script = SCRIPT_TEMPLATE
 			script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
 			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + textBlock.name + '.meta'
 			scriptGuid = GetGuid(filePath)
-			open(filePath, 'wb').write((guidIndicator + scriptGuid).encode('utf-8'))
+			scriptMeta = SCRIPT_META_TEMPLATE
+			scriptMeta += scriptGuid
+			open(filePath, 'wb').write(scriptMeta.encode('utf-8'))
 			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 			gameObjectsAndComponentsText += script + '\n'
 			componentIds.append(lastId)
