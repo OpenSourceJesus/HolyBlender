@@ -6,7 +6,7 @@ os.system('''rm /tmp/Unity2Many Data (UnityToBevy)
 command = [ 'blender' ]
 for arg in sys.argv:
     if arg.endswith('.blend'):
-        command.append(arg)
+        command.append(os.path.expanduser(arg))
 command += [ '--python', 'MakeBlenderPlugin.py' ]
 print(command)
 

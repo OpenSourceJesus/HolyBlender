@@ -1,11 +1,13 @@
-import os, subprocess, sys
+import subprocess, sys, os
 
-os.system('rm -r ' + os.path.expanduser('~/Unity2Many') + '''/UnityToBevy
-make build_UnityToBevy''')
+os.system('rm -r ' + os.path.expanduser('~/Unity2Many/UnityToBevy') + '''
+    make build_UnityToBevy''')
 
-command = [ 'blender', '--python', 'MakeBevyBlenderApp.py' ]
+command = [ 'blender' ]
 for arg in sys.argv:
-    command.append(arg)
+    if arg.endswith('.blend'):
+        command.append(os.path.expanduser(arg))
+command += [ '--python', 'MakeBevyBlenderApp.py' ]
 print(command)
 
 subprocess.check_call(command)
