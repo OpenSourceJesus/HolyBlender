@@ -1,6 +1,7 @@
 #include "Utils.h"
 #include <stdio.h>
 #include "UObject/UObjectGlobals.h"
+#include "Kismet/GameplayStatics.h"
 #include <iostream>
 
 FVector Utils::GetMousePosition (UWorld* world)

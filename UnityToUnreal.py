@@ -6,7 +6,7 @@ from SystemExtensions import *
 UNITY_PROJECT_PATH = ''
 UNREAL_COMMAND_PATH = os.path.expanduser('~/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd')
 UNREAL_PROJECT_PATH = ''
-MAKE_UNREAL_PROJECT_SCRIPT_PATH = os.path.expanduser('~/Unity2Many') + '/MakeUnrealProject.py'
+MAKE_UNREAL_PROJECT_SCRIPT_PATH = os.path.expanduser('~/Unity2Many/MakeUnrealProject.py')
 CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
 INPUT_PATH_INDICATOR = 'input='
 OUTPUT_PATH_INDICATOR = 'output='
@@ -28,6 +28,7 @@ for arg in sys.argv:
 	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
 		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) :])
 
+unrealProjectName = UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
 metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
 fileGuidsDict = {}
 for metaFilePath in metaFilesPaths:
@@ -46,9 +47,13 @@ for metaFilePath in metaFilesPaths:
 	guid = metaFileText[indexOfGuid : indexOfNewLine]
 	fileGuidsDict[guid] = metaFilePath.replace('.meta', '')
 
-os.system('rm -r ' + UNREAL_PROJECT_PATH + '''
-	cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + UNREAL_PROJECT_PATH + '''
-	make build_UnityToUnreal''')
+command = 'rm -r ' + UNREAL_PROJECT_PATH + '''
+	cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + ' ' + UNREAL_PROJECT_PATH + '''
+	mv ''' + UNREAL_PROJECT_PATH + '/Source/BareUEProject ' + UNREAL_PROJECT_PATH + '/Source/' + unrealProjectName + '''
+	make build_UnityToUnreal'''
+print(command)
+
+os.system(command)
 
 def ConvertPythonFileToCpp (filePath):
 	global membersDict
