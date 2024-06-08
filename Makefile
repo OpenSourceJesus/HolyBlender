@@ -32,7 +32,7 @@ build_UnityToBevy:
 	dotnet build Unity2Many.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityToBevy -o=UnityToBevy
 
 UnityToBevy:
-	python3 UnityToBevy.py input=~/Unity2Many-TestUnityProject output=~/Unity2Many exclude=/Library
+	python3 UnityToBevy.py input=~/Unity2Many-TestUnityProject output=~/Unity2Many exclude=/Library fromUnity
 
 install_KritaToBlender:
 	# sudo apt install python3

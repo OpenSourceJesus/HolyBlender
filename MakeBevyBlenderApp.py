@@ -58,6 +58,20 @@ COMPONENT_TEMPLATE = '''"Unity2Many::ꗈ": {
 	"type": "object",
 	"typeInfo": "Struct"
 }'''
+CUSTOM_TYPE_TEMPLATE = '''#[derive(Component, Reflect, Default, Debug)]
+#[reflect(Component)]
+struct ꗈ;'''
+REMOVE_COMPONENT_TEMPLATE = '''fn RemoveComponent (mut commands: Commands, query: Query<Entity, With<ꗈ>>, EventReader<RemoveComponentEvent>)
+{
+	for entity in query
+	{
+		if entity.name == entityName:
+		{
+			commands.entity(entity).remove::<ꗈ>();
+			return;
+		}
+	}
+}'''
 SYSTEM_ARGUMENTS = '''mut commands: Commands,
 assetServer: Res<AssetServer>,
 mut meshes : ResMut<Assets<Mesh>>,
@@ -67,20 +81,6 @@ mut query: Query<&mut Transform, With<ꗈ>>,
 time: Res<Time>,
 mut cursorEvent: EventReader<CursorMoved>,
 mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>'''
-CUSTOM_TYPE_INDICATOR = '''#[derive(Component, Reflect, Default, Debug)]
-#[reflect(Component)]
-struct ꗈ;'''
-REMOVE_COMPONENT_TEMPLATE = '''fn RemoveComponent (mut commands: Commands, query: Query<Entity, With<ꗈ1>>, EventReader<RemoveComponentEvent>)
-{
-	for entity in query
-	{
-		if entity.name == entityName:
-		{
-			commands.entity(entity).remove::<ꗈ1>();
-			return;
-		}
-	}
-}'''
 PI = 3.141592653589793
 outputFileText = ''
 importStatementsText = ''
@@ -463,7 +463,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	indexOfUpdateMethod = outputFileText.find('fn Update')
 	if indexOfUpdateMethod != -1:
 		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
-		outputFileText += CUSTOM_TYPE_INDICATOR.replace('ꗈ', mainClassName)
+		outputFileText += CUSTOM_TYPE_TEMPLATE.replace('ꗈ', mainClassName)
 	outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
 	addToOutputFileText += '\n\n' + outputFileText
 
@@ -477,7 +477,7 @@ def MakeComponent (objectName : str, componentType : str):
 		bpy.ops.object.select_all(action='DESELECT')
 		bpy.context.view_layer.objects.active = obj
 		obj.select_set(True)
-		addComponentOperator(component_type=componentType)
+		bpy.ops.object.add_bevy_component(component_type=componentType)
 
 def DeleteScene (scene = None):
 	if scene is None:
@@ -672,9 +672,11 @@ def AddToMembersDictAndAssetsPathsDict (sceneOrPrefabFilePath : str):
 				membersDict[memberName] = value
 
 data = ''
+fromUnity = False
 for arg in sys.argv:
 	if arg.startswith(INPUT_PATH_INDICATOR):
 		UNITY_PROJECT_PATH = os.path.expanduser(arg[len(INPUT_PATH_INDICATOR) :])
+		fromUnity = True
 	elif arg.startswith(OUTPUT_PATH_INDICATOR):
 		BEVY_PROJECT_PATH = os.path.expanduser(arg[len(OUTPUT_PATH_INDICATOR) :])
 		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
@@ -696,108 +698,117 @@ os.system('cd ' + BEVY_PROJECT_PATH + '''
 	cargo add serde --features derive
 	cargo add wasm-bindgen --features serde-serialize''')
 
-codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
-i = 0
-while i < len(codeFilesPaths):
-	codeFilePath = codeFilesPaths[i]
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in codeFilePath:
-			isExcluded = True
-			break
-	if isExcluded:
-		codeFilesPaths.pop(i)
-		i -= 1
-	i += 1
-for i in range(len(codeFilesPaths)):
-	codeFilePath = codeFilesPaths[i]
-	mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
-	indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
-	componentText = ',\n' + COMPONENT_TEMPLATE
-	componentText = componentText.replace('ꗈ', mainClassName)
-	registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
+if fromUnity:
+	codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
+	i = 0
+	while i < len(codeFilesPaths):
+		codeFilePath = codeFilesPaths[i]
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in codeFilePath:
+				isExcluded = True
+				break
+		if isExcluded:
+			codeFilesPaths.pop(i)
+			i -= 1
+		i += 1
+	for i in range(len(codeFilesPaths)):
+		codeFilePath = codeFilesPaths[i]
+		mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
+		indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
+		componentText = ',\n' + COMPONENT_TEMPLATE
+		componentText = componentText.replace('ꗈ', mainClassName)
+		registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
+else:
+	for textBlock in bpy.data.texts:
+		mainClassName = textBlock.name.replace('.cs', '')
+		indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
+		componentText = ',\n' + COMPONENT_TEMPLATE
+		componentText = componentText.replace('ꗈ', mainClassName)
+		registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
+	data = open('/tmp/Unity2Many Data (BlenderToBevy)', 'rb').read().decode('utf-8')
+	BEVY_PROJECT_PATH = data
+	ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
+	CODE_PATH = BEVY_PROJECT_PATH + '/src'
+	OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
+	REGISTRY_PATH = ASSETS_PATH + '/registry.json'
 registryText = registryText.replace('ꗈ', '')
 if not os.path.isdir(ASSETS_PATH):
 	os.mkdir(ASSETS_PATH)
 if not os.path.isdir(CODE_PATH):
 	os.mkdir(CODE_PATH)
-addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
-if not os.path.isdir(addonsPath):
-	MakeFolderForFile (addonsPath + '/')
-
-os.system('cd ' + os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools') + '''
-	python3 internal_generate_release_zips.py''')
-if not os.path.isdir(addonsPath + '/bevy_components'):
-	os.system('unzip bevy_components.zip -d ' + addonsPath)
-if not os.path.isdir(addonsPath + '/gltf_auto_export'):
-	os.system('unzip gltf_auto_export.zip -d ' + addonsPath)
-
-bpy.ops.preferences.addon_enable(module='bevy_components')
-bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+sys.path.append('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
 bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
 registry = bpy.context.window_manager.components_registry
 registry.schemaPath = REGISTRY_PATH
 bpy.ops.object.reload_registry()
 typeInfos = registry.type_infos
-addComponentOperator = bpy.ops.object.add_bevy_component
 
-sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
-for sceneFilePath in sceneFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in sceneFilePath:
-			isExcluded = True
-			break
-	if not isExcluded:
-		sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
-		AddToMembersDictAndAssetsPathsDict (sceneFileText)
-prefabFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
-for prefabFilePath in prefabFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in prefabFilePath:
-			isExcluded = True
-			break
-	if not isExcluded:
-		prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
-		AddToMembersDictAndAssetsPathsDict (prefabFileText)
-codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
-for codeFilePath in codeFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in codeFilePath:
-			isExcluded = True
-			break
-	if not isExcluded:
-		mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
-		MakeScript ([], [], [1, 1, 1], '', codeFilePath)
-prefabFilePaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
-for prefabFilePath in prefabFilePaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in prefabFilePath:
-			isExcluded = True
-			break
-	if not isExcluded:
-		prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
-		prefabName = prefabName.replace('.prefab', '_Prefab.glb')
-		MakeSceneOrPrefab (prefabFilePath)
-		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + prefabName, export_extras=True, export_cameras=True)
-sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
-for sceneFilePath in sceneFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in sceneFilePath:
-			isExcluded = True
-			break
-	if not isExcluded:
-		sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
-		sceneName = sceneName.replace('.unity', '.glb')
-		MakeSceneOrPrefab (sceneFilePath)
-		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
-		outputFileTextReplaceClauses[2] = sceneName
+if fromUnity:
+	sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
+	for sceneFilePath in sceneFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in sceneFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+			AddToMembersDictAndAssetsPathsDict (sceneFileText)
+	prefabFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
+	for prefabFilePath in prefabFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in prefabFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
+			AddToMembersDictAndAssetsPathsDict (prefabFileText)
+	codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
+	for codeFilePath in codeFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in codeFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			mainClassName = codeFilePath[codeFilePath.rfind('/') + 1 : codeFilePath.rfind('.')]
+			MakeScript ([], [], [1, 1, 1], '', codeFilePath)
+	prefabFilePaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
+	for prefabFilePath in prefabFilePaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in prefabFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
+			prefabName = prefabName.replace('.prefab', '_Prefab.glb')
+			MakeSceneOrPrefab (prefabFilePath)
+			bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + prefabName, export_extras=True, export_cameras=True)
+	sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
+	for sceneFilePath in sceneFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in sceneFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
+			sceneName = sceneName.replace('.unity', '.glb')
+			MakeSceneOrPrefab (sceneFilePath)
+			bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
+			outputFileTextReplaceClauses[2] = sceneName
+else:
+	sceneName = bpy.data.filepath.replace('.blend', '')
+	sceneName = sceneName[sceneName.rfind('/') + 1 :]
+	bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
+	outputFileTextReplaceClauses[2] = sceneName
+	sys.argv.append(WEBGL_INDICATOR)
+
 outputFileText = open(TEMPLATE_APP_PATH, 'rb').read().decode('utf-8')
 outputFileText = importStatementsText + outputFileText
 outputFileText = outputFileText.replace('ꗈ0', outputFileTextReplaceClauses[0])
@@ -807,9 +818,9 @@ outputFileText = outputFileText.replace('ꗈ3', outputFileTextReplaceClauses[3])
 outputFileText += addToOutputFileText
 open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
 
-
 os.environ['WGPU_BACKEND'] = 'gl'
 os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
+
 command = [ 'cargo', 'run' ]
 if WEBGL_INDICATOR in sys.argv:
 	command.append('--target')

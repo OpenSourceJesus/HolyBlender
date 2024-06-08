@@ -14,7 +14,10 @@ for arg in sys.argv:
 	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
 		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) :])
 
-metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
+if UNITY_PROJECT_PATH != '':
+	metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
+else:
+	metaFilesPaths = []
 fileGuidsDict = {}
 for metaFilePath in metaFilesPaths:
 	isExcluded = False

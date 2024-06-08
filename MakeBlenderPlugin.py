@@ -444,13 +444,13 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
-		if importPath == '':
-			previousUnityExportPath = context.scene.world.unity_project_export_path
-			context.scene.world.unity_project_export_path = '/tmp/TestUnityProject'
-			ExportToUnity (context)
-			importPath = os.path.expanduser(context.scene.world.unity_project_export_path)
-			context.scene.world.unity_project_export_path = previousUnityExportPath
+		# importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		# if importPath == '':
+		# 	previousUnityExportPath = context.scene.world.unity_project_export_path
+		# 	context.scene.world.unity_project_export_path = '/tmp/TestUnityProject'
+		# 	ExportToUnity (context)
+		# 	importPath = os.path.expanduser(context.scene.world.unity_project_export_path)
+		# 	context.scene.world.unity_project_export_path = previousUnityExportPath
 		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
 		if not os.path.isdir(bevyExportPath):
 			MakeFolderForFile (bevyExportPath + '/')
@@ -459,6 +459,7 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		# print(command)
 
 		# subprocess.check_call(command)
+		open('/tmp/Unity2Many Data (BlenderToBevy)', 'wb').write(bevyExportPath.encode('utf-8'))
 		import MakeBevyBlenderApp
 
 		webbrowser.open('http://localhost:1334')
@@ -1075,23 +1076,11 @@ def Update ():
 
 def register ():
 	global attachScriptDropdownOptions
-	addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
-	if not os.path.isdir(addonsPath):
-		MakeFolderForFile (addonsPath + '/')
-
-	os.system('cd ' + os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools') + '''
-		python3 internal_generate_release_zips.py''')
-	if not os.path.isdir(addonsPath + '/bevy_components'):
-		os.system('unzip bevy_components.zip -d ' + addonsPath)
-	if not os.path.isdir(addonsPath + '/gltf_auto_export'):
-		os.system('unzip gltf_auto_export.zip -d ' + addonsPath)
-
-	bpy.ops.preferences.addon_enable(module='bevy_components')
-	bpy.ops.preferences.addon_enable(module='gltf_auto_export')
-	bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
+	sys.path.append('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
+	bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	registry = bpy.context.window_manager.components_registry
 	registry.schemaPath = REGISTRY_PATH
 	bpy.ops.object.reload_registry()

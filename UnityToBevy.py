@@ -7,7 +7,7 @@ command = [ 'blender' ]
 for arg in sys.argv:
     if arg.endswith('.blend'):
         command.append(os.path.expanduser(arg))
-command += [ '--python', 'MakeBevyBlenderApp.py' ]
+command += [ '--python', 'MakeBevyBlenderApp.py', 'fromUnity' ]
 print(command)
 
 subprocess.check_call(command)
