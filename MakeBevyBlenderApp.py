@@ -802,7 +802,7 @@ def Do ():
 				prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
 				prefabName = prefabName.replace('.prefab', '_Prefab.glb')
 				MakeSceneOrPrefab (prefabFilePath)
-				bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + prefabName, export_extras=True, export_cameras=True)
+				bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + prefabName, export_extras=True, export_cameras=True, export_lights=True)
 		sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
 		for sceneFilePath in sceneFilesPaths:
 			isExcluded = False
@@ -814,12 +814,12 @@ def Do ():
 				sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
 				sceneName = sceneName.replace('.unity', '.glb')
 				MakeSceneOrPrefab (sceneFilePath)
-				bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
+				bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
 				outputFileTextReplaceClauses[2] = sceneName
 	else:
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
-		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True)
+		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
 		outputFileTextReplaceClauses[2] = sceneName
 		sys.argv.append(WEBGL_INDICATOR)
 
