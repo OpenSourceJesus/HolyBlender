@@ -6,6 +6,7 @@ from SystemExtensions import *
 UNITY_PROJECT_PATH = ''
 UNREAL_COMMAND_PATH = os.path.expanduser('~/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd')
 UNREAL_PROJECT_PATH = ''
+UNREAL_PROJECT_NAME = ''
 MAKE_UNREAL_PROJECT_SCRIPT_PATH = os.path.expanduser('~/Unity2Many/MakeUnrealProject.py')
 CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
 INPUT_PATH_INDICATOR = 'input='
@@ -24,11 +25,11 @@ for arg in sys.argv:
 		UNITY_PROJECT_PATH = os.path.expanduser(arg[len(INPUT_PATH_INDICATOR) :])
 	elif arg.startswith(OUTPUT_PATH_INDICATOR):
 		UNREAL_PROJECT_PATH = os.path.expanduser(arg[len(OUTPUT_PATH_INDICATOR) :])
-		CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
+		UNREAL_PROJECT_NAME = UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
+		CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_NAME
 	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
 		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) :])
 
-unrealProjectName = UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
 metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
 fileGuidsDict = {}
 for metaFilePath in metaFilesPaths:
@@ -49,11 +50,20 @@ for metaFilePath in metaFilesPaths:
 
 command = 'rm -r ' + UNREAL_PROJECT_PATH + '''
 	cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + ' ' + UNREAL_PROJECT_PATH + '''
-	mv ''' + UNREAL_PROJECT_PATH + '/Source/BareUEProject ' + UNREAL_PROJECT_PATH + '/Source/' + unrealProjectName + '''
+	mv ''' + UNREAL_PROJECT_PATH + '/Source/BareUEProject ' + CODE_PATH + '''
 	make build_UnityToUnreal'''
 print(command)
 
 os.system(command)
+
+codeFilesPaths = GetAllFilePathsOfType(UNREAL_PROJECT_PATH, '.cs')
+codeFilesPaths.append(CODE_PATH + '/BareUEProject.h')
+codeFilesPaths.append(CODE_PATH + '/BareUEProject.cpp')
+for codeFilePath in codeFilesPaths:
+	codeFileText = open(codeFilePath, 'rb').read().decode('utf-8')
+	codeFileText = codeFileText.replace('BareUEProject', unrealProjectName)
+	open(codeFilePath, 'wb').write(codeFileText.encode('utf-8'))
+	os.rename(codeFilePath, codeFilePath.replace('BareUEProject', unrealProjectName))
 
 def ConvertPythonFileToCpp (filePath):
 	global membersDict

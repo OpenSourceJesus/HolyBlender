@@ -400,12 +400,17 @@ SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
 PI = 3.141592653589793
 UNREAL_CODE_PATH = ''
 UNREAL_CODE_PATH_SUFFIX = '/Source/'
+TEMPLATES_PATH = os.path.expanduser('~/Unity2Many/Templates')
+TEMPLATE_REGISTRY_PATH = TEMPLATES_PATH + '/registry.json'
+REGISTRY_PATH = '/tmp/registry.json'
 excludeItems = [ '/Library' ]
 lastId = 5
 operatorContext = None
 mainClassNames = []
 attachScriptDropdownOptions = []
 attachedScriptsDict = {}
+detachScriptDropdownOptions = []
+attachedScriptsText = ''
 
 class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -449,11 +454,13 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
 		if not os.path.isdir(bevyExportPath):
 			MakeFolderForFile (bevyExportPath + '/')
-		command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
-		print(command)
 
-		subprocess.check_call(command)
-		
+		# command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
+		# print(command)
+
+		# subprocess.check_call(command)
+		import MakeBevyBlenderApp
+
 		webbrowser.open('http://localhost:1334')
 
 class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
@@ -980,6 +987,27 @@ def DrawBevyTranslateButton (self, context):
 def DrawAttachScriptDropdown (self, context):
 	self.layout.prop(context.object, 'attach_script_dropdown')
 
+def SetupObjectContext (self, context):
+	global attachedScriptsDict
+	global detachScriptDropdownOptions
+	detachScriptDropdownOptions.clear()
+	attachedScripts = attachedScriptsDict.get(context.object, [])
+	i = 0
+	for attachedScript in attachedScripts:
+		detachScriptDropdownOptions.append((attachedScript, attachedScript, '', '', i))
+		i += 1
+
+def DrawDetachScriptDropdown (self, context):
+	self.layout.prop(context.object, 'detach_script_dropdown')
+
+def SetupTextEditorFooterContext (self, context):
+	global attachedScriptsText
+	attachedScriptsText = ''
+	for obj in attachedScriptsDict:
+		if context.edit_text.name in attachedScriptsDict[obj]:
+			attachedScriptsText += obj.name + ', '
+	attachedScriptsText = attachedScriptsText[: -2]
+
 def DrawAttachedScriptsText (self, context):
 	self.layout.prop(context.edit_text, 'attached_to_objects')
 
@@ -989,9 +1017,16 @@ def AttachScript (self, context):
 	attachedScripts.append(bpy.context.object.attach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
 
+def DetachScript (self, context):
+	global attachedScriptsDict
+	attachedScripts = attachedScriptsDict.get(self, [])
+	attachedScripts.remove(bpy.context.object.detach_script_dropdown)
+	attachedScriptsDict[self] = attachedScripts
+
 def Update ():
 	global attachedScriptsDict
 	global attachScriptDropdownOptions
+	global detachScriptDropdownOptions
 	attachScriptDropdownOptions.clear()
 	i = 0
 	defaultScript = None
@@ -1004,55 +1039,88 @@ def Update ():
 		bpy.types.Object.attach_script_dropdown = bpy.props.EnumProperty(
 			items = attachScriptDropdownOptions,
 			name = 'Attach script',
-			description = 'My description',
+			description = '',
 			default = defaultScript,
 			update = AttachScript
 		)
-		attachedScriptsText = ''
-		for obj in attachedScriptsDict:
-			if bpy.context.object.attach_script_dropdown in attachedScriptsDict[obj]:
-				attachedScriptsText += obj.name + ', '
-		attachedScriptsText = attachedScriptsText[: -2]
+		bpy.types.OBJECT_PT_context_object.remove(SetupObjectContext)
+		bpy.types.OBJECT_PT_context_object.append(SetupObjectContext)
+		attachedScripts = attachedScriptsDict.get(bpy.context.object, [])
+		defaultAttachedScript = None
+		for attachedScript in attachedScripts:
+			defaultAttachedScript = attachedScript
+			break
+		if defaultAttachedScript != None:
+			bpy.types.Object.detach_script_dropdown = bpy.props.EnumProperty(
+				items = detachScriptDropdownOptions,
+				name = 'Detach script',
+				description = '',
+				default = defaultAttachedScript,
+				update = DetachScript
+			)
+			bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
+			bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
+		bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
+		bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
 		bpy.types.Text.attached_to_objects = bpy.props.StringProperty(
-			name = 'Attached to objects: ',
-			description = 'My description',
+			name = 'Attached to objects',
+			description = '',
 			default = attachedScriptsText
 		)
-		# bpy.context.edit_text.attached_to_objects = attachedScriptsText
 		bpy.types.TEXT_HT_footer.remove(DrawAttachedScriptsText)
 		bpy.types.TEXT_HT_footer.append(DrawAttachedScriptsText)
-	bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
-	bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
+		bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
+		bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
 	return 0.1
 
 def register ():
 	global attachScriptDropdownOptions
+	addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
+	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
+	registryText = registryText.replace('ꗈ', '')
+	if not os.path.isdir(addonsPath):
+		MakeFolderForFile (addonsPath + '/')
+
+	os.system('cd ' + os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools') + '''
+		python3 internal_generate_release_zips.py''')
+	if not os.path.isdir(addonsPath + '/bevy_components'):
+		os.system('unzip bevy_components.zip -d ' + addonsPath)
+	if not os.path.isdir(addonsPath + '/gltf_auto_export'):
+		os.system('unzip gltf_auto_export.zip -d ' + addonsPath)
+
+	bpy.ops.preferences.addon_enable(module='bevy_components')
+	bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+	bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
+	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
+	registry = bpy.context.window_manager.components_registry
+	registry.schemaPath = REGISTRY_PATH
+	bpy.ops.object.reload_registry()
 	# bpy.types.View3DShading.color_type = 'OBJECT'
 	for cls in classes:
 		bpy.utils.register_class(cls)
 	bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
 		name = 'Unity project import path',
-		description = 'My description',
+		description = '',
 		default = ''
 	)
 	bpy.types.World.unity_project_export_path = bpy.props.StringProperty(
 		name = 'Unity project export path',
-		description = 'My description',
+		description = '',
 		default = '/tmp/TestUnityProject'
 	)
 	# bpy.types.World.unity_export_version = bpy.props.StringProperty(
 	# 	name = 'Unity export version',
-	# 	description = 'My description',
+	# 	description = '',
 	# 	default = ''
 	# )
 	bpy.types.World.unreal_project_path = bpy.props.StringProperty(
 		name = 'Unreal project path',
-		description = 'My description',
+		description = '',
 		default = ''
 	)
 	bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 		name = 'Bevy project path',
-		description = 'My description',
+		description = '',
 		default = ''
 	)
 	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
