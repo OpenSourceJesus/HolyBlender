@@ -325,6 +325,10 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
 				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z))')
+			elif textBetweenTrsEulerAnglesAndEquals.strip() == '-':
+				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = -' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z))')
 			else:
 				outputFileText = Remove(outputFileText, indexOfTrsEulerAngles, len(trsEulerAnglesIndicator))
 				outputFileText = outputFileText[: indexOfTrsEulerAngles] + 'Vec3::from(trs.rotation.to_euler(EulerRot::ZYX))' + outputFileText[indexOfTrsEulerAngles :]
@@ -496,6 +500,13 @@ def MakeComponent (objectName : str, componentType : str):
 		registry.ComponentsRegistry.type_infos[componentType] = typeInfo
 		import bevy_components.components.metadata as metadata
 		metadata.add_component_to_object(obj, typeInfo)
+
+def RemoveComponent (objectName : str, componentType : str):
+	if objectName != '':
+		obj = bpy.data.objects[objectName]
+		sys.path.append(os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools'))
+		import bevy_components.components.metadata as metadata
+		metadata.remove_component_to_object(obj, componentType.replace('Unit2Many::', ''))
 
 def DeleteScene (scene = None):
 	if scene is None:

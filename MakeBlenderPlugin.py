@@ -395,6 +395,28 @@ public class GetUnityProjectInfo : MonoBehaviour
 		File.WriteAllText("/tmp/Unity2Many Data (BlenderToUnity)", outputText);
 	}
 }'''
+EXAMPLES_DICT = {
+	'Hello World' : '''using UnityEngine;
+
+public class HelloWorld : MonoBehaviour
+{
+		void Start ()
+		{
+				print("Hello World!");
+		}
+}''',
+	'Rotate': '''using UnityEngine;
+
+public class Rotate : MonoBehaviour
+{
+		float rotateSpeed = 10.0f;
+
+		void Update ()
+		{
+				transform.eulerAngles += Vector3.forward * rotateSpeed * Time.deltaTime;
+		}
+}''',
+}
 COMPONENT_TEMPLATE = '  - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
 PI = 3.141592653589793
@@ -411,6 +433,47 @@ attachScriptDropdownOptions = []
 attachedScriptsDict = {}
 detachScriptDropdownOptions = []
 attachedScriptsText = ''
+
+class ExamplesOperator (bpy.types.Operator):
+	bl_label = 'Add or Remove'
+	bl_idname = 'u2m.show_template'
+	template : bpy.props.StringProperty(default = '')
+
+	def invoke (self, context, event):
+		if context.edit_text:
+			context.edit_text.from_string(EXAMPLES_DICT[self.template])
+
+		return {'FINISHED'}
+
+class ExamplesMenu (bpy.types.Menu):
+	bl_label = 'Unity2Many:Templates'
+	bl_idname = 'TEXT_MT_u2m_menu'
+
+	def draw (self, context):
+		layout = self.layout
+		for name in EXAMPLES_DICT:
+			op = layout.operator('u2m.show_template', text=name)
+			op.template = name
+
+# class AttachedObjectsMenu (bpy.types.Menu):
+# 	bl_label = 'Unity2Many:Attached Objects'
+# 	bl_idname = 'TEXT_MT_u2m_menu_obj'
+
+# 	def draw (self, context):
+# 		layout = self.layout
+# 		if not context.edit_text:
+# 			layout.label(text='No text block')
+# 			return
+# 		objs = []
+# 		for obj in bpy.data.objects:
+# 			attachedScripts = attachedScriptsDict.get(obj, [])
+# 			if context.edit_text.name in attachedScripts:
+# 				objs.append(obj)
+# 		if objs:
+# 			for obj in objs:
+# 				layout.label(text=o.name)
+# 		else:
+# 			layout.label(text='Script not attached to any objects')
 
 class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -445,29 +508,24 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		BuildTool ('UnityToBevy')
-		# importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
-		# if importPath == '':
-		# 	previousUnityExportPath = context.scene.world.unity_project_export_path
-		# 	context.scene.world.unity_project_export_path = '/tmp/TestUnityProject'
-		# 	ExportToUnity (context)
-		# 	importPath = os.path.expanduser(context.scene.world.unity_project_export_path)
-		# 	context.scene.world.unity_project_export_path = previousUnityExportPath
 		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
 		if not os.path.isdir(bevyExportPath):
 			MakeFolderForFile (bevyExportPath + '/')
+		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		if importPath != '':
+			command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
+			print(command)
 
-		# command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
-		# print(command)
+			subprocess.check_call(command)
 
-		# subprocess.check_call(command)
-		data = bevyExportPath
-		for obj in attachedScriptsDict:
-			data += '\n' + obj.name + '☢️' + '☣️'.join(attachedScriptsDict[obj])
-		open('/tmp/Unity2Many Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
-		import MakeBevyBlenderApp as makeBevyBlenderApp
-		makeBevyBlenderApp.Do ()
-
-		# webbrowser.open('http://localhost:1334')
+		else:
+			data = bevyExportPath
+			for obj in attachedScriptsDict:
+				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedScriptsDict[obj])
+			open('/tmp/Unity2Many Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
+			import MakeBevyBlenderApp as makeBevyBlenderApp
+			makeBevyBlenderApp.Do ()
+			# webbrowser.open('http://localhost:1334')
 
 class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 	bl_idname = 'unity.export'
@@ -522,6 +580,9 @@ classes = [
 	TEXT_EDITOR_OT_UnityExportButton,
 	TEXT_EDITOR_OT_UnrealTranslateButton,
 	TEXT_EDITOR_OT_BevyTranslateButton,
+	ExamplesOperator,
+	ExamplesMenu,
+	# AttachedObjectsMenu
 ]
 
 def ExportToUnity (context):
@@ -960,6 +1021,12 @@ def ConvertPythonFileToRust (filePath):
 			outputFileText = open('/tmp/src/main.rs', 'rb').read().decode('utf-8')
 			textBlock.write(outputFileText)
 
+def DrawExamplesMenu (self, context):
+	self.layout.menu(ExamplesMenu.bl_idname)
+
+# def DrawAttachedObjectsMenu (self, context):
+# 	self.layout.menu(AttachedObjectsMenu.bl_idname)
+
 def DrawUnityImportField (self, context):
 	self.layout.prop(context.world, 'unity_project_import_path')
 
@@ -1137,6 +1204,8 @@ def register ():
 		description = '',
 		default = ''
 	)
+	bpy.types.TEXT_HT_header.append(DrawExamplesMenu)
+	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
 	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityImportField)
@@ -1150,6 +1219,8 @@ def register ():
 	bpy.app.timers.register(Update)
 
 def unregister ():
+	bpy.types.TEXT_HT_header.remove(DrawExamplesMenu)
+	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
 	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityImportField)
