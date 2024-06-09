@@ -400,22 +400,50 @@ EXAMPLES_DICT = {
 
 public class HelloWorld : MonoBehaviour
 {
-		void Start ()
-		{
-				print("Hello World!");
-		}
+    void Start ()
+    {
+        print("Hello World!");
+    }
 }''',
 	'Rotate': '''using UnityEngine;
 
 public class Rotate : MonoBehaviour
 {
-		float rotateSpeed = 10.0f;
+    float rotateSpeed = 10.0f;
 
-		void Update ()
-		{
-				transform.eulerAngles += Vector3.forward * rotateSpeed * Time.deltaTime;
-		}
+    void Update ()
+    {
+        transform.eulerAngles += Vector3.forward * rotateSpeed * Time.deltaTime;
+    }
 }''',
+  'Keyboard And Mouse Controls' : '''using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class WASDAndMouseControls : MonoBehaviour
+{
+    float moveSpeed = 5.0f;
+
+    void Update ()
+    {
+        Vector3 move = Vector3.zero;
+        if (Keyboard.current.aKey.isPressed)
+            move.x -= 1.0f;
+        if (Keyboard.current.dKey.isPressed)
+            move.x += 1.0f;
+        if (Keyboard.current.sKey.isPressed)
+            move.y -= 1.0f;
+        if (Keyboard.current.wKey.isPressed)
+            move.y += 1.0f;
+        move.Normalize();
+        Vector3 position = transform.position;
+        position += move * moveSpeed * Time.deltaTime;
+        transform.position = position;
+        Vector3 mousePosition = Mouse.current.position.ReadValue();
+        mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
+        Vector3 facing = mousePosition - position;
+        transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * 57.2958f - 90.0f);
+    }
+}'''
 }
 COMPONENT_TEMPLATE = '  - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
@@ -446,7 +474,7 @@ class ExamplesOperator (bpy.types.Operator):
 		return {'FINISHED'}
 
 class ExamplesMenu (bpy.types.Menu):
-	bl_label = 'Unity2Many:Templates'
+	bl_label = 'Unity2Many Templates'
 	bl_idname = 'TEXT_MT_u2m_menu'
 
 	def draw (self, context):
