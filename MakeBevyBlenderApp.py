@@ -47,17 +47,17 @@ NEAR_CLIP_PLANE_INDICATOR = '  near clip plane: '
 FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 CLASS_MEMBER_INDICATOR = '#💠'
 GAME_OBJECT_FIND_INDICATOR = 'GameObject.Find('
-COMPONENT_TEMPLATE = '''"Unity2Many::ꗈ": {
-	"additionalProperties": false,
-	"isComponent": true,
-	"isResource": false,
-	"properties": {},
-	"required": [],
-	"short_name": "ꗈ",
-	"title": "Unity2Many::ꗈ",
-	"type": "object",
-	"typeInfo": "Struct"
-}'''
+COMPONENT_TEMPLATE = '''    "Unity2Many::ꗈ": {
+      "additionalProperties": false,
+      "isComponent": true,
+      "isResource": false,
+      "properties": {},
+      "required": [],
+      "short_name": "ꗈ",
+      "title": "Unity2Many::ꗈ",
+      "type": "object",
+      "typeInfo": "Struct"
+    }'''
 CUSTOM_TYPE_TEMPLATE = '''#[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
 struct ꗈ;'''
@@ -91,6 +91,7 @@ membersDict = {}
 assetsPathsDict = {}
 
 def ConvertCSFileToRust (filePath):
+	global CODE_PATH
 	global mainClassName
 	mainClassName = filePath[filePath.rfind('/') + 1 : filePath.rfind('.')]
 	assert os.path.isfile(filePath)
@@ -116,6 +117,8 @@ def ConvertCSFileToRust (filePath):
 	ConvertPythonFileToRust (outputFilePath)
 
 def ConvertPythonFileToRust (filePath):
+	global UNITY_PROJECT_PATH
+	global OUTPUT_FILE_PATH
 	global mainClassName
 	lines = []
 	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
@@ -314,10 +317,17 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		if indexOfTrsEulerAngles != -1:
 			indexOfEquals = outputFileText.find('=', indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
 			textBetweenTrsEulerAnglesAndEquals = outputFileText[indexOfTrsEulerAngles + len(trsEulerAnglesIndicator) : indexOfEquals]
-			if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals == ' ':
+			if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals.isspace():
 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, rotation.x, rotation.y, rotation.z)')
+				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z)')
+			elif textBetweenTrsEulerAnglesAndEquals.strip() == '+':
+				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z))')
+			else:
+				outputFileText = Remove(outputFileText, indexOfTrsEulerAngles, len(trsEulerAnglesIndicator))
+				outputFileText = outputFileText[: indexOfTrsEulerAngles] + 'Vec3::from(trs.rotation.to_euler(EulerRot::ZYX))' + outputFileText[indexOfTrsEulerAngles :]
 	outputFileText = outputFileText.replace(mainClassName + '::', '')
 	outputFileText = outputFileText.replace('&' + mainClassName + ' {}', '')
 	indexOfMacro = 0
@@ -468,16 +478,24 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	addToOutputFileText += '\n\n' + outputFileText
 
 def MakeComponent (objectName : str, componentType : str):
-	global mainClassName
-	definition = typeInfos[componentType]
-	componentType = definition['title']
-	isComponent = definition['isComponent'] if 'isComponent' in definition else False
-	if isComponent and objectName != '':
+	if objectName != '':
 		obj = bpy.data.objects[objectName]
-		bpy.ops.object.select_all(action='DESELECT')
-		bpy.context.view_layer.objects.active = obj
-		obj.select_set(True)
-		bpy.ops.object.add_bevy_component(component_type=componentType)
+		sys.path.append(os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools'))
+		import bevy_components.registry.registry as registry
+		typeInfo = {
+			'additionalProperties': False,
+			'isComponent': True,
+			'isResource': False,
+			'properties': {},
+			'required': [],
+			'short_name': mainClassName,
+			'title': 'Unity2Many::' + mainClassName,
+			'type': 'object',
+			'typeInfo': 'Struct'
+		}
+		registry.ComponentsRegistry.type_infos[componentType] = typeInfo
+		import bevy_components.components.metadata as metadata
+		metadata.add_component_to_object(obj, typeInfo)
 
 def DeleteScene (scene = None):
 	if scene is None:
@@ -687,6 +705,26 @@ for arg in sys.argv:
 open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 
 def Do ():
+	global CODE_PATH
+	global OUTPUT_FILE_PATH
+	global UNITY_PROJECT_PATH
+	toolsPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools')
+	if os.path.isdir(toolsPath):
+		addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
+		if not os.path.isdir(addonsPath):
+			MakeFolderForFile (addonsPath + '/')
+
+		os.system('cd ' + toolsPath + '''
+			python3 internal_generate_release_zips.py''')
+		if not os.path.isdir(addonsPath + '/bevy_components'):
+			os.system('unzip ' + toolsPath + '/bevy_components.zip -d ' + addonsPath)
+		if not os.path.isdir(addonsPath + '/gltf_auto_export'):
+			os.system('unzip ' + toolsPath + '/gltf_auto_export.zip -d ' + addonsPath)
+
+		bpy.ops.preferences.addon_enable(module='bevy_components')
+		bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+	# sys.path.append('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
+	bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	if fromUnity:
 		codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
@@ -710,45 +748,32 @@ def Do ():
 			componentText = componentText.replace('ꗈ', mainClassName)
 			registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
 	else:
+		data = open('/tmp/Unity2Many Data (BlenderToBevy)', 'rb').read().decode('utf-8')
+		BEVY_PROJECT_PATH = data.split('\n')[0]
+		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
+		CODE_PATH = BEVY_PROJECT_PATH + '/src'
+		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
+		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
+		MakeFolderForFile (ASSETS_PATH + '/')
+		MakeFolderForFile (CODE_PATH + '/')
+		open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(('output=' + BEVY_PROJECT_PATH).encode('utf-8'))
 		for textBlock in bpy.data.texts:
+			if textBlock.name == '.gltf_auto_export_gltf_settings':
+				continue
 			mainClassName = textBlock.name.replace('.cs', '')
 			indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
 			componentText = ',\n' + COMPONENT_TEMPLATE
 			componentText = componentText.replace('ꗈ', mainClassName)
 			registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
-		data = open('/tmp/Unity2Many Data (BlenderToBevy)', 'rb').read().decode('utf-8')
-		BEVY_PROJECT_PATH = data
-		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
-		CODE_PATH = BEVY_PROJECT_PATH + '/src'
-		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
-		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
 	registryText = registryText.replace('ꗈ', '')
 	if not os.path.isdir(ASSETS_PATH):
 		os.mkdir(ASSETS_PATH)
 	if not os.path.isdir(CODE_PATH):
 		os.mkdir(CODE_PATH)
-	toolsPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools')
-	if os.path.isdir(toolsPath):
-		addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
-		if not os.path.isdir(addonsPath):
-			MakeFolderForFile (addonsPath + '/')
-
-		os.system('cd ' + toolsPath + '''
-			python3 internal_generate_release_zips.py''')
-		if not os.path.isdir(addonsPath + '/bevy_components'):
-			os.system('unzip ' + toolsPath + '/bevy_components.zip -d ' + addonsPath)
-		if not os.path.isdir(addonsPath + '/gltf_auto_export'):
-			os.system('unzip ' + toolsPath + '/gltf_auto_export.zip -d ' + addonsPath)
-
-		bpy.ops.preferences.addon_enable(module='bevy_components')
-		bpy.ops.preferences.addon_enable(module='gltf_auto_export')
-	# sys.path.append('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
-	bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
 	registry = bpy.context.window_manager.components_registry
 	registry.schemaPath = REGISTRY_PATH
 	bpy.ops.object.reload_registry()
-	typeInfos = registry.type_infos
 	os.system('cd ' + BEVY_PROJECT_PATH + '''
 		cargo init
 		cargo add bevy
@@ -817,6 +842,21 @@ def Do ():
 				bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
 				outputFileTextReplaceClauses[2] = sceneName
 	else:
+		for textBlock in bpy.data.texts:
+			if textBlock.name == '.gltf_auto_export_gltf_settings':
+				continue
+			mainClassName = textBlock.name.replace('.cs', '')
+			codeFilePath = '/tmp/' + mainClassName + '.cs'
+			open(codeFilePath, 'wb').write(textBlock.as_string().encode('utf-8'))
+			MakeScript ([], [], [1, 1, 1], '', codeFilePath)
+		lines = data.split('\n')
+		for line in lines:
+			indexOfEndOfObjectName = line.find('☢️')
+			if indexOfEndOfObjectName != -1:
+				objectName = line[: indexOfEndOfObjectName]
+				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
+				for script in scripts:
+					MakeComponent (objectName, 'Unity2Many::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)

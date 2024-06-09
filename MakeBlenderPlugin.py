@@ -444,6 +444,7 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
+		BuildTool ('UnityToBevy')
 		# importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		# if importPath == '':
 		# 	previousUnityExportPath = context.scene.world.unity_project_export_path
@@ -459,9 +460,12 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 		# print(command)
 
 		# subprocess.check_call(command)
-		open('/tmp/Unity2Many Data (BlenderToBevy)', 'wb').write(bevyExportPath.encode('utf-8'))
-		import MakeBevyBlenderApp as MakeBevyBlenderApp
-		MakeBevyBlenderApp.Do ()
+		data = bevyExportPath
+		for obj in attachedScriptsDict:
+			data += '\n' + obj.name + '☢️' + '☣️'.join(attachedScriptsDict[obj])
+		open('/tmp/Unity2Many Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
+		import MakeBevyBlenderApp as makeBevyBlenderApp
+		makeBevyBlenderApp.Do ()
 
 		# webbrowser.open('http://localhost:1334')
 
@@ -1033,6 +1037,8 @@ def Update ():
 	i = 0
 	defaultScript = None
 	for textBlock in bpy.data.texts:
+		if textBlock.name == '.gltf_auto_export_gltf_settings':
+			continue
 		if i == 0:
 			defaultScript = textBlock.name
 		attachScriptDropdownOptions.append((textBlock.name, textBlock.name, '', '', i))
