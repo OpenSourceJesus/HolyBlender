@@ -18,7 +18,7 @@ sudo apt -y install python3-toposort
 sudo snap install blender --classic
 sudo snap install rustup --classic
 rustup default stable
-sudo apt -y install dotnet-sdk-8.0
+sudo snap install dotnet-sdk --classic
 dotnet new console --force
 rm Program.cs
 dotnet add package Microsoft.CodeAnalysis

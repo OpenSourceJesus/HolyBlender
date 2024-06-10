@@ -29,6 +29,7 @@ FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
 UNITY_PROJECT_PATH = ''
 UNREAL_PROJECT_PATH = ''
+UNREAL_PROJECT_NAME = ''
 CODE_PATH = UNREAL_PROJECT_PATH + ''
 LEVEL_EDITOR = unreal.get_editor_subsystem(unreal.LevelEditorSubsystem)
 ASSET_TOOLS = unreal.AssetToolsHelpers().get_asset_tools()
@@ -38,35 +39,161 @@ INTERCHANGE_MANAGER = unreal.InterchangeManager.get_interchange_manager_scripted
 EDITOR = unreal.get_editor_subsystem(unreal.UnrealEditorSubsystem)
 EDITOR_UTILITY = unreal.get_editor_subsystem(unreal.EditorUtilitySubsystem)
 SUBOBJECT_DATA = unreal.get_engine_subsystem(unreal.SubobjectDataSubsystem)
+PI = 3.141592653589793
 excludeItems = []
 blueprintAsset = None
+CLASS_MEMBER_INDICATOR = '#💠'
+mainClassNames = []
+membersDict = {}
+filePathMembersNamesDict = {}
 
-data = open('/tmp/Unity2Many Data (UnityToUnreal)', 'rb').read().decode('utf-8').split('\n')
-for arg in data:
-	if arg.startswith(INPUT_PATH_INDICATOR):
-		UNITY_PROJECT_PATH = arg[len(INPUT_PATH_INDICATOR) :]
-	elif arg.startswith(OUTPUT_PATH_INDICATOR):
-		UNREAL_PROJECT_PATH = arg[len(OUTPUT_PATH_INDICATOR) :]
-		CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
-	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
-		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) + 1 :])
-metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
-fileGuidsDict = {}
-for metaFilePath in metaFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in metaFilePath:
-			isExcluded = True
+def ConvertPythonFileToCpp (filePath):
+	global membersDict
+	global mainClassNames
+	global filePathMembersNamesDict
+	lines = []
+	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
+		if line.startswith('import ') or line.startswith('from '):
+			print('Skipping line:', line)
+			continue
+		lines.append(line)
+	text = '\n'.join(lines)
+	open(filePath, 'wb').write(text.encode('utf-8'))
+	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
+	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
+	# for arg in sys.argv:
+	# 	command.append(arg)
+	command.append(UNITY_PROJECT_PATH)
+	print(command)
+	
+	subprocess.check_call(command)
+
+	outputFileText = open(outputFilePath.replace('.py', '.cpp'), 'rb').read().decode('utf-8')
+	for mainClassName in mainClassNames:
+		indexOfMainClassName = 0
+		while indexOfMainClassName != -1:
+			indexOfMainClassName = outputFileText.find(mainClassName, indexOfMainClassName + len(mainClassName))
+			if indexOfMainClassName != -1 and outputFileText[indexOfMainClassName - 1 : indexOfMainClassName] != 'A' and not IsInString_CS(outputFileText, indexOfMainClassName):
+				outputFileText = outputFileText[: indexOfMainClassName] + 'A' + outputFileText[indexOfMainClassName :]
+		equalsNullIndicator = '= nullptr'
+		indexOfEqualsNull = 0
+		while indexOfEqualsNull != -1:
+			indexOfEqualsNull = outputFileText.find(equalsNullIndicator, indexOfEqualsNull + len(equalsNullIndicator))
+			if indexOfEqualsNull != -1:
+				indexOfSpace = outputFileText.rfind(' ', 0, indexOfEqualsNull - 1)
+				indexOfMainClassName = outputFileText.rfind(mainClassName, 0, indexOfSpace)
+				if indexOfMainClassName == indexOfSpace - len(mainClassName):
+					outputFileText = Remove(outputFileText, indexOfEqualsNull, len(equalsNullIndicator))
+	pythonFileText = open(outputFilePath, 'rb').read().decode('utf-8')
+	pythonFileLines = pythonFileText.split('\n')
+	headerFileText = open(outputFilePath.replace('.py', '.h'), 'rb').read().decode('utf-8')
+	for i in range(len(pythonFileLines) - 1, -1, -1):
+		line = pythonFileLines[i]
+		if not line.startswith(' '):
+			line = line.replace(' ', '')
+			indexOfColon = line.find(':')
+			variableName = line[: indexOfColon]
+			mainClassName = os.path.split(outputFilePath)[-1].split('.')[0]
+			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
+			headerFileText = headerFileText.replace(variableName, variableName + '_' + mainClassName)
+			indexOfVariableName = headerFileText.find(variableName)
+			indexOfNewLine = headerFileText.rfind('\n', 0, indexOfVariableName)
+			headerFileText = headerFileText[: indexOfNewLine] + '\n\tUPROPERTY(EditAnywhere)' + headerFileText[indexOfNewLine :]
+			indexOfEquals = line.find('=', indexOfColon + 1)
+			variableName += '_' + mainClassName
+			value = membersDict.get(variableName, None)
+			mainConstructor = '::A' + mainClassName + '() {'
+			indexOfMainConstructor = outputFileText.find(mainConstructor)
+			if indexOfEquals != -1:
+				if value == None:
+					value = line[indexOfEquals + 1 :]
+				outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = ' + value + ';\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
+			else:
+				for memberName in filePathMembersNamesDict:
+					referenceString = filePathMembersNamesDict[variableName]
+					if referenceString.endswith('.prefab"'):
+						referenceString = referenceString.replace('.prefab"', '')
+						referenceString = referenceString[referenceString.rfind('/') + 1 :] + '_Script'
+						referenceString = '/Game/' + referenceString + '/' + referenceString + '.' + referenceString
+						outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = "' + referenceString + '";\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
+		else:
 			break
-	if isExcluded:
-		continue
-	metaFileText = open(metaFilePath, 'rb').read().decode('utf-8')
-	indexOfGuid = metaFileText.find(GUID_INDICATOR) + len(GUID_INDICATOR)
-	indexOfNewLine = metaFileText.find('\n', indexOfGuid)
-	if indexOfNewLine == -1:
-		indexOfNewLine = len(metaFileText)
-	guid = metaFileText[indexOfGuid : indexOfNewLine]
-	fileGuidsDict[guid] = metaFilePath.replace('.meta', '')
+	outputFileLines = outputFileText.split('\n')
+	for i in range(len(outputFileLines) - 2, -1, -1):
+		line = outputFileLines[i]
+		if line != '':
+			for mainClassName in mainClassNames:
+				if line.startswith('A' + mainClassName):
+					line = line.replace('A' + mainClassName, 'FString')
+					outputFileLines[i] = line
+					break
+			mainClassName = os.path.split(outputFilePath)[-1].split('.')[0]
+			for memberName in membersDict:
+				indexOfMemberName = 0
+				while indexOfMemberName != -1:
+					indexOfMemberName = line.find(memberName, indexOfMemberName + 1)
+					if indexOfMemberName != -1:
+						memberValue = membersDict[memberName]
+						line = line.replace(line[indexOfMemberName :], memberName + '_' + mainClassName + ' = ' + memberValue + ';')
+						line = line.replace('_' + mainClassName + '_' + mainClassName, '_' + mainClassName)
+						outputFileLines[i] = line
+		else:
+			break
+	for i in range(len(outputFileLines)):
+		line = outputFileLines[i]
+		line = line.replace(' ', '')
+		indexOfX = 0
+		while indexOfX != -1:
+			indexOfX = line.find('.X', indexOfX + 1)
+			if indexOfX != -1:
+				indexOfEquals = line.find('=', indexOfX)
+				if indexOfEquals != -1 and indexOfEquals <= indexOfX + 3:
+					outputFileLines[i] = line[: indexOfEquals + 1] + '-' + line[indexOfEquals + 1 :]
+	outputFileText = '\n'.join(outputFileLines)
+	indexOfUProperty = 0
+	uPropertyIndicator = 'UPROPERTY('
+	while indexOfUProperty != -1:
+		indexOfUProperty = headerFileText.find(uPropertyIndicator, indexOfUProperty + len(uPropertyIndicator))
+		indexOfNewLine = headerFileText.find('\n', indexOfUProperty)
+		indexOfSpace = headerFileText.find(' ', indexOfNewLine + 1)
+		variableType = headerFileText[indexOfNewLine + 1 : indexOfSpace]
+		variableType = variableType.replace('\t', '')
+		if variableType.startswith('A'):
+			variableType = variableType[1 :]
+			if variableType in mainClassNames:
+				headerFileText = RemoveStartEnd(headerFileText, indexOfNewLine + 1, indexOfSpace)
+				headerFileText = headerFileText[: indexOfNewLine + 1] + 'FString' + headerFileText[indexOfNewLine + 1 :]
+	open(outputFilePath.replace('.py', '.cpp'), 'wb').write(outputFileText.encode('utf-8'))
+	open(outputFilePath.replace('.py', '.h'), 'wb').write(headerFileText.encode('utf-8'))
+	command = [ 'cat', outputFilePath.replace('.py', '.cpp') ]
+	print(command)
+
+	subprocess.check_call(command)
+
+def ConvertCSFileToCPP (filePath):
+	assert os.path.isfile(filePath)
+	command = [
+		'dotnet',
+		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
+		'includeFile=' + filePath,
+		'unreal=true',
+		'output=' + CODE_PATH,
+	]
+	# for arg in sys.argv:
+	# 	command.append(arg)
+	command.append(UNITY_PROJECT_PATH)
+	print(command)
+
+	subprocess.check_call(command)
+
+	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
+	outputFilePath = outputFilePath.replace('.cs', '.py')
+	print(outputFilePath)
+	assert os.path.isfile(outputFilePath)
+
+	os.system('cat ' + outputFilePath)
+
+	ConvertPythonFileToCpp (outputFilePath)
 
 def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, meshAssetPath : str):
 	projectFilePath = UNREAL_PROJECT_PATH + '/Content' + meshAssetPath[meshAssetPath.rfind('/') :]
@@ -144,7 +271,7 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	script = LoadScript(scriptAssetPath)
 	blueprintFactory = unreal.BlueprintFactory()
 	assetName = scriptAssetPath[scriptAssetPath.rfind('/') + 1 :].replace('.cpp', '')
-	blueprintFactory.set_editor_property('parent_class', unreal.load_class(None, '/Script/BareUEProject.' + assetName))
+	blueprintFactory.set_editor_property('parent_class', unreal.load_class(None, '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName))
 	assetName += '_Script'
 	destinationPath = '/Game/' + assetName
 	unreal.EditorAssetLibrary.delete_asset(destinationPath + '/' + assetName)
@@ -163,7 +290,7 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	if blueprintAsset != None:
 		rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
 		assetName = assetName.replace('_Script', '')
-		classType = unreal.load_class(None, '/Script/BareUEProject.' + assetName)
+		classType = unreal.load_class(None, '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName)
 		blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
 		addSubobjectParameters = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)
 		subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(addSubobjectParameters)
@@ -195,7 +322,7 @@ def LoadObject (assetPath : str) -> unreal.Object:
 def LoadScript (assetPath : str) -> unreal.Object:
 	lastIndexOfPeriod = assetPath.rfind('.')
 	assetName = assetPath[assetPath.rfind('/') + 1 : lastIndexOfPeriod]
-	destinationPath = '/Script/BareUEProject.' + assetName
+	destinationPath = '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName
 	return unreal.load_object(None, destinationPath)
 
 def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
@@ -345,40 +472,184 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 				indexOfGuid = line.find(GUID_INDICATOR)
 				textureAssetPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
 
-prefabFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
-for prefabFilePath in prefabFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in prefabFilePath:
-			isExcluded = True
-			break
-	if not isExcluded:
-		prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
-		prefabName = prefabName.replace('.prefab', '')
-		prefabName += '_Prefab'
-		destinationPath = '/Game/' + prefabName
-		unreal.EditorAssetLibrary.delete_asset(destinationPath)
-		destinationPath += '/' + prefabName + '.' + prefabName
-		blueprintFactory = unreal.BlueprintFactory()
-		blueprintFactory.set_editor_property('parent_class', unreal.Actor)
-		blueprintAsset = ASSET_TOOLS.create_asset(prefabName, destinationPath, None, blueprintFactory)
-		ASSET_REGISTRY.scan_files_synchronous([destinationPath])
-		unreal.EditorAssetSubsystem().save_asset(destinationPath)
-		prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
-		MakeLevelOrPrefab (prefabFileText)
-blueprintAsset = None
-sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
-for sceneFilePath in sceneFilesPaths:
-	isExcluded = False
-	for excludeItem in excludeItems:
-		if excludeItem in sceneFilePath:
-			isExcluded = True
-			break
-	if not isExcluded:
-		sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
-		sceneName = sceneName.replace('.unity', '')
-		sceneName = '/Game/' + sceneName + '/' + sceneName
-		unreal.EditorAssetLibrary.delete_asset(sceneName)
-		LEVEL_EDITOR.new_level(sceneName)
-		sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
-		MakeLevelOrPrefab (sceneFileText)
+data = open('/tmp/Unity2Many Data (UnityToUnreal)', 'rb').read().decode('utf-8').split('\n')
+fromUnity = False
+for arg in data:
+	if arg.startswith(INPUT_PATH_INDICATOR):
+		UNITY_PROJECT_PATH = arg[len(INPUT_PATH_INDICATOR) :]
+		fromUnity = True
+	elif arg.startswith(OUTPUT_PATH_INDICATOR):
+		UNREAL_PROJECT_PATH = arg[len(OUTPUT_PATH_INDICATOR) :]
+		UNREAL_PROJECT_NAME = UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
+		CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_NAME
+	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
+		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) + 1 :])
+
+if fromUnity:
+	metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
+	fileGuidsDict = {}
+	for metaFilePath in metaFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in metaFilePath:
+				isExcluded = True
+				break
+		if isExcluded:
+			continue
+		metaFileText = open(metaFilePath, 'rb').read().decode('utf-8')
+		indexOfGuid = metaFileText.find(GUID_INDICATOR) + len(GUID_INDICATOR)
+		indexOfNewLine = metaFileText.find('\n', indexOfGuid)
+		if indexOfNewLine == -1:
+			indexOfNewLine = len(metaFileText)
+		guid = metaFileText[indexOfGuid : indexOfNewLine]
+		fileGuidsDict[guid] = metaFilePath.replace('.meta', '')
+	prefabFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.prefab')
+	for prefabFilePath in prefabFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in prefabFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			prefabName = prefabFilePath[prefabFilePath.rfind('/') + 1 :]
+			prefabName = prefabName.replace('.prefab', '')
+			prefabName += '_Prefab'
+			destinationPath = '/Game/' + prefabName
+			unreal.EditorAssetLibrary.delete_asset(destinationPath)
+			destinationPath += '/' + prefabName + '.' + prefabName
+			blueprintFactory = unreal.BlueprintFactory()
+			blueprintFactory.set_editor_property('parent_class', unreal.Actor)
+			blueprintAsset = ASSET_TOOLS.create_asset(prefabName, destinationPath, None, blueprintFactory)
+			ASSET_REGISTRY.scan_files_synchronous([destinationPath])
+			unreal.EditorAssetSubsystem().save_asset(destinationPath)
+			prefabFileText = open(prefabFilePath, 'rb').read().decode('utf-8')
+			MakeLevelOrPrefab (prefabFileText)
+	blueprintAsset = None
+	sceneFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.unity')
+	for sceneFilePath in sceneFilesPaths:
+		isExcluded = False
+		for excludeItem in excludeItems:
+			if excludeItem in sceneFilePath:
+				isExcluded = True
+				break
+		if not isExcluded:
+			sceneName = sceneFilePath[sceneFilePath.rfind('/') + 1 :]
+			sceneName = sceneName.replace('.unity', '')
+			sceneName = '/Game/' + sceneName + '/' + sceneName
+			unreal.EditorAssetLibrary.delete_asset(sceneName)
+			LEVEL_EDITOR.new_level(sceneName)
+			sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
+			MakeLevelOrPrefab (sceneFileText)
+else:
+	data = open('/tmp/Unity2Many Data (BlenderToUnreal)', 'rb').read().decode('utf-8')
+	lines = data.split('\n')
+	UNREAL_PROJECT_PATH = lines[0]
+	UNREAL_PROJECT_NAME = UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
+	CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_NAME
+	sceneName = lines[1].replace('.blend', '')
+	sceneName = sceneName[sceneName.rfind('/') + 1 :]
+	if sceneName == '':
+		sceneName = 'Game'
+	sceneName = '/Game/' + sceneName + '/' + sceneName
+	unreal.EditorAssetLibrary.delete_asset(sceneName)
+	LEVEL_EDITOR.new_level(sceneName)
+	stage = 0
+	for line in lines:
+		name = ''
+		localPosition = unreal.Vector()
+		localRotation = unreal.Quat()
+		localSize = unreal.Vector()
+		actorsDict = {}
+		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts':
+			stage += 1
+		elif stage > 0:
+			objectInfo = line.split('☣️')
+			name = objectInfo[0]
+			actorsDict[name] = []
+			localPositionInfo = objectInfo[1]
+			indexOfComma = localPositionInfo.find(',')
+			localPosition.x = float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
+			indexOfComma2 = localPositionInfo.find(',', indexOfComma + 1)
+			localPosition.y = float(localPositionInfo[indexOfComma + 1 : indexOfComma2])
+			localPosition.z = float(localPositionInfo[indexOfComma2 + 1 : localPositionInfo.find(')')])
+			localRotationInfo = objectInfo[2]
+			indexOfEquals = localRotationInfo.find('=')
+			indexOfComma = localRotationInfo.find(',')
+			localRotation.w = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
+			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
+			indexOfComma = localRotationInfo.find(',', indexOfComma + 1)
+			localRotation.x = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
+			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
+			indexOfComma = localRotationInfo.find(',', indexOfComma + 1)
+			localRotation.y = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
+			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
+			localRotation.z = float(localRotationInfo[indexOfEquals + 1 : localRotationInfo.find(')')])
+			localRotation = localRotation.rotator()
+			localRotation.yaw += 180
+			localSizeInfo = objectInfo[3]
+			indexOfComma = localSizeInfo.find(',')
+			localSize.x = float(localSizeInfo[localSizeInfo.find('(') + 1 : indexOfComma])
+			indexOfComma2 = localSizeInfo.find(',', indexOfComma + 1)
+			localSize.y = float(localSizeInfo[indexOfComma + 1 : indexOfComma2])
+			localSize.z = float(localSizeInfo[indexOfComma2 + 1 : localSizeInfo.find(')')])
+			if stage == 1:
+				horizontalFov = bool(objectInfo[4])
+				fov = float(objectInfo[5])
+				isOrthographic = bool(objectInfo[6])
+				orthographicSize = float(objectInfo[7])
+				nearClipPlane = float(objectInfo[8])
+				farClipPlane = float(objectInfo[9])
+				actorsDict[name].append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
+			elif stage == 2:
+				lightType = int(objectInfo[4])
+				intensity = float(objectInfo[5])
+				actorsDict[name].append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity))
+			elif stage == 3:
+				actorsDict[name].append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx'))
+			elif stage == 4:
+				scripts = objectInfo[4 :]
+				for script in scripts:
+					ConvertCSFileToCPP ('/tmp/' + script)
+					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
+					attachRule = unreal.AttachmentRule.KEEP_WORLD
+					for actor in actorsDict[name]:
+						actor.attach_to_actor(scriptActor, '', attachRule, attachRule, attachRule)
+	# for obj in bpy.data.objects:
+	# 	localPosition = unreal.Vector(obj.location.x, obj.location.y, obj.location.z)
+	# 	previousObjectRotationMode = obj.rotation_mode
+	# 	obj.rotation_mode = 'QUATERNION'
+	# 	localRotation = unreal.Quat(obj.rotation_quaternion.x, obj.rotation_quaternion.y, obj.rotation_quaternion.z, obj.rotation_quaternion.w)
+	# 	localRotation = localRotation.rotator()
+	# 	localRotation.yaw += 180
+	# 	obj.rotation_mode = previousObjectRotationMode
+	# 	localSize = unreal.Vector(obj.scale.x, obj.scale.y, obj.scale.z)
+	# 	actors = []
+	# 	if obj.type == 'LIGHT':
+	# 		light = bpy.data.lights[obj.name]
+	# 		actors.append(MakeLightActor(localPosition, localRotation, localSize, light.energy))
+	# 	elif obj.type == 'MESH':
+	# 		meshAssetPath = '/tmp/' + obj.name + '.fbx'
+	# 		bpy.ops.object.select_all(action='DESELECT')
+	# 		bpy.context.view_layer.objects.active = obj
+	# 		obj.select_set(True)
+	# 		bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True)
+	# 		actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, meshAssetPath))
+	# 	elif obj.type == 'CAMERA':
+	# 		camera = bpy.data.cameras[obj.name]
+	# 		actors.append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, camera.angle * (180.0 / PI), isOrthographic, camera.ortho_scale, camera.clip_start, camera.clip_end))
+	# 	for line in lines:
+	# 		indexOfEndOfObjectName = line.find('☢️')
+	# 		if indexOfEndOfObjectName != -1:
+	# 			objectName = line[: indexOfEndOfObjectName]
+	# 			if objectName == obj.name:
+	# 				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
+	# 				for textBlock in bpy.data.texts:
+	# 					if textBlock.name in scripts:
+	# 						mainClassName = textBlock.name.replace('.cs', '')
+	# 						codeFilePath = '/tmp/' + mainClassName + '.cs'
+	# 						open(codeFilePath, 'wb').write(textBlock.as_string().encode('utf-8'))
+	# 						ConvertCSFileToCPP (codeFilePath)
+	# 						scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
+	# 						attachRule = unreal.AttachmentRule.KEEP_WORLD
+	# 						for actor in actors:
+	# 							actor.attach_to_actor(scriptActor, '', attachRule, attachRule, attachRule)

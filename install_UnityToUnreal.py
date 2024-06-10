@@ -18,8 +18,11 @@ cd UnrealEngine
 ./Setup.sh
 ./GenerateProjectFiles.sh
 make
-cd ../Unity2Many
-sudo apt install dotnet-sdk-6.0
+cd ~/Unity2Many
+# sudo snap install dotnet-sdk --channel 6.0 --classic
+wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+chmod +x ./dotnet-install.sh
+./dotnet-install.sh --version 6.0.423
 dotnet new console --force
 rm Program.cs
 dotnet add package Microsoft.CodeAnalysis

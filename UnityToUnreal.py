@@ -68,7 +68,7 @@ for codeFilePath in codeFilesPaths:
 def ConvertPythonFileToCpp (filePath):
 	global membersDict
 	global mainClassNames
-	global filePathMembersNames
+	global filePathMembersNamesDict
 	lines = []
 	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
 		if line.startswith('import ') or line.startswith('from '):
@@ -213,14 +213,6 @@ def ConvertCSFileToCPP (filePath):
 
 	ConvertPythonFileToCpp (outputFilePath)
 
-def ImportAsset (assetPath : str):
-	lastIndexOfPeriod = assetPath.rfind('.')
-	projectFilePath = UNREAL_PROJECT_PATH + '/Content' + assetPath[assetPath.rfind('/') :]
-	os.system('cp \'' + assetPath + '\' \'' + projectFilePath + '\'')
-
-def MakeUProperty ():
-	pass
-
 codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
 i = 0
 while True:
@@ -267,14 +259,13 @@ for sceneFilePath in sceneFilesPaths:
 for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)
 
-command = 'dotnet ' + os.path.expanduser('~/Unity2Many') + '/../UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll BareUEProject Development Linux -Project="' + UNREAL_PROJECT_PATH + '/BareUEProject.uproject" -TargetType=Editor -Progress'
+command = 'dotnet ' + os.path.expanduser('~/UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll') + ' BareUEProject Development Linux -Project="' + UNREAL_PROJECT_PATH + '/BareUEProject.uproject" -TargetType=Editor -Progress'
 print(command)
 
 os.system(command)
 
 data = '\n'.join(sys.argv)
 open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
-
 command = UNREAL_COMMAND_PATH + ' ' + UNREAL_PROJECT_PATH + '/BareUEProject.uproject -nullrhi -ExecutePythonScript=' + MAKE_UNREAL_PROJECT_SCRIPT_PATH
 print(command)
 

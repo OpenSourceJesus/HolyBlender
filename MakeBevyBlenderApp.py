@@ -328,7 +328,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 			elif textBetweenTrsEulerAnglesAndEquals.strip() == '-':
 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
 				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = -' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z))')
+				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, -_rotation.x, -_rotation.y, -_rotation.z))')
 			else:
 				outputFileText = Remove(outputFileText, indexOfTrsEulerAngles, len(trsEulerAnglesIndicator))
 				outputFileText = outputFileText[: indexOfTrsEulerAngles] + 'Vec3::from(trs.rotation.to_euler(EulerRot::ZYX))' + outputFileText[indexOfTrsEulerAngles :]
