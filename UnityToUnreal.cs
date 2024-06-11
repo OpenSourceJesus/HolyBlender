@@ -10,9 +10,8 @@ public class UnityToUnreal : Translator
 	public static string pythonFileContents;
 	public const string UNREAL_MODE_INDICATOR = "unreal=";
 	public static List<string> mainClassNames = new List<string>();
-	// static string BARE_UNREAL_PROJECT_PATH = "/UEBareDesktopMaxQual";
 	static bool unrealMode;
-	static string TEMPLATES_PATH = "Templates";
+	static string TEMPLATES_PATH = UNITY_2_MANY_PATH + "/Templates";
 	static Stage stage;
 	static string className;
 	static int beginPlayMethodLine = -1;
@@ -54,14 +53,16 @@ public class UnityToUnreal : Translator
 		Translator.typeConversionsDict = typeConversionsDict;
 		Translator.memberConversionsDict = memberConversionsDict;
 		Translator.removeTexts = removeTexts;
-		// BARE_UNREAL_PROJECT_PATH = UNITY_2_MANY_PATH + BARE_UNREAL_PROJECT_PATH;
 		base.Init (args);
-		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".cs");
-		foreach (string filePath in filePaths)
+		if (args[args.Length - 1] != "")
 		{
-			string mainClassName = filePath.Remove(filePath.LastIndexOf('.'));
-			mainClassName = mainClassName.Substring(mainClassName.LastIndexOf('/') + 1);
-			mainClassNames.Add(mainClassName);
+			string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".cs");
+			foreach (string filePath in filePaths)
+			{
+				string mainClassName = filePath.Remove(filePath.LastIndexOf('.'));
+				mainClassName = mainClassName.Substring(mainClassName.LastIndexOf('/') + 1);
+				mainClassNames.Add(mainClassName);
+			}
 		}
 	}
 

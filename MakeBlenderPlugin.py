@@ -514,7 +514,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 	def execute (self, context):
 		global unrealCodePath
 		global unrealCodePathSuffix
-		# BuildTool ('UnityToUnreal')
+		BuildTool ('UnityToUnreal')
 		unrealExportPath = os.path.expanduser(context.scene.world.unrealExportPath)
 		if not os.path.isdir(unrealExportPath):
 			MakeFolderForFile (unrealExportPath + '/')
@@ -588,7 +588,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					open(codeFilePath, 'wb').write(codeFileText.encode('utf-8'))
 					os.rename(codeFilePath, codeFilePath.replace('BareUEProject', unrealProjectName))
 			command = 'dotnet ' + os.path.expanduser('~/UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll ') + unrealProjectName + ' Development Linux -Project="' + projectFilePath + '" -TargetType=Editor -Progress'
-			command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
+			# command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
 			print(command)
 
 			# os.system(command)

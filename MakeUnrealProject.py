@@ -1,4 +1,4 @@
-import unreal, os, sys
+import unreal, os, sys, subprocess
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from StringExtensions import *
 from SystemExtensions import *
@@ -179,6 +179,7 @@ def ConvertCSFileToCPP (filePath):
 		'unreal=true',
 		'output=' + CODE_PATH,
 	]
+	# command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
 	# for arg in sys.argv:
 	# 	command.append(arg)
 	command.append(UNITY_PROJECT_PATH)
@@ -556,6 +557,7 @@ else:
 	sceneName = '/Game/' + sceneName + '/' + sceneName
 	unreal.EditorAssetLibrary.delete_asset(sceneName)
 	LEVEL_EDITOR.new_level(sceneName)
+	EDITOR.get_editor_world().get_world_settings().lightmass_settings.environment_color = unreal.Color(75, 75, 75, 0)
 	stage = 0
 	for line in lines:
 		name = ''
