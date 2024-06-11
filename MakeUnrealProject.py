@@ -255,11 +255,14 @@ def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	LEVEL_EDITOR.save_current_level()
 	return cameraActor
 
-def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, type : int, intensity : float):
+def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, type : int, intensity : float, color : unreal.LinearColor):
 	lightActor = None
-	if type == 1:
-		lightActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight.static_class(), unreal.Vector(), unreal.Rotator())
+	if type == 0:
+		lightActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight.static_class(), location, rotation)
+	elif type == 1:
+		lightActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PointLight.static_class(), location, rotation)
 	lightActor.light_component.set_intensity(intensity)
+	lightActor.set_light_color(color)
 	lightActor.set_actor_scale3d(size)
 	LEVEL_EDITOR.save_current_level()
 	return lightActor
@@ -568,7 +571,7 @@ else:
 			actorsDict[name] = []
 			localPositionInfo = objectInfo[1]
 			indexOfComma = localPositionInfo.find(',')
-			localPosition.x = float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
+			localPosition.x = -float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
 			indexOfComma2 = localPositionInfo.find(',', indexOfComma + 1)
 			localPosition.y = float(localPositionInfo[indexOfComma + 1 : indexOfComma2])
 			localPosition.z = float(localPositionInfo[indexOfComma2 + 1 : localPositionInfo.find(')')])
@@ -578,7 +581,7 @@ else:
 			localRotation.w = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
 			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
 			indexOfComma = localRotationInfo.find(',', indexOfComma + 1)
-			localRotation.x = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
+			localRotation.x = -float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
 			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
 			indexOfComma = localRotationInfo.find(',', indexOfComma + 1)
 			localRotation.y = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
@@ -588,7 +591,7 @@ else:
 			localRotation.yaw += 180
 			localSizeInfo = objectInfo[3]
 			indexOfComma = localSizeInfo.find(',')
-			localSize.x = float(localSizeInfo[localSizeInfo.find('(') + 1 : indexOfComma])
+			localSize.x = -float(localSizeInfo[localSizeInfo.find('(') + 1 : indexOfComma])
 			indexOfComma2 = localSizeInfo.find(',', indexOfComma + 1)
 			localSize.y = float(localSizeInfo[indexOfComma + 1 : indexOfComma2])
 			localSize.z = float(localSizeInfo[indexOfComma2 + 1 : localSizeInfo.find(')')])
@@ -603,7 +606,17 @@ else:
 			elif stage == 2:
 				lightType = int(objectInfo[4])
 				intensity = float(objectInfo[5])
-				actorsDict[name].append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity))
+				colorInfo = objectInfo[6]
+				indexOfEquals = colorInfo.find('=')
+				indexOfComma = colorInfo.find(',')
+				color = unreal.LinearColor()
+				color.r = float(colorInfo[indexOfEquals + 1 : indexOfComma])
+				indexOfEquals = colorInfo.find('=', indexOfEquals + 1)
+				indexOfComma = colorInfo.find(',', indexOfComma + 1)
+				color.g = float(colorInfo[indexOfEquals + 1 : indexOfComma])
+				indexOfEquals = colorInfo.find('=', indexOfEquals + 1)
+				color.b = float(colorInfo[indexOfEquals + 1 : colorInfo.find(')')])
+				actorsDict[name].append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity, color))
 			elif stage == 3:
 				actorsDict[name].append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx'))
 			elif stage == 4:

@@ -547,7 +547,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					lightType = 2
 				elif lightObject.type == 'AREA':
 					lightType = 3
-				data += '\n' + GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy)
+				data += '\n' + GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * 0.001341022) + '☣️' + str(light.color)
 			data += '\nMeshes'
 			for obj in bpy.context.scene.objects:
 				if obj.type == 'MESH':
@@ -919,7 +919,7 @@ def GetBasicObjectData (obj):
 			break
 	previousObjectRotationMode = obj.rotation_mode
 	obj.rotation_mode = 'QUATERNION'
-	output = obj.name + '☣️' + str(obj.location) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
+	output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
 	obj.rotation_mode = previousObjectRotationMode
 	return output
 
