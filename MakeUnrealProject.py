@@ -48,6 +48,7 @@ membersDict = {}
 filePathMembersNamesDict = {}
 
 def ConvertPythonFileToCpp (filePath):
+	global fromUnity
 	global membersDict
 	global mainClassNames
 	global filePathMembersNamesDict
@@ -63,7 +64,10 @@ def ConvertPythonFileToCpp (filePath):
 	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
-	command.append(UNITY_PROJECT_PATH)
+	if fromUnity:
+		command.append(UNITY_PROJECT_PATH)
+	else:
+		command.append('/tmp/Unity2Many (Unreal Scripts)')
 	print(command)
 	
 	subprocess.check_call(command)
@@ -171,6 +175,7 @@ def ConvertPythonFileToCpp (filePath):
 	subprocess.check_call(command)
 
 def ConvertCSFileToCPP (filePath):
+	global fromUnity
 	assert os.path.isfile(filePath)
 	command = [
 		'dotnet',
@@ -179,10 +184,12 @@ def ConvertCSFileToCPP (filePath):
 		'unreal=true',
 		'output=' + CODE_PATH,
 	]
-	# command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
 	# for arg in sys.argv:
 	# 	command.append(arg)
-	command.append(UNITY_PROJECT_PATH)
+	if fromUnity:
+		command.append(UNITY_PROJECT_PATH)
+	else:
+		command.append('/tmp/Unity2Many (Unreal Scripts)')
 	print(command)
 
 	subprocess.check_call(command)
@@ -570,7 +577,7 @@ else:
 		elif stage > 0:
 			objectInfo = line.split('☣️')
 			name = objectInfo[0]
-			actorsDict[name] = []
+			actors = []
 			localPositionInfo = objectInfo[1]
 			indexOfComma = localPositionInfo.find(',')
 			localPosition.x = -float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
@@ -604,7 +611,8 @@ else:
 				orthographicSize = float(objectInfo[7])
 				nearClipPlane = float(objectInfo[8])
 				farClipPlane = float(objectInfo[9])
-				actorsDict[name].append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
+				actors.append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
+				actorsDict[name] = actors
 			elif stage == 2:
 				lightType = int(objectInfo[4])
 				intensity = float(objectInfo[5])
@@ -618,53 +626,19 @@ else:
 				color.g = float(colorInfo[indexOfEquals + 1 : indexOfComma])
 				indexOfEquals = colorInfo.find('=', indexOfEquals + 1)
 				color.b = float(colorInfo[indexOfEquals + 1 : colorInfo.find(')')])
-				actorsDict[name].append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity, color))
+				actors.append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity, color))
+				actorsDict[name] = actors
 			elif stage == 3:
-				actorsDict[name].append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx'))
+				actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx'))
+				actorsDict[name] = actors
 			elif stage == 4:
 				scripts = objectInfo[4 :]
 				for script in scripts:
-					ConvertCSFileToCPP ('/tmp/' + script)
+					if not script.endswith('.cs'):
+						script += '.cs'
+					codeFilePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
+					ConvertCSFileToCPP (codeFilePath)
 					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
 					attachRule = unreal.AttachmentRule.KEEP_WORLD
 					for actor in actorsDict[name]:
 						actor.attach_to_actor(scriptActor, '', attachRule, attachRule, attachRule)
-	# for obj in bpy.data.objects:
-	# 	localPosition = unreal.Vector(obj.location.x, obj.location.y, obj.location.z)
-	# 	previousObjectRotationMode = obj.rotation_mode
-	# 	obj.rotation_mode = 'QUATERNION'
-	# 	localRotation = unreal.Quat(obj.rotation_quaternion.x, obj.rotation_quaternion.y, obj.rotation_quaternion.z, obj.rotation_quaternion.w)
-	# 	localRotation = localRotation.rotator()
-	# 	localRotation.yaw += 180
-	# 	obj.rotation_mode = previousObjectRotationMode
-	# 	localSize = unreal.Vector(obj.scale.x, obj.scale.y, obj.scale.z)
-	# 	actors = []
-	# 	if obj.type == 'LIGHT':
-	# 		light = bpy.data.lights[obj.name]
-	# 		actors.append(MakeLightActor(localPosition, localRotation, localSize, light.energy))
-	# 	elif obj.type == 'MESH':
-	# 		meshAssetPath = '/tmp/' + obj.name + '.fbx'
-	# 		bpy.ops.object.select_all(action='DESELECT')
-	# 		bpy.context.view_layer.objects.active = obj
-	# 		obj.select_set(True)
-	# 		bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True)
-	# 		actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, meshAssetPath))
-	# 	elif obj.type == 'CAMERA':
-	# 		camera = bpy.data.cameras[obj.name]
-	# 		actors.append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, camera.angle * (180.0 / PI), isOrthographic, camera.ortho_scale, camera.clip_start, camera.clip_end))
-	# 	for line in lines:
-	# 		indexOfEndOfObjectName = line.find('☢️')
-	# 		if indexOfEndOfObjectName != -1:
-	# 			objectName = line[: indexOfEndOfObjectName]
-	# 			if objectName == obj.name:
-	# 				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
-	# 				for textBlock in bpy.data.texts:
-	# 					if textBlock.name in scripts:
-	# 						mainClassName = textBlock.name.replace('.cs', '')
-	# 						codeFilePath = '/tmp/' + mainClassName + '.cs'
-	# 						open(codeFilePath, 'wb').write(textBlock.as_string().encode('utf-8'))
-	# 						ConvertCSFileToCPP (codeFilePath)
-	# 						scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
-	# 						attachRule = unreal.AttachmentRule.KEEP_WORLD
-	# 						for actor in actors:
-	# 							actor.attach_to_actor(scriptActor, '', attachRule, attachRule, attachRule)

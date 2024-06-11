@@ -39,11 +39,11 @@ ExcludeFolder ('stride')
 ExcludeFolder ('BareStrideProject')
 open(filePath, 'w').writelines(fileLines)
 actorClassPath = os.path.expanduser('~/UnrealEngine/Engine/Source/Runtime/Engine/Private/Actor.cpp')
-fileLines = open(actorClassPath, 'rb').readlines()
+fileLines = open(actorClassPath, 'rb').read().decode('utf-8').split('\n')
 i = 0
 while i < len(fileLines):
 	line = fileLines[i]
 	if 'check(' in line:
 		fileLines[i] = '//' + line
 	i += 1
-open(actorClassPath, 'wb').writelines(fileLines)
+open(actorClassPath, 'wb').write('\n'.join(fileLines).encode('utf-8'))

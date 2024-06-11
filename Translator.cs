@@ -34,7 +34,7 @@ public class Translator
 	public const string DEBUG_INDICATOR = "Debug: ";
 	public static int lineAtLastRunEnd;
 	public static List<string> excludeItemsPaths = new List<string>();
-	public static string UNITY_2_MANY_PATH = Environment.GetEnvironmentVariable("USERPROFILE");
+	public static string UNITY_2_MANY_PATH = "/home/" + Environment.UserName + "/Unity2Many";
 	static string inputFilePath;
 
 	public virtual void Init (string[] args)

@@ -26,10 +26,10 @@ dotnet add package Microsoft.CodeAnalysis.CSharp
 dotnet add package IronPython
 dotnet add package System.Resources.Extensions''')
 filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
-fileLines = open(filePath, "r").readlines()
+fileLines = open(filePath, 'rb').read().decode('utf-8').split('\n')
 ExcludeFolder ('BareUEProject')
 ExcludeFolder ('obj')
 ExcludeFolder ('CSharpToPython/src/CSharpToPython.Tests')
 ExcludeFolder ('stride')
 ExcludeFolder ('BareStrideProject')
-open(filePath, 'w').writelines(fileLines)
+open(filePath, 'w').write('\n'.join(fileLines).encode('utf-8'))

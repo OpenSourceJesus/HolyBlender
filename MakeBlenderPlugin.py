@@ -527,7 +527,8 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 
 		else:
 			unrealCodePath = unrealExportPath
-			unrealCodePathSuffix = '/Source/' + unrealCodePath[unrealCodePath.rfind('/') + 1 :]
+			unrealProjectName = unrealExportPath[unrealExportPath.rfind('/') + 1 :]
+			unrealCodePathSuffix = '/Source/' + unrealProjectName
 			unrealCodePath += unrealCodePathSuffix
 			data = unrealExportPath + '\n' + bpy.data.filepath + '\nCameras'
 			for camera in bpy.data.cameras:
@@ -557,16 +558,18 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					obj.select_set(True)
 					bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True)
 					data += '\n' + GetBasicObjectData(obj)
+			MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
 			data += '\nScripts'
 			for obj in attachedScriptsDict:
 				data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj])
 				for script in attachedScriptsDict[obj]:
 					for textBlock in bpy.data.texts:
 						if textBlock.name == script:
-							open('/tmp/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
+							if not script.endswith('.cs'):
+								script += '.cs'
+							open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
 							break
 			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
-			unrealProjectName = unrealExportPath[unrealExportPath.rfind('/') + 1 :]
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):
 				command = 'cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + ' ' + unrealExportPath
@@ -574,11 +577,15 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 
 				os.system(command)
 
-				os.rename(unrealExportPath + '/Source/BareUEProject', unrealExportPath + '/Source/' + unrealProjectName)
+				os.rename(unrealExportPath + '/Source/BareUEProject', unrealCodePath)
 				os.rename(unrealExportPath + '/BareUEProject.uproject', projectFilePath)
 				projectFileText = open(projectFilePath, 'rb').read().decode('utf-8')
 				projectFileText = projectFileText.replace('BareUEProject', unrealProjectName)
 				open(projectFilePath, 'wb').write(projectFileText.encode('utf-8'))
+				utilsFilePath = unrealCodePath + '/Utils.h'
+				utilsFileText = open(utilsFileText, 'rb').read().decode('utf-8')
+				utilsFileText = utilsFileText.replace('BAREUEPROJECT', unrealProjectName.upper())
+				open(utilsFilePath, 'wb').write(utilsFileText.encode('utf-8'))
 				codeFilesPaths = GetAllFilePathsOfType(unrealExportPath, '.cs')
 				codeFilesPaths.append(unrealCodePath + '/BareUEProject.h')
 				codeFilesPaths.append(unrealCodePath + '/BareUEProject.cpp')
@@ -588,10 +595,11 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					open(codeFilePath, 'wb').write(codeFileText.encode('utf-8'))
 					os.rename(codeFilePath, codeFilePath.replace('BareUEProject', unrealProjectName))
 			command = 'dotnet ' + os.path.expanduser('~/UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll ') + unrealProjectName + ' Development Linux -Project="' + projectFilePath + '" -TargetType=Editor -Progress'
-			# command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
+			if os.path.expanduser('~') == '/home/gilead':
+				command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
 			print(command)
 
-			# os.system(command)
+			os.system(command)
 
 			data = ''
 			open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
@@ -871,9 +879,10 @@ class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 		global operatorContext
 		BuildTool ('UnityToUnreal')
 		operatorContext = context
+		MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
 		for textBlock in bpy.data.texts:
 			if textBlock.name.endswith('.cs'):
-				filePath = '/tmp/' + textBlock.name
+				filePath = '/tmp/Unity2Many (Unreal Scripts)/' + textBlock.name
 				open(filePath, 'wb').write(textBlock.as_string().encode('utf-8'))
 				ConvertCSFileToCPP (filePath)
 
@@ -932,7 +941,8 @@ def ConvertCSFileToCPP (filePath):
 	global unrealCodePathSuffix
 	assert os.path.isfile(filePath)
 	unrealCodePath = os.path.expanduser(operatorContext.scene.world.unrealExportPath)
-	unrealCodePathSuffix = '/Source/' + unrealCodePath[unrealCodePath.rfind('/') + 1 :]
+	unrealProjectName = unrealCodePath[unrealCodePath.rfind('/') + 1 :]
+	unrealCodePathSuffix = '/Source/' + unrealProjectName
 	unrealCodePath += unrealCodePathSuffix
 	codeFilesPaths = GetAllFilePathsOfType(os.path.expanduser(operatorContext.scene.world.unity_project_import_path), '.cs')
 	for codeFilePath in codeFilesPaths:
@@ -1113,7 +1123,6 @@ def ConvertPythonFileToRust (filePath):
 	textBlock = bpy.data.texts[textBlockName]
 	textBlock.clear()
 	textBlock.write(text)
-	outputFilePath = unrealCodePath + '/' + textBlockName
 	command = [ 'python3', 'py2many/py2many.py', '--rust=1', '--force', filePath, '--outdir=/tmp/src' ]
 	# for arg in sys.argv:
 	# 	command.append(arg)

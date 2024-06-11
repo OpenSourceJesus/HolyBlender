@@ -66,15 +66,6 @@ public class UnityToUnreal : Translator
 		}
 	}
 
-	public override void Do ()
-	{
-		base.Do ();
-		File.Copy(TEMPLATES_PATH + "/Utils.h", outputFolderPath + "/Utils.h", true);
-		File.Copy(TEMPLATES_PATH + "/Utils.cpp", outputFolderPath + "/Utils.cpp", true);
-		// File.Copy(TEMPLATES_PATH + "/Prefab.h", outputFolderPath + "/Prefab.h", true);
-		// File.Copy(TEMPLATES_PATH + "/Prefab.cpp", outputFolderPath + "/Prefab.cpp", true);
-	}
-
 	public override string ConvertFile (string path)
 	{
 		stage = Stage.Header;
@@ -117,7 +108,10 @@ public class UnityToUnreal : Translator
 			}
 		}
 		outputFileLines.Add("};");
-		File.WriteAllLines(outputFilePath, outputFileLines.ToArray());
+		string outputFileText = string.Join("\n", outputFileLines.ToArray());
+		string projectName = outputFolderPath.Substring(outputFolderPath.LastIndexOf('/') + 1);
+		outputFileText = outputFileText.Replace("BAREUEPROJECT", projectName.ToUpper());
+		File.WriteAllText(outputFilePath, outputFileText);
 		outputFileLines.Clear();
 		return outputFilePath;
 	}
