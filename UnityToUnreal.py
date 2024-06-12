@@ -56,14 +56,30 @@ print(command)
 
 os.system(command)
 
-codeFilesPaths = GetAllFilePathsOfType(UNREAL_PROJECT_PATH, '.cs')
-codeFilesPaths.append(CODE_PATH + '/BareUEProject.h')
-codeFilesPaths.append(CODE_PATH + '/BareUEProject.cpp')
-for codeFilePath in codeFilesPaths:
-	codeFileText = open(codeFilePath, 'rb').read().decode('utf-8')
-	codeFileText = codeFileText.replace('BareUEProject', unrealProjectName)
-	open(codeFilePath, 'wb').write(codeFileText.encode('utf-8'))
-	os.rename(codeFilePath, codeFilePath.replace('BareUEProject', unrealProjectName))
+projectFilePath = UNREAL_PROJECT_PATH + '/' + UNREAL_PROJECT_NAME + '.uproject'
+if not os.path.isdir(UNREAL_PROJECT_PATH):
+	command = 'cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + ' ' + UNREAL_PROJECT_PATH
+	print(command)
+
+	os.system(command)
+
+	os.rename(UNREAL_PROJECT_PATH + '/Source/BareUEProject', CODE_PATH)
+	os.rename(UNREAL_PROJECT_PATH + '/BareUEProject.uproject', projectFilePath)
+	projectFileText = open(projectFilePath, 'rb').read().decode('utf-8')
+	projectFileText = projectFileText.replace('BareUEProject', UNREAL_PROJECT_NAME)
+	open(projectFilePath, 'wb').write(projectFileText.encode('utf-8'))
+	utilsFilePath = CODE_PATH + '/Utils.h'
+	utilsFileText = open(utilsFileText, 'rb').read().decode('utf-8')
+	utilsFileText = utilsFileText.replace('BAREUEPROJECT', UNREAL_PROJECT_NAME.upper())
+	open(utilsFilePath, 'wb').write(utilsFileText.encode('utf-8'))
+	codeFilesPaths = GetAllFilePathsOfType(UNREAL_PROJECT_PATH, '.cs')
+	codeFilesPaths.append(CODE_PATH + '/BareUEProject.h')
+	codeFilesPaths.append(CODE_PATH + '/BareUEProject.cpp')
+	for codeFilePath in codeFilesPaths:
+		codeFileText = open(codeFilePath, 'rb').read().decode('utf-8')
+		codeFileText = codeFileText.replace('BareUEProject', UNREAL_PROJECT_NAME)
+		open(codeFilePath, 'wb').write(codeFileText.encode('utf-8'))
+		os.rename(codeFilePath, codeFilePath.replace('BareUEProject', UNREAL_PROJECT_NAME))
 
 def ConvertPythonFileToCpp (filePath):
 	global membersDict
@@ -260,6 +276,8 @@ for codeFilePath in codeFilesPaths:
 	ConvertCSFileToCPP (codeFilePath)
 
 command = 'dotnet ' + os.path.expanduser('~/UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll') + ' BareUEProject Development Linux -Project="' + UNREAL_PROJECT_PATH + '/BareUEProject.uproject" -TargetType=Editor -Progress'
+if os.path.expanduser('~') == '/home/gilead':
+	command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
 print(command)
 
 os.system(command)
