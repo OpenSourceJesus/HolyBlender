@@ -211,7 +211,7 @@ def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, si
 	staticMeshActor.static_mesh_component.set_static_mesh(staticMesh)
 	staticMeshActor.set_actor_scale3d(size)
 	staticMeshActor.set_mobility(unreal.ComponentMobility.MOVABLE)
-	LEVEL_EDITOR.save_current_level()
+	# LEVEL_EDITOR.save_current_level()
 	return staticMeshActor
 
 def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, textureAssetPath : str):
@@ -246,7 +246,7 @@ def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, s
 	paperSpriteActor.set_actor_scale3d(size)
 	paperSpriteActor.render_component.set_editor_property('source_sprite', paperSprite)
 	paperSpriteActor.set_mobility(unreal.ComponentMobility.MOVABLE)
-	LEVEL_EDITOR.save_current_level()
+	# LEVEL_EDITOR.save_current_level()
 	return paperSpriteActor
 
 def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, horizontalFov : bool, fov : float, isOrthographic : bool, orthographicSize : float, nearClipPlane : float, farClipPlane : float):
@@ -276,7 +276,7 @@ def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : 
 	lightActor.set_light_color(color)
 	lightActor.set_actor_scale3d(size)
 	lightActor.light_component.set_mobility(unreal.ComponentMobility.MOVABLE)
-	LEVEL_EDITOR.save_current_level()
+	# LEVEL_EDITOR.save_current_level()
 	return lightActor
 
 def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, scriptAssetPath : str, parent : unreal.Actor = None):
@@ -298,6 +298,10 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	attachRule = unreal.AttachmentRule.KEEP_WORLD
 	if parent != None:
 		blueprintActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
+	# else:
+	# 	staticMeshActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.StaticMeshActor.static_class(), location, rotation)
+	# 	blueprintActor.set_editor_property('root_component', staticMeshActor.static_mesh_component)
+	# 	staticMeshActor.set_actor_scale3d(size)
 	if blueprintAsset != None:
 		rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
 		assetName = assetName.replace('_Script', '')
@@ -312,8 +316,8 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		subComponent = blueprintLibrary.get_object(subData)
 		subComponent.set_editor_property('relative_location', location)
 		unreal.EditorAssetSubsystem().save_asset(destinationPath)
-	else:
-		LEVEL_EDITOR.save_current_level()
+	# else:
+	# 	LEVEL_EDITOR.save_current_level()
 	return blueprintActor
 
 def LoadObject (assetPath : str) -> unreal.Object:
@@ -577,7 +581,7 @@ else:
 		elif stage > 0:
 			objectInfo = line.split('☣️')
 			name = objectInfo[0]
-			actors = []
+			actors = actorsDict.get(name, [])
 			localPositionInfo = objectInfo[1]
 			indexOfComma = localPositionInfo.find(',')
 			localPosition.x = -float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
@@ -639,6 +643,6 @@ else:
 					codeFilePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
 					ConvertCSFileToCPP (codeFilePath)
 					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
-					attachRule = unreal.AttachmentRule.KEEP_WORLD
 					for actor in actorsDict[name]:
-						actor.attach_to_actor(scriptActor, '', attachRule, attachRule, attachRule)
+						scriptActor.set_editor_property('root_component', actor.get_editor_property('root_component'))
+LEVEL_EDITOR.save_current_level()
