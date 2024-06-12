@@ -43,7 +43,8 @@ fileLines = open(actorClassPath, 'rb').read().decode('utf-8').split('\n')
 i = 0
 while i < len(fileLines):
 	line = fileLines[i]
-	if 'check(' in line:
+	if 'check(ThreadContext.TestRegisterTickFunctions == nullptr);' in line:
 		fileLines[i] = '//' + line
+		break
 	i += 1
 open(actorClassPath, 'wb').write('\n'.join(fileLines).encode('utf-8'))

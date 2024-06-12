@@ -210,6 +210,7 @@ def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, si
 	staticMeshActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.StaticMeshActor.static_class(), location, rotation)
 	staticMeshActor.static_mesh_component.set_static_mesh(staticMesh)
 	staticMeshActor.set_actor_scale3d(size)
+	staticMeshActor.set_mobility(unreal.ComponentMobility.MOVABLE)
 	LEVEL_EDITOR.save_current_level()
 	return staticMeshActor
 
@@ -244,6 +245,7 @@ def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, s
 	paperSprite = unreal.load_object(None, destinationPath)
 	paperSpriteActor.set_actor_scale3d(size)
 	paperSpriteActor.render_component.set_editor_property('source_sprite', paperSprite)
+	paperSpriteActor.set_mobility(unreal.ComponentMobility.MOVABLE)
 	LEVEL_EDITOR.save_current_level()
 	return paperSpriteActor
 
@@ -260,6 +262,7 @@ def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	cameraActor.camera_component.ortho_far_clip_plane = farClipPlane
 	cameraActor.set_actor_scale3d(size)
 	cameraActor.set_editor_property('auto_activate_for_player', unreal.AutoReceiveInput.PLAYER0)
+	cameraActor.camera_component.set_mobility(unreal.ComponentMobility.MOVABLE)
 	LEVEL_EDITOR.save_current_level()
 	return cameraActor
 
@@ -272,6 +275,7 @@ def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : 
 	lightActor.light_component.set_intensity(intensity)
 	lightActor.set_light_color(color)
 	lightActor.set_actor_scale3d(size)
+	lightActor.light_component.set_mobility(unreal.ComponentMobility.MOVABLE)
 	LEVEL_EDITOR.save_current_level()
 	return lightActor
 
@@ -294,10 +298,6 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	attachRule = unreal.AttachmentRule.KEEP_WORLD
 	if parent != None:
 		blueprintActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
-	else:
-		staticMeshActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.StaticMeshActor.static_class(), location, rotation)
-		blueprintActor.set_editor_property('root_component', staticMeshActor.static_mesh_component)
-		staticMeshActor.set_actor_scale3d(size)
 	if blueprintAsset != None:
 		rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
 		assetName = assetName.replace('_Script', '')
@@ -566,12 +566,12 @@ else:
 	LEVEL_EDITOR.new_level(sceneName)
 	EDITOR.get_editor_world().get_world_settings().lightmass_settings.environment_color = unreal.Color(75, 75, 75, 0)
 	stage = 0
+	actorsDict = {}
 	for line in lines:
 		name = ''
 		localPosition = unreal.Vector()
 		localRotation = unreal.Quat()
 		localSize = unreal.Vector()
-		actorsDict = {}
 		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts':
 			stage += 1
 		elif stage > 0:

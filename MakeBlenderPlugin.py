@@ -409,7 +409,7 @@ public class HelloWorld : MonoBehaviour
 
 public class Rotate : MonoBehaviour
 {
-    float rotateSpeed = 50.0f;
+    public float rotateSpeed = 50.0f;
 
     void Update ()
     {
@@ -421,7 +421,7 @@ using UnityEngine.InputSystem;
 
 public class WASDAndMouseControls : MonoBehaviour
 {
-    float moveSpeed = 5.0f;
+    public float moveSpeed = 5.0f;
 
     void Update ()
     {
@@ -599,7 +599,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 				command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
 			print(command)
 
-			os.system(command)
+			# os.system(command)
 
 			data = ''
 			open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
