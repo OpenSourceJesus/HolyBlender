@@ -211,7 +211,6 @@ def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, si
 	staticMeshActor.static_mesh_component.set_static_mesh(staticMesh)
 	staticMeshActor.set_actor_scale3d(size)
 	staticMeshActor.set_mobility(unreal.ComponentMobility.MOVABLE)
-	# LEVEL_EDITOR.save_current_level()
 	return staticMeshActor
 
 def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, textureAssetPath : str):
@@ -246,7 +245,6 @@ def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, s
 	paperSpriteActor.set_actor_scale3d(size)
 	paperSpriteActor.render_component.set_editor_property('source_sprite', paperSprite)
 	paperSpriteActor.set_mobility(unreal.ComponentMobility.MOVABLE)
-	# LEVEL_EDITOR.save_current_level()
 	return paperSpriteActor
 
 def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, horizontalFov : bool, fov : float, isOrthographic : bool, orthographicSize : float, nearClipPlane : float, farClipPlane : float):
@@ -263,7 +261,6 @@ def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	cameraActor.set_actor_scale3d(size)
 	cameraActor.set_editor_property('auto_activate_for_player', unreal.AutoReceiveInput.PLAYER0)
 	cameraActor.camera_component.set_mobility(unreal.ComponentMobility.MOVABLE)
-	LEVEL_EDITOR.save_current_level()
 	return cameraActor
 
 def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, type : int, intensity : float, color : unreal.LinearColor):
@@ -276,7 +273,6 @@ def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : 
 	lightActor.set_light_color(color)
 	lightActor.set_actor_scale3d(size)
 	lightActor.light_component.set_mobility(unreal.ComponentMobility.MOVABLE)
-	# LEVEL_EDITOR.save_current_level()
 	return lightActor
 
 def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, scriptAssetPath : str, parent : unreal.Actor = None):
@@ -298,10 +294,6 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	attachRule = unreal.AttachmentRule.KEEP_WORLD
 	if parent != None:
 		blueprintActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
-	# else:
-	# 	staticMeshActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.StaticMeshActor.static_class(), location, rotation)
-	# 	blueprintActor.set_editor_property('root_component', staticMeshActor.static_mesh_component)
-	# 	staticMeshActor.set_actor_scale3d(size)
 	if blueprintAsset != None:
 		rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
 		assetName = assetName.replace('_Script', '')
@@ -316,8 +308,6 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		subComponent = blueprintLibrary.get_object(subData)
 		subComponent.set_editor_property('relative_location', location)
 		unreal.EditorAssetSubsystem().save_asset(destinationPath)
-	# else:
-	# 	LEVEL_EDITOR.save_current_level()
 	return blueprintActor
 
 def LoadObject (assetPath : str) -> unreal.Object:
@@ -586,8 +576,8 @@ else:
 			indexOfComma = localPositionInfo.find(',')
 			localPosition.x = -float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
 			indexOfComma2 = localPositionInfo.find(',', indexOfComma + 1)
-			localPosition.y = float(localPositionInfo[indexOfComma + 1 : indexOfComma2])
-			localPosition.z = float(localPositionInfo[indexOfComma2 + 1 : localPositionInfo.find(')')])
+			localPosition.z = float(localPositionInfo[indexOfComma + 1 : indexOfComma2])
+			localPosition.y = float(localPositionInfo[indexOfComma2 + 1 : localPositionInfo.find(')')])
 			localRotationInfo = objectInfo[2]
 			indexOfEquals = localRotationInfo.find('=')
 			indexOfComma = localRotationInfo.find(',')
@@ -597,17 +587,17 @@ else:
 			localRotation.x = -float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
 			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
 			indexOfComma = localRotationInfo.find(',', indexOfComma + 1)
-			localRotation.y = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
+			localRotation.z = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
 			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
-			localRotation.z = float(localRotationInfo[indexOfEquals + 1 : localRotationInfo.find(')')])
+			localRotation.y = float(localRotationInfo[indexOfEquals + 1 : localRotationInfo.find(')')])
 			localRotation = localRotation.rotator()
 			localRotation.yaw += 180
 			localSizeInfo = objectInfo[3]
 			indexOfComma = localSizeInfo.find(',')
 			localSize.x = -float(localSizeInfo[localSizeInfo.find('(') + 1 : indexOfComma])
 			indexOfComma2 = localSizeInfo.find(',', indexOfComma + 1)
-			localSize.y = float(localSizeInfo[indexOfComma + 1 : indexOfComma2])
-			localSize.z = float(localSizeInfo[indexOfComma2 + 1 : localSizeInfo.find(')')])
+			localSize.z = float(localSizeInfo[indexOfComma + 1 : indexOfComma2])
+			localSize.y = float(localSizeInfo[indexOfComma2 + 1 : localSizeInfo.find(')')])
 			if stage == 1:
 				horizontalFov = bool(objectInfo[4])
 				fov = float(objectInfo[5])

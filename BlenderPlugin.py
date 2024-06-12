@@ -4,6 +4,10 @@ os.system('''rm /tmp/Unity2Many Data (UnityToBevy)
 	rm /tmp/Unity2Many Data (UnityToUnreal)''')
 
 blender = 'blender'
+if sys.platform == 'win32': # Windows
+    blender = 'C:/Program Files/Blender Foundation/Blender 4.1/blender.exe'
+elif sys.platform == 'darwin': # Apple
+    blender = '/Applications/Blender.app/Contents/MacOS/Blender'
 command = []
 for arg in sys.argv:
 	if arg.endswith('.blend'):
