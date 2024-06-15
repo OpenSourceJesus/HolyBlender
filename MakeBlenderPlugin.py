@@ -516,8 +516,6 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 		global unrealCodePathSuffix
 		BuildTool ('UnityToUnreal')
 		unrealExportPath = os.path.expanduser(context.scene.world.unrealExportPath)
-		if not os.path.isdir(unrealExportPath):
-			MakeFolderForFile (unrealExportPath + '/')
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath != '':
 			command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToUnreal.py'), 'input=' + importPath, 'output=' + unrealExportPath, 'exclude=/Library' ]
@@ -572,18 +570,27 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):
-				command = 'cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + ' ' + unrealExportPath
-				print(command)
+				MakeFolderForFile (unrealExportPath + '/')
+				bareProjectPath = os.path.expanduser('~/Unity2Many/BareUEProject')
+				filesAndFolders = os.listdir(bareProjectPath)
+				for fileOrFolder in filesAndFolders:
+					command = 'cp -r ''' + bareProjectPath + '/' + fileOrFolder + ' ' + unrealExportPath
+					print(command)
 
-				os.system(command)
+					os.system(command)
 
 				os.rename(unrealExportPath + '/Source/BareUEProject', unrealCodePath)
 				os.rename(unrealExportPath + '/BareUEProject.uproject', projectFilePath)
+				command = 'cp -r ' + TEMPLATES_PATH + '/Utils.h' + ' ' + unrealCodePath + '''/Utils.h
+					cp -r ''' + TEMPLATES_PATH + '/Utils.cpp' + ' ' + unrealCodePath + '/Utils.cpp'
+				print(command)
+
+				os.system(command)
 				projectFileText = open(projectFilePath, 'rb').read().decode('utf-8')
 				projectFileText = projectFileText.replace('BareUEProject', unrealProjectName)
 				open(projectFilePath, 'wb').write(projectFileText.encode('utf-8'))
 				utilsFilePath = unrealCodePath + '/Utils.h'
-				utilsFileText = open(utilsFileText, 'rb').read().decode('utf-8')
+				utilsFileText = open(utilsFilePath, 'rb').read().decode('utf-8')
 				utilsFileText = utilsFileText.replace('BAREUEPROJECT', unrealProjectName.upper())
 				open(utilsFilePath, 'wb').write(utilsFileText.encode('utf-8'))
 				codeFilesPaths = GetAllFilePathsOfType(unrealExportPath, '.cs')
@@ -599,7 +606,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 				command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
 			print(command)
 
-			# os.system(command)
+			os.system(command)
 
 			data = ''
 			open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
