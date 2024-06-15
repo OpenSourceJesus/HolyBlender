@@ -404,7 +404,7 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 				elif line.startswith(LOCAL_POSITION_INDICATOR):
 					indexOfComma = line.find(',')
 					x = line[len(LOCAL_POSITION_INDICATOR) + 3 : indexOfComma]
-					localPosition.x = -float(x)
+					localPosition.x = float(x)
 					indexOfComma = line.find(',', indexOfComma + 1)
 					indexOfY = line.find('y: ')
 					y = line[indexOfY + 3 : indexOfComma]
@@ -417,7 +417,7 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 					localRotation = unreal.Quat()
 					indexOfComma = line.find(',')
 					x = line[len(LOCAL_ROTATION_INDICATOR) + 3 : indexOfComma]
-					localRotation.x = -float(x)
+					localRotation.x = float(x)
 					indexOfComma = line.find(',', indexOfComma + 1)
 					indexOfY = line.find('y: ')
 					y = line[indexOfY + 3 : indexOfComma]
@@ -431,11 +431,10 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 					w = line[indexOfW + 3 : indexOfComma]
 					localRotation.w = float(w)
 					localRotation = localRotation.rotator()
-					localRotation.yaw += 180
 				elif line.startswith(LOCAL_SCALE_INDICATOR):
 					indexOfComma = line.find(',')
 					x = line[len(LOCAL_SCALE_INDICATOR) + 3 : indexOfComma]
-					localSize.x = -float(x)
+					localSize.x = float(x)
 					indexOfComma = line.find(',', indexOfComma + 1)
 					indexOfY = line.find('y: ')
 					y = line[indexOfY + 3 : indexOfComma]
@@ -558,7 +557,7 @@ else:
 	sceneName = '/Game/' + sceneName + '/' + sceneName
 	unreal.EditorAssetLibrary.delete_asset(sceneName)
 	LEVEL_EDITOR.new_level(sceneName)
-	EDITOR.get_editor_world().get_world_settings().lightmass_settings.environment_color = unreal.Color(75, 75, 75, 0)
+	EDITOR.get_editor_world().get_world_settings().lightmass_settings.environment_color = unreal.Color(128, 128, 128, 0)
 	stage = 0
 	actorsDict = {}
 	for line in lines:
@@ -574,7 +573,7 @@ else:
 			actors = actorsDict.get(name, [])
 			localPositionInfo = objectInfo[1]
 			indexOfComma = localPositionInfo.find(',')
-			localPosition.x = -float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
+			localPosition.x = float(localPositionInfo[localPositionInfo.find('(') + 1 : indexOfComma])
 			indexOfComma2 = localPositionInfo.find(',', indexOfComma + 1)
 			localPosition.z = float(localPositionInfo[indexOfComma + 1 : indexOfComma2])
 			localPosition.y = float(localPositionInfo[indexOfComma2 + 1 : localPositionInfo.find(')')])
@@ -584,17 +583,16 @@ else:
 			localRotation.w = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
 			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
 			indexOfComma = localRotationInfo.find(',', indexOfComma + 1)
-			localRotation.x = -float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
+			localRotation.x = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
 			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
 			indexOfComma = localRotationInfo.find(',', indexOfComma + 1)
 			localRotation.z = float(localRotationInfo[indexOfEquals + 1 : indexOfComma])
 			indexOfEquals = localRotationInfo.find('=', indexOfEquals + 1)
 			localRotation.y = float(localRotationInfo[indexOfEquals + 1 : localRotationInfo.find(')')])
 			localRotation = localRotation.rotator()
-			localRotation.yaw += 180
 			localSizeInfo = objectInfo[3]
 			indexOfComma = localSizeInfo.find(',')
-			localSize.x = -float(localSizeInfo[localSizeInfo.find('(') + 1 : indexOfComma])
+			localSize.x = float(localSizeInfo[localSizeInfo.find('(') + 1 : indexOfComma])
 			indexOfComma2 = localSizeInfo.find(',', indexOfComma + 1)
 			localSize.z = float(localSizeInfo[indexOfComma + 1 : indexOfComma2])
 			localSize.y = float(localSizeInfo[indexOfComma2 + 1 : localSizeInfo.find(')')])

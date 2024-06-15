@@ -413,7 +413,7 @@ public class Rotate : MonoBehaviour
 
     void Update ()
     {
-        transform.eulerAngles += Vector3.forward * rotateSpeed * Time.deltaTime;
+        transform.eulerAngles += Vector3.up * rotateSpeed * Time.deltaTime;
     }
 }''',
   'Keyboard And Mouse Controls' : '''using UnityEngine;
@@ -463,8 +463,8 @@ detachScriptDropdownOptions = []
 attachedScriptsText = ''
 
 class ExamplesOperator (bpy.types.Operator):
-	bl_label = 'Add or Remove'
 	bl_idname = 'u2m.show_template'
+	bl_label = 'Add or Remove'
 	template : bpy.props.StringProperty(default = '')
 
 	def invoke (self, context, event):
@@ -474,8 +474,8 @@ class ExamplesOperator (bpy.types.Operator):
 		return {'FINISHED'}
 
 class ExamplesMenu (bpy.types.Menu):
-	bl_label = 'Unity2Many Templates'
 	bl_idname = 'TEXT_MT_u2m_menu'
+	bl_label = 'Unity2Many Templates'
 
 	def draw (self, context):
 		layout = self.layout
@@ -546,7 +546,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					lightType = 2
 				elif lightObject.type == 'AREA':
 					lightType = 3
-				data += '\n' + GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * 0.001341022) + '☣️' + str(light.color)
+				data += '\n' + GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * 0.001341022 * 100) + '☣️' + str(light.color)
 			data += '\nMeshes'
 			for obj in bpy.context.scene.objects:
 				if obj.type == 'MESH':
@@ -554,7 +554,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					bpy.ops.object.select_all(action='DESELECT')
 					bpy.context.view_layer.objects.active = obj
 					obj.select_set(True)
-					bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True)
+					bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
 					data += '\n' + GetBasicObjectData(obj)
 			MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
 			data += '\nScripts'
@@ -874,6 +874,19 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 			
 			subprocess.check_call(command)
 
+
+class TEXT_EDITOR_OT_RunCSButton (bpy.types.Operator):
+	bl_idname = 'run.cs'
+	bl_label = 'Run CS Script'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		import RunCSInBlender as runCSInBlender
+		runCSInBlender.Do ()
+
 class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
 	bl_label = 'Translate To Unreal'
@@ -915,6 +928,7 @@ classes = [
 	TEXT_EDITOR_OT_UnrealExportButton,
 	TEXT_EDITOR_OT_BevyExportButton,
 	TEXT_EDITOR_OT_UnityExportButton,
+	TEXT_EDITOR_OT_RunCSButton,
 	TEXT_EDITOR_OT_UnrealTranslateButton,
 	TEXT_EDITOR_OT_BevyTranslateButton,
 	ExamplesOperator,
@@ -1175,19 +1189,22 @@ def DrawBevyExportField (self, context):
 	self.layout.prop(context.world, 'bevy_project_path')
 
 def DrawUnrealExportButton (self, context):
-	self.layout.operator('unreal.export', icon='CONSOLE')
+	self.layout.operator(TEXT_EDITOR_OT_UnrealExportButton.bl_idname, icon='CONSOLE')
 
 def DrawBevyExportButton (self, context):
-	self.layout.operator('bevy.export', icon='CONSOLE')
+	self.layout.operator(TEXT_EDITOR_OT_BevyExportButton.bl_idname, icon='CONSOLE')
 
 def DrawUnityExportButton (self, context):
-	self.layout.operator('unity.export', icon='CONSOLE')
+	self.layout.operator(TEXT_EDITOR_OT_UnityExportButton.bl_idname, icon='CONSOLE')
+
+def DrawRunCSButton (self, context):
+	self.layout.operator(TEXT_EDITOR_OT_RunCSButton.bl_idname, icon='CONSOLE')
 
 def DrawUnrealTranslateButton (self, context):
-	self.layout.operator('unreal.translate', icon='CONSOLE')
+	self.layout.operator(TEXT_EDITOR_OT_UnrealTranslateButton.bl_idname, icon='CONSOLE')
 
 def DrawBevyTranslateButton (self, context):
-	self.layout.operator('bevy.translate', icon='CONSOLE')
+	self.layout.operator(TEXT_EDITOR_OT_BevyTranslateButton.bl_idname, icon='CONSOLE')
 
 def DrawAttachScriptDropdown (self, context):
 	self.layout.prop(context.object, 'attach_script_dropdown')
@@ -1338,6 +1355,7 @@ def register ():
 	)
 	bpy.types.TEXT_HT_header.append(DrawExamplesMenu)
 	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
+	# bpy.types.TEXT_HT_footer.append(DrawRunCSButton)
 	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityImportField)
@@ -1353,6 +1371,7 @@ def register ():
 def unregister ():
 	bpy.types.TEXT_HT_header.remove(DrawExamplesMenu)
 	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
+	# bpy.types.TEXT_HT_footer.remove(DrawRunCSButton)
 	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityImportField)
