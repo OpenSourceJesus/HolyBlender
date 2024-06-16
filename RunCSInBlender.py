@@ -1,10 +1,13 @@
-import bpy, ast
+import bpy
 
-def Do (textBlockName : str):
-	for textBlock in bpy.data.texts:
-		if textBlock.name == textBlockName:
-			tree = ast.parse(textBlock.as_string())
-			Run (tree)
+MAPPINGS_DICT = {
+	'transform.position' : 'self.location',
+	'transform.eulerAngles' : 'self.rotation_euler'
+}
 
-def Run (tree : ast.AST):
-	
+def Run (code : str, obj):
+	outputCode = 'self = bpy.data.objects[' + obj.name + ']'
+	outputCode += code 
+	for key in MAPPINGS_DICT:
+		outputCode = outputCode.replace(key, MAPPINGS_DICT[key])
+	exec(outputCode)

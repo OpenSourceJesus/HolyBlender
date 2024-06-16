@@ -456,11 +456,13 @@ unrealCodePathSuffix = '/Source/'
 excludeItems = [ '/Library' ]
 lastId = 5
 operatorContext = None
+currentTextBlock = None
 mainClassNames = []
 attachScriptDropdownOptions = []
 attachedScriptsDict = {}
 detachScriptDropdownOptions = []
 attachedScriptsText = ''
+previousRunScripts = []
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -874,19 +876,6 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 			
 			subprocess.check_call(command)
 
-
-class TEXT_EDITOR_OT_RunCSButton (bpy.types.Operator):
-	bl_idname = 'run.cs'
-	bl_label = 'Run CS Script'
-
-	@classmethod
-	def poll (cls, context):
-		return True
-	
-	def execute (self, context):
-		import RunCSInBlender as runCSInBlender
-		runCSInBlender.Do ()
-
 class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
 	bl_label = 'Translate To Unreal'
@@ -924,11 +913,38 @@ class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
 				open(filePath, 'wb').write(textBlock.as_string().encode('utf-8'))
 				ConvertCSFileToRust (filePath)
 
+timer = None
+@bpy.utils.register_class
+class Loop (bpy.types.Operator):
+	bl_idname = 'blender_plugin.start'
+	bl_label = 'blender_plugin_start'
+	bl_options = { 'REGISTER' }
+
+	def modal (self, context, event):
+		for area in bpy.data.screens['Layout'].areas:
+			if area.type == 'VIEW_3D':
+				for region in area.regions:
+					if region.type == 'WINDOW':
+						region.tag_redraw()
+		return {'PASS_THROUGH'} # will not supress event bubbles
+
+	def invoke (self, context, event):
+		global timer
+		if timer is None:
+			timer = self._timer = context.window_manager.event_timer_add(
+				time_step=0.016666667,
+				window=context.window)
+			context.window_manager.modal_handler_add(self)
+			return {'RUNNING_MODAL'}
+		return {'FINISHED'}
+
+	def execute (self, context):
+		return self.invoke(context, None)
+
 classes = [
 	TEXT_EDITOR_OT_UnrealExportButton,
 	TEXT_EDITOR_OT_BevyExportButton,
 	TEXT_EDITOR_OT_UnityExportButton,
-	TEXT_EDITOR_OT_RunCSButton,
 	TEXT_EDITOR_OT_UnrealTranslateButton,
 	TEXT_EDITOR_OT_BevyTranslateButton,
 	ExamplesOperator,
@@ -1197,9 +1213,6 @@ def DrawBevyExportButton (self, context):
 def DrawUnityExportButton (self, context):
 	self.layout.operator(TEXT_EDITOR_OT_UnityExportButton.bl_idname, icon='CONSOLE')
 
-def DrawRunCSButton (self, context):
-	self.layout.operator(TEXT_EDITOR_OT_RunCSButton.bl_idname, icon='CONSOLE')
-
 def DrawUnrealTranslateButton (self, context):
 	self.layout.operator(TEXT_EDITOR_OT_UnrealTranslateButton.bl_idname, icon='CONSOLE')
 
@@ -1223,15 +1236,20 @@ def DrawDetachScriptDropdown (self, context):
 	self.layout.prop(context.object, 'detach_script_dropdown')
 
 def SetupTextEditorFooterContext (self, context):
+	global currentTextBlock
 	global attachedScriptsText
+	currentTextBlock = context.edit_text
 	attachedScriptsText = ''
 	for obj in attachedScriptsDict:
-		if context.edit_text.name in attachedScriptsDict[obj]:
+		if currentTextBlock.name in attachedScriptsDict[obj]:
 			attachedScriptsText += obj.name + ', '
 	attachedScriptsText = attachedScriptsText[: -2]
 
 def DrawAttachedScriptsText (self, context):
 	self.layout.prop(context.edit_text, 'attached_to_objects')
+
+def DrawRunCSToggle (self, context):
+	self.layout.prop(context.edit_text, 'run_cs')
 
 def AttachScript (self, context):
 	global attachedScriptsDict
@@ -1245,7 +1263,8 @@ def DetachScript (self, context):
 	attachedScripts.remove(bpy.context.object.detach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
 
-def Update ():
+def OnRedrawView ():
+	global currentTextBlock
 	global attachedScriptsDict
 	global attachScriptDropdownOptions
 	global detachScriptDropdownOptions
@@ -1295,7 +1314,12 @@ def Update ():
 		bpy.types.TEXT_HT_footer.append(DrawAttachedScriptsText)
 		bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
 		bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
-	return 0.1
+		if currentTextBlock != None:
+			if currentTextBlock.run_cs:
+				import RunCSInBlender as runCSInBlender
+				for obj in attachedScriptsDict:
+					if currentTextBlock.name in attachedScriptsDict[obj]:
+						runCSInBlender.Run (currentTextBlock.as_string(), obj)
 
 def register ():
 	global attachScriptDropdownOptions
@@ -1311,7 +1335,7 @@ def register ():
 		os.system('cd ' + toolsPath + '''
 			python3 internal_generate_release_zips.py''')
 		if not os.path.isdir(addonsPath + '/bevy_components'):
-			os.system('unzip ' + toolsPath + '/bevy_components.zip -d ' + addonsPath)
+			os.system('unzip ' + toolsPath + '/ponents.zip -d ' + addonsPath)
 		if not os.path.isdir(addonsPath + '/gltf_auto_export'):
 			os.system('unzip ' + toolsPath + '/gltf_auto_export.zip -d ' + addonsPath)
 
@@ -1353,11 +1377,15 @@ def register ():
 		description = '',
 		default = ''
 	)
+	bpy.types.Text.run_cs = bpy.props.BoolProperty(
+		name = 'Run C# Script',
+		description = ''
+	)
 	bpy.types.TEXT_HT_header.append(DrawExamplesMenu)
 	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
-	# bpy.types.TEXT_HT_footer.append(DrawRunCSButton)
 	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
+	bpy.types.TEXT_HT_footer.append(DrawRunCSToggle)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityImportField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportField)
 	# bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
@@ -1366,14 +1394,18 @@ def register ():
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
-	bpy.app.timers.register(Update)
+	handle = bpy.types.SpaceView3D.draw_handler_add(
+		OnRedrawView,
+		tuple([]),
+		'WINDOW', 'POST_PIXEL')
+	bpy.ops.blender_plugin.start()
 
 def unregister ():
 	bpy.types.TEXT_HT_header.remove(DrawExamplesMenu)
 	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
-	# bpy.types.TEXT_HT_footer.remove(DrawRunCSButton)
 	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
+	bpy.types.TEXT_HT_footer.remove(DrawRunCSToggle)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityImportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportField)
 	# bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)
@@ -1382,7 +1414,6 @@ def unregister ():
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportButton)
-	bpy.app.timers.unregister(Update)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 

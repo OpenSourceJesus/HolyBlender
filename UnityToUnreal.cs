@@ -7,7 +7,6 @@ public class UnityToUnreal : Translator
 {
 	public new static Dictionary<string, string> typeConversionsDict = new Dictionary<string, string>() { { "Vector2" , "FVector2D" }, {"FFVector2DD" , "FVector2D"}, {"Transform" , "FTransform"}, {"FFTransform" , "FTransform"} };
 	// public new static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>() { { "IndexOf", "Find"} };
-	public static string pythonFileContents;
 	public const string UNREAL_MODE_INDICATOR = "unreal=";
 	public static List<string> mainClassNames = new List<string>();
 	static bool unrealMode;

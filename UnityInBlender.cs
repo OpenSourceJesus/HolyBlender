@@ -3,15 +3,11 @@ using CSharpToPython;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
-public class UnityToBevy : Translator 
+public class UnityInBlender : Translator 
 {
 	// public new static Dictionary<string, string> typeConversionsDict = new Dictionary<string, string>() { { "Console.Write" , "printf" } };
 	// public new static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>() { { "IndexOf", "Find"} };
-	public const string BEVY_MODE_INDICATOR = "bevy=";
-	public static bool bevyMode;
 	public static string outputFilePath;
-	static string TEMPLATES_PATH = "/Templates";
-	static Stage stage;
 	static string className;
 	static Dictionary<string, List<string>> membersToAddDict = new Dictionary<string, List<string>>();
 	static List<string> codeToSkip = new List<string>();
@@ -19,7 +15,7 @@ public class UnityToBevy : Translator
 
 	public static void Main (string[] args)
 	{
-		instance = new UnityToBevy();
+		instance = new UnityInBlender();
 		instance.Init (args);
 		instance.Do ();
 		File.WriteAllText(outputFolderPath + '/' + instance.GetStaticFileName(), instance.GetStaticFileContents());
@@ -27,25 +23,13 @@ public class UnityToBevy : Translator
 
 	public virtual void Init (string[] args)
 	{
-		foreach (string arg in args)
-		{
-			if (arg.StartsWith(BEVY_MODE_INDICATOR))
-				bevyMode = bool.Parse(arg.Substring(BEVY_MODE_INDICATOR.Length));
-		}
 		Translator.typeConversionsDict = typeConversionsDict;
 		Translator.memberConversionsDict = memberConversionsDict;
 		Translator.removeTexts = removeTexts;
-		TEMPLATES_PATH = UNITY_2_MANY_PATH + TEMPLATES_PATH;
 		base.Init (args);
 	}
 
 	public override string ConvertFile (string path)
-	{
-		stage = Stage.Python;
-		return ConvertFileToPython(path);
-	}
-
-	string ConvertFileToPython (string path)
 	{
 		Console.WriteLine("File: " + path);
 		string inputFileContents = File.ReadAllText(path);
@@ -61,31 +45,20 @@ public class UnityToBevy : Translator
 	{
 		foreach (string outputFilePath in outputFilesPaths)
 		{
-			UnityToBevy.outputFilePath = outputFilePath;
+			UnityInBlender.outputFilePath = outputFilePath;
 			File.WriteAllText(outputFilePath, PostProcessCode(File.ReadAllText(outputFilePath)));
 		}
 	}
 
 	public override string GetNewOutputPath (string path)
 	{
-		// string fileName = path.Substring(path.LastIndexOf('/') + 1);
-		string output = "/tmp/main.cs";
-		if (stage == Stage.Python)
-			return output.Replace(".cs", ".py");
-		else if (stage == Stage.Rust)
-			return output.Replace(".cs", ".rs");
-		else if (stage == Stage.Bevy)
-			return output.Replace(".cs", ".rs");
-		else
-			return output;
+		string output = path.Substring(path.LastIndexOf('/') + 1);
+		return output.Replace(".cs", ".py");
 	}
 
 	public override string GetStaticFileName ()
 	{
-		if (stage == Stage.Python)
-			return STATIC_CLASS_NAME + ".py";
-		else
-			return STATIC_CLASS_NAME + ".rs";
+		return STATIC_CLASS_NAME + ".py";
 	}
 
 	public override string GetStaticFileContents ()
@@ -103,26 +76,17 @@ public class UnityToBevy : Translator
 			int indexOfClass = output.IndexOf(CLASS_INDICATOR);
 			int classNameEndIndex = output.IndexOfAny(new char[] { '{', '\n' }, indexOfClass);
 			int indexOfColon = output.LastIndexOf(':', classNameEndIndex);
-			string baseClassAndInterfacesNames = ""; //TODO: Convert to the matching Bevy class name if one exists
 			if (indexOfColon != -1)
-			{
 				className = output.SubstringStartEnd(indexOfClass + CLASS_INDICATOR.Length, indexOfColon);
-				baseClassAndInterfacesNames = output.SubstringStartEnd(indexOfColon + 1, classNameEndIndex);
-			}
 			else
 				className = output.SubstringStartEnd(indexOfClass + CLASS_INDICATOR.Length, classNameEndIndex);
 			outputCharIndex = -1;
 		}
 		else if (node.IsKind(SyntaxKind.MethodDeclaration))
 		{
-			string methodName = GetMethodName(output);
-			int indexOfLeftParenthesis = output.IndexOf('(');
-			if (indexOfLeftParenthesis != -1)	
-				output = output.Remove(indexOfLeftParenthesis);
-			int indexOfMethodName = output.IndexOf(methodName);
-			output = output.Insert(indexOfMethodName, className + "::");
 			AddToMembersToAdd (output);
-			outputCharIndex = output.Length;
+			outputLineIndex ++;
+			outputCharIndex = -1;
 		}
 		else if (node.IsKind(SyntaxKind.ParameterList))
 		{
@@ -155,11 +119,9 @@ public class UnityToBevy : Translator
 		}
 		else if (node.IsKind(SyntaxKind.ExpressionStatement))
 		{
-			int indexOfLeftParenthesis = output.IndexOf('(');
-			if (indexOfLeftParenthesis != -1)
-				output = output.Remove(indexOfLeftParenthesis);
 			AddToMembersToAdd (output);
-			outputCharIndex = output.Length;
+			outputLineIndex ++;
+			outputCharIndex = -1;
 		}
 		else if (node.IsKind(SyntaxKind.LocalDeclarationStatement) || node.IsKind(SyntaxKind.FieldDeclaration)) //TODO: Handle multi-dimensional arrays
 																												//TODO: Handle multi-dimensional lists
@@ -208,13 +170,6 @@ public class UnityToBevy : Translator
 		return base.PostProcessCode(text);
 	}
 
-	static string GetMethodName (string str)
-	{
-		int indexOfLeftParenthesis = str.IndexOf('(');
-		int indexOfSpace = str.LastIndexOf(' ', indexOfLeftParenthesis - 2);
-		return str.SubstringStartEnd(indexOfSpace + 1, indexOfLeftParenthesis - 1);
-	}
-
 	static void AddToMembersToAdd (string memberToAdd)
 	{
 		List<string> membersToAdd = new List<string>();
@@ -225,12 +180,5 @@ public class UnityToBevy : Translator
 		}
 		else
 			membersToAddDict[outputFilesPaths[outputFilesPaths.Count - 1]] = new List<string>(new string[] { memberToAdd });
-	}
-
-	enum Stage
-	{
-		Python,
-		Rust,
-		Bevy
 	}
 }
