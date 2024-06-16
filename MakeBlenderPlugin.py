@@ -1351,7 +1351,7 @@ def register ():
 		os.system('cd ' + toolsPath + '''
 			python3 internal_generate_release_zips.py''')
 		if not os.path.isdir(addonsPath + '/bevy_components'):
-			os.system('unzip ' + toolsPath + '/ponents.zip -d ' + addonsPath)
+			os.system('unzip ' + toolsPath + '/bevy_components.zip -d ' + addonsPath)
 		if not os.path.isdir(addonsPath + '/gltf_auto_export'):
 			os.system('unzip ' + toolsPath + '/gltf_auto_export.zip -d ' + addonsPath)
 
