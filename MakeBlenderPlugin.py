@@ -3,6 +3,7 @@ import bpy, subprocess, os, sys, webbrowser, hashlib
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from SystemExtensions import *
 from StringExtensions import *
+from CollectionExtensions import *
 
 bl_info = {
 	'name': 'Blender Plugin',
@@ -462,7 +463,7 @@ attachScriptDropdownOptions = []
 attachedScriptsDict = {}
 detachScriptDropdownOptions = []
 attachedScriptsText = ''
-previousRunScripts = []
+previousRunningScripts = []
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -1238,12 +1239,19 @@ def DrawDetachScriptDropdown (self, context):
 def SetupTextEditorFooterContext (self, context):
 	global currentTextBlock
 	global attachedScriptsText
+	global previousRunningScripts
 	currentTextBlock = context.edit_text
 	attachedScriptsText = ''
 	for obj in attachedScriptsDict:
 		if currentTextBlock.name in attachedScriptsDict[obj]:
 			attachedScriptsText += obj.name + ', '
 	attachedScriptsText = attachedScriptsText[: -2]
+	previousRunningScripts = []
+	for textBlock in bpy.data.texts:
+		if textBlock.name == '.gltf_auto_export_gltf_settings':
+			continue
+		if textBlock.run_cs:
+			previousRunningScripts.append(textBlock.name)
 
 def DrawAttachedScriptsText (self, context):
 	self.layout.prop(context.edit_text, 'attached_to_objects')
@@ -1266,6 +1274,7 @@ def DetachScript (self, context):
 def OnRedrawView ():
 	global currentTextBlock
 	global attachedScriptsDict
+	global previousRunningScripts
 	global attachScriptDropdownOptions
 	global detachScriptDropdownOptions
 	attachScriptDropdownOptions.clear()
@@ -1319,7 +1328,14 @@ def OnRedrawView ():
 				import RunCSInBlender as runCSInBlender
 				for obj in attachedScriptsDict:
 					if currentTextBlock.name in attachedScriptsDict[obj]:
-						runCSInBlender.Run (currentTextBlock.as_string(), obj)
+						filePath = os.path.expanduser('/tmp/Unity2Many Data (UnityInBlender)/' + currentTextBlock.name.replace('.cs', '.py'))
+						if not filePath.endswith('.py'):
+							filePath += '.py'
+						MakeFolderForFile (filePath)
+						open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
+						if currentTextBlock.name not in previousRunningScripts:
+							BuildTool ('UnityInBlender')
+						runCSInBlender.Run (filePath, obj)
 
 def register ():
 	global attachScriptDropdownOptions

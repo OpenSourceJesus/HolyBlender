@@ -52,7 +52,7 @@ public class UnityInBlender : Translator
 
 	public override string GetNewOutputPath (string path)
 	{
-		string output = path.Substring(path.LastIndexOf('/') + 1);
+		string output = outputFolderPath + path.Substring(path.LastIndexOf('/') + 1);
 		return output.Replace(".cs", ".py");
 	}
 
@@ -167,6 +167,7 @@ public class UnityInBlender : Translator
 				text += '\n' + line;
 			}
 		}
+		text = text.Replace("transform.eulerAngles", "self.rotation_euler");
 		return base.PostProcessCode(text);
 	}
 
