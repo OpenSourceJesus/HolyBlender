@@ -12,19 +12,19 @@ if not os.path.isdir(UNITY_2_MANY_PATH + '/py2many'):
 if not os.path.isdir(UNITY_2_MANY_PATH + '/Blender_bevy_components_workflow'):
 	os.system('git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1')
 os.system('''sudo apt install pip
-cp -r ~/.local/lib/python3.12/site-packages/wand ''' + UNITY_2_MANY_PATH + '''/wand
-pip install Wand --break-system-packages
-sudo apt -y install python3-toposort
-sudo snap install blender --classic
-sudo snap install rustup --classic
-rustup default stable
-sudo snap install dotnet-sdk --classic
-dotnet new console --force
-rm Program.cs
-dotnet add package Microsoft.CodeAnalysis
-dotnet add package Microsoft.CodeAnalysis.CSharp
-dotnet add package IronPython
-dotnet add package System.Resources.Extensions''')
+	pip install Wand --break-system-packages
+	cp -r ~/.local/lib/python3.12/site-packages/wand ''' + UNITY_2_MANY_PATH + '''/wand
+	sudo apt -y install python3-toposort
+	sudo snap install blender --classic
+	sudo snap install rustup --classic
+	rustup default stable
+	sudo apt -y install dotnet-sdk-8.0
+	dotnet new console --force
+	rm Program.cs
+	dotnet add package Microsoft.CodeAnalysis
+	dotnet add package Microsoft.CodeAnalysis.CSharp
+	dotnet add package IronPython
+	dotnet add package System.Resources.Extensions''')
 filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
 fileLines = open(filePath, 'rb').read().decode('utf-8').split('\n')
 ExcludeFolder ('BareUEProject')
