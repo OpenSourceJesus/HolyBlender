@@ -1,3 +1,4 @@
+using System;
 using CSharpToPython;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
@@ -16,6 +17,9 @@ public class CSToPython : Translator
 	{
 		string inputFileContents = File.ReadAllText(path);
 		string outputFilePath = GetNewOutputPath(path);
+		SyntaxTree tree = CSharpSyntaxTree.ParseText(inputFileContents);
+		ConvertSyntaxNode (tree.GetRoot(), 0);
+		Directory.CreateDirectory(outputFilePath.Remove(outputFilePath.LastIndexOf('/')));
 		EngineWrapper engineWrapper = new EngineWrapper();
 		object result = Program.ConvertAndRunCode(engineWrapper, inputFileContents);
 		File.WriteAllText(outputFilePath, pythonFileContents);
@@ -35,11 +39,16 @@ public class CSToPython : Translator
 
 	public override string GetStaticFileName ()
 	{
-		return "Utils";
+		return "Utils.cs";
 	}
 
 	public override string GetStaticFileContents ()
 	{
 		return "";
+	}
+
+	public override string ConvertSyntaxNode (SyntaxNode node, int outputLineIndex = -1, int outputCharIndex = -1, int indents = 0, bool parsedMainClass = false)
+	{
+		return "" + node;
 	}
 }
