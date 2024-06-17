@@ -414,7 +414,7 @@ public class Rotate : MonoBehaviour
 
     void Update ()
     {
-        transform.eulerAngles += Vector3.up * rotateSpeed * Time.deltaTime;
+        this.transform.eulerAngles += Vector3.up * this.rotateSpeed * Time.deltaTime;
     }
 }''',
   'Keyboard And Mouse Controls' : '''using UnityEngine;
@@ -436,13 +436,13 @@ public class WASDAndMouseControls : MonoBehaviour
         if (Keyboard.current.wKey.isPressed)
             move.y += 1.0f;
         move.Normalize();
-        Vector3 position = transform.position;
-        position += move * moveSpeed * Time.deltaTime;
-        transform.position = position;
+        Vector3 position = this.transform.position;
+        position += move * this.moveSpeed * Time.deltaTime;
+        this.transform.position = position;
         Vector3 mousePosition = Mouse.current.position.ReadValue();
         mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
         Vector3 facing = mousePosition - position;
-        transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * 57.2958f - 90.0f);
+        this.transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * 57.2958f - 90.0f);
     }
 }'''
 }
