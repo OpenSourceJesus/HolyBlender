@@ -1328,13 +1328,23 @@ def OnRedrawView ():
 				import RunCSInBlender as runCSInBlender
 				for obj in attachedScriptsDict:
 					if currentTextBlock.name in attachedScriptsDict[obj]:
-						filePath = os.path.expanduser('/tmp/Unity2Many Data (UnityInBlender)/' + currentTextBlock.name.replace('.cs', '.py'))
+						filePath = os.path.expanduser('/tmp/Unity2Many Data (UnityInBlender)/' + currentTextBlock.name)
+						filePath = filePath.replace('.cs', '.py')
 						if not filePath.endswith('.py'):
 							filePath += '.py'
-						MakeFolderForFile (filePath)
-						open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
 						if currentTextBlock.name not in previousRunningScripts:
+							MakeFolderForFile (filePath)
+							open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
 							BuildTool ('UnityInBlender')
+							command = [
+								'dotnet',
+								os.path.expanduser('~/Unity2Many/UnityInBlender/Unity2Many.dll'), 
+								'includeFile=' + filePath,
+								'output=/tmp/Unity2Many Data (UnityInBlender)'
+							]
+							print(command)
+
+							subprocess.check_call(command)
 						runCSInBlender.Run (filePath, obj)
 
 def register ():
