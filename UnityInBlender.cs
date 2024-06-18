@@ -97,9 +97,4 @@ public class UnityInBlender : Translator
 		else
 			membersToAddDict[outputFilesPaths[outputFilesPaths.Count - 1]] = new List<string>(new string[] { memberToAdd });
 	}
-
-    static string SwapVectorYAndZ (string vectorValue)
-    {
-        throw new NotImplementedException();
-    }
 }
