@@ -19,7 +19,7 @@ public class CSToPython : Translator
 		string outputFilePath = GetNewOutputPath(path);
 		SyntaxTree tree = CSharpSyntaxTree.ParseText(inputFileContents);
 		ConvertSyntaxNode (tree.GetRoot(), 0);
-		Directory.CreateDirectory(outputFilePath.Remove(outputFilePath.LastIndexOf('/')));
+		Directory.CreateDirectory(outputFolderPath);
 		EngineWrapper engineWrapper = new EngineWrapper();
 		object result = Program.ConvertAndRunCode(engineWrapper, inputFileContents);
 		File.WriteAllText(outputFilePath, pythonFileContents);
