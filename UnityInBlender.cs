@@ -70,22 +70,6 @@ public class UnityInBlender : Translator
 		return "" + node;
 	}
 
-	public override string PostProcessCode (string text)
-	{
-		List<string> lines;
-		if (membersToAddDict.TryGetValue(outputFilePath, out lines))
-		{
-			Console.WriteLine(DEBUG_INDICATOR + outputFilePath);
-			for (int i = 0; i < lines.Count; i ++)
-			{
-				string line = lines[i];
-				text += '\n' + line;
-			}
-		}
-		text = text.Replace("transform.eulerAngles", "self.rotation_euler");
-		return base.PostProcessCode(text);
-	}
-
 	static void AddToMembersToAdd (string memberToAdd)
 	{
 		List<string> membersToAdd = new List<string>();
