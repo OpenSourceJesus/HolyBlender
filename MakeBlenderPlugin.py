@@ -1,4 +1,4 @@
-import bpy, subprocess, os, sys, webbrowser, hashlib, blf
+import bpy, subprocess, os, sys, webbrowser, hashlib#, blf
 sys.path.append('/usr/lib/python3/dist-packages')
 sys.path.append('/usr/local/lib/python3.12/dist-packages')
 sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
@@ -1412,13 +1412,13 @@ def OnRedrawView ():
 
 							subprocess.check_call(command)
 						runCSInBlender.Run (filePath, obj)
-	id = 0
-	size = 32
-	blf.size(id, size)
-	blf.color(id, 0, 1, 0, 0.8)
-	x = 0
-	y = 0
-	blf.draw(id, str(random()))
+	# id = 0
+	# size = 32
+	# blf.size(id, size)
+	# blf.color(id, 0, 1, 0, 0.8)
+	# x = 0
+	# y = 0
+	# blf.draw(id, str(random()))
 
 def register ():
 	global attachScriptDropdownOptions
@@ -1495,11 +1495,11 @@ def register ():
 	# bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportField)
-	bpy.types.WORLD_PT_context_world.append(DrawPygameExportField)
+	# bpy.types.WORLD_PT_context_world.append(DrawPygameExportField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
-	bpy.types.WORLD_PT_context_world.append(DrawPygameExportButton)
+	# bpy.types.WORLD_PT_context_world.append(DrawPygameExportButton)
 	handle = bpy.types.SpaceView3D.draw_handler_add(
 		OnRedrawView,
 		tuple([]),
@@ -1517,11 +1517,11 @@ def unregister ():
 	# bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportField)
-	bpy.types.WORLD_PT_context_world.remove(DrawPygameExportField)
+	# bpy.types.WORLD_PT_context_world.remove(DrawPygameExportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportButton)
-	bpy.types.WORLD_PT_context_world.remove(DrawPygameExportButton)
+	# bpy.types.WORLD_PT_context_world.remove(DrawPygameExportButton)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 
