@@ -419,7 +419,7 @@ public class Rotate : MonoBehaviour
 
 	void Update ()
 	{
-		this.transform.eulerAngles += Vector3.up * this.rotateSpeed * Time.deltaTime;
+		transform.eulerAngles += Vector3.up * rotateSpeed * Time.deltaTime;
 	}
 }''',
   'Keyboard And Mouse Controls' : '''using UnityEngine;
@@ -441,13 +441,13 @@ public class WASDAndMouseControls : MonoBehaviour
 		if (Keyboard.current.wKey.isPressed)
 			move.y += 1.0f;
 		move.Normalize();
-		Vector3 position = this.transform.position;
-		position += move * this.moveSpeed * Time.deltaTime;
-		this.transform.position = position;
+		Vector3 position = transform.position;
+		position += move * moveSpeed * Time.deltaTime;
+		transform.position = position;
 		Vector3 mousePosition = Mouse.current.position.ReadValue();
 		mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
 		Vector3 facing = mousePosition - position;
-		this.transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * 57.2958f - 90.0f);
+		transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * 57.2958f - 90.0f);
 	}
 }'''
 }
@@ -469,7 +469,6 @@ mainClassNames = []
 attachScriptDropdownOptions = []
 attachedScriptsDict = {}
 detachScriptDropdownOptions = []
-attachedScriptsText = ''
 previousRunningScripts = []
 
 class ExamplesOperator (bpy.types.Operator):
@@ -493,25 +492,25 @@ class ExamplesMenu (bpy.types.Menu):
 			op = layout.operator('u2m.show_template', text=name)
 			op.template = name
 
-# class AttachedObjectsMenu (bpy.types.Menu):
-# 	bl_label = 'Unity2Many:Attached Objects'
-# 	bl_idname = 'TEXT_MT_u2m_menu_obj'
+class AttachedObjectsMenu (bpy.types.Menu):
+	bl_label = 'Unity2Many Attached Objects'
+	bl_idname = 'TEXT_MT_u2m_menu_obj'
 
-# 	def draw (self, context):
-# 		layout = self.layout
-# 		if not context.edit_text:
-# 			layout.label(text='No text block')
-# 			return
-# 		objs = []
-# 		for obj in bpy.data.objects:
-# 			attachedScripts = attachedScriptsDict.get(obj, [])
-# 			if context.edit_text.name in attachedScripts:
-# 				objs.append(obj)
-# 		if objs:
-# 			for obj in objs:
-# 				layout.label(text=o.name)
-# 		else:
-# 			layout.label(text='Script not attached to any objects')
+	def draw (self, context):
+		layout = self.layout
+		if not context.edit_text:
+			layout.label(text='No text block')
+			return
+		objs = []
+		for obj in bpy.data.objects:
+			attachedScripts = attachedScriptsDict.get(obj, [])
+			if context.edit_text.name in attachedScripts:
+				objs.append(obj)
+		if objs:
+			for obj in objs:
+				layout.label(text=obj.name)
+		else:
+			layout.label(text='Script not attached to any objects')
 
 class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -1010,7 +1009,7 @@ classes = [
 	TEXT_EDITOR_OT_BevyTranslateButton,
 	ExamplesOperator,
 	ExamplesMenu,
-	# AttachedObjectsMenu
+	AttachedObjectsMenu
 ]
 
 def BuildTool (toolName : str):
@@ -1247,8 +1246,8 @@ def ConvertPythonFileToRust (filePath):
 def DrawExamplesMenu (self, context):
 	self.layout.menu(ExamplesMenu.bl_idname)
 
-# def DrawAttachedObjectsMenu (self, context):
-# 	self.layout.menu(AttachedObjectsMenu.bl_idname)
+def DrawAttachedObjectsMenu (self, context):
+	self.layout.menu(AttachedObjectsMenu.bl_idname)
 
 def DrawUnityImportField (self, context):
 	self.layout.prop(context.world, 'unity_project_import_path')
@@ -1304,14 +1303,8 @@ def DrawDetachScriptDropdown (self, context):
 
 def SetupTextEditorFooterContext (self, context):
 	global currentTextBlock
-	global attachedScriptsText
 	global previousRunningScripts
 	currentTextBlock = context.edit_text
-	attachedScriptsText = ''
-	for obj in attachedScriptsDict:
-		if currentTextBlock.name in attachedScriptsDict[obj]:
-			attachedScriptsText += obj.name + ', '
-	attachedScriptsText = attachedScriptsText[: -2]
 	previousRunningScripts = []
 	for textBlock in bpy.data.texts:
 		if textBlock.name == '.gltf_auto_export_gltf_settings':
@@ -1380,11 +1373,6 @@ def OnRedrawView ():
 			bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
 		bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
 		bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
-		bpy.types.Text.attached_to_objects = bpy.props.StringProperty(
-			name = 'Attached to objects',
-			description = '',
-			default = attachedScriptsText
-		)
 		bpy.types.TEXT_HT_footer.remove(DrawAttachedScriptsText)
 		bpy.types.TEXT_HT_footer.append(DrawAttachedScriptsText)
 		bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
@@ -1486,7 +1474,7 @@ def register ():
 		description = ''
 	)
 	bpy.types.TEXT_HT_header.append(DrawExamplesMenu)
-	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
+	bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
 	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawRunCSToggle)
@@ -1508,7 +1496,7 @@ def register ():
 
 def unregister ():
 	bpy.types.TEXT_HT_header.remove(DrawExamplesMenu)
-	# bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
+	bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
 	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawRunCSToggle)
