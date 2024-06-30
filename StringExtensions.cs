@@ -1,5 +1,21 @@
+using System;
+
 public static class StringExtensions
 {
+	public static (int index, string whatWasFound) IndexOfAny (this string str, string[] findAny, int startIndex = 0)
+	{
+		(int index, string whatWasFound) output = (str.Length, null);
+		foreach (string find in findAny)
+		{
+			int indexOfFind = str.IndexOf(find, startIndex);
+			if (indexOfFind != -1)
+				output = (Math.Min(indexOfFind, output.index), find);
+		}
+		if (output.index == str.Length)
+			return (-1, null);
+		return output;
+	}
+
 	public static string SubstringStartEnd (this string str, int startIndex, int endIndex)
 	{
 		return str.Substring(startIndex, endIndex - startIndex);

@@ -5,32 +5,26 @@ sys.path.append('/usr/local/lib/python3.12/dist-packages')
 sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 from pynput import *
 
-def Run (filePath : str, obj):
-	outputCode = 'self = bpy.data.objects[\'' + obj.name + '\']' + '''
-mousePosition_ = mathutils.Vector()
-
-def OnMouseMove (x, y):
-	global mousePosition_
-	mousePosition_.x = x
-	mousePosition_.y = y
-	print('Pointer moved to {0}'.format((x, y)))
+mouseButtonsPressed_ = []
 
 def OnMouseClick (x, y, button, pressed):
-	print('{0} at {1}'.format('Pressed' if pressed else 'Released',	(x, y)))
-	if not pressed:
-		return False # Stop listener
+	global mouseButtonsPressed_
+	if pressed:
+		mouseButtonsPressed_.append(button.name)
+	else:
+		mouseButtonsPressed_.remove(button.name)
 
-def OnMouseScroll (x, y, dx, dy):
-	print('Scrolled {0} at {1}'.format('down' if dy < 0 else 'up', (x, y)))
+listener = mouse.Listener(
+	on_click=OnMouseClick)
+listener.start()
 
-listener_ = mouse.Listener(
-	on_move=OnMouseMove,
-	on_click=OnMouseClick,
-	on_scroll=OnMouseScroll)
-listener_.start()
+def Run (filePath : str, obj):
+	global mouseButtonsPressed_
+	outputCode = 'self = bpy.data.objects[\'' + obj.name + '\']' + '''
+mouseController_ = mouse.Controller()
+mousePosition_ = mathutils.Vector((mouseController_.position[0], mouseController_.position[1]))
 '''
 	outputCode += open(filePath, 'rb').read().decode('utf-8')
-	# outputCode += '\nlistener_.stop()'
-	# print(outputCode)
+	print(outputCode)
 
 	exec(outputCode)
