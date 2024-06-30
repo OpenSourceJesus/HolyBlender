@@ -17,7 +17,8 @@ os.system('''sudo snap install blender --classic
 	dotnet add package Microsoft.CodeAnalysis
 	dotnet add package Microsoft.CodeAnalysis.CSharp
 	dotnet add package IronPython
-	dotnet add package System.Resources.Extensions''')
+	dotnet add package System.Resources.Extensions
+	pip install pynput --break-system-packages''')
 
 filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
 fileLines = open(filePath, "rb").read().decode('utf-8').split('\n')

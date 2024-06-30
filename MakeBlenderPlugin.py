@@ -2,7 +2,8 @@ import bpy, subprocess, os, sys, webbrowser, hashlib#, blf
 sys.path.append('/usr/lib/python3/dist-packages')
 sys.path.append('/usr/local/lib/python3.12/dist-packages')
 sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
-import pygame
+import pynput
+# import pygame
 from random import random
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
