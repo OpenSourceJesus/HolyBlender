@@ -13,7 +13,7 @@ Three tools can be used (as well as an addon for Blender); UnityToUnreaal, Unity
 
 UnityToUnreal and UnityToBevy translates a Unity project to an Unreal or bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated.
 
-MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project. The BlenderPlugin can also run C# scripts on Blender objects and export the scene and any attached scripts to Unity. Currently, KritaToBlender can't be used from BlenderPlugin.
+MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project (KritaToBlender can't be used from BlenderPlugin yet). It can also export from Blender to Unity, Unreal, and bevy. Additionally, BlenderPlugin can attach Unity C# scripts (Blender text blocks) to Blender objects and run the scripts.
 
 # Installation
 Inside the terminal program on your computer, type or copy and paste 'cd ~' and press the Enter key to change directory to your account folder. Then run (type or copy and paste the following and then press Enter) 'git clone https://github.com/OpenSourceJesus/Unity2Many --depth=1' to download the files and folders of this project to the current folder (your account folder). Note that these installation steps except for the first step require internet connection.
