@@ -43,6 +43,8 @@ In BlenderPlugin, running a C# script won't work if you attach the script to obj
 
 Each script needs to be have the same name as the MonoBehaviour class contained within it in BlenderPlugin.
 
+Currently, attached scripts are not remembered. They will have be reattached everytime you open BlenderPlugin.
+
 Some comments are treated as code in the output of translations (not desired behvaior).
 
 In UnityToBevy, when float variables in C# scripts are declared they need to be set to a value that contains a decimal and has an 'f' at the end for proper translation.
