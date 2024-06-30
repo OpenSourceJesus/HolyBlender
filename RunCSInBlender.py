@@ -6,6 +6,7 @@ sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 from pynput import *
 
 mouseButtonsPressed_ = []
+keysPressed_ = []
 
 def OnMouseClick (x, y, button, pressed):
 	global mouseButtonsPressed_
@@ -14,9 +15,25 @@ def OnMouseClick (x, y, button, pressed):
 	else:
 		mouseButtonsPressed_.remove(button.name)
 
-listener = mouse.Listener(
-	on_click=OnMouseClick)
-listener.start()
+mouseListener = mouse.Listener(on_click=OnMouseClick)
+mouseListener.start()
+
+def OnKeyPress (key):
+	global keysPressed_
+	try:
+		keysPressed_.append(key.char)
+	except AttributeError:
+		keysPressed_.append(key)
+
+def OnKeyRelease (key):
+	global keysPressed_
+	try:
+		keysPressed_.remove(key.char)
+	except AttributeError:
+		keysPressed_.remove(key)
+
+keyboardListener = keyboard.Listener(on_press=OnKeyPress, on_release=OnKeyRelease)
+keyboardListener.start()
 
 def Run (filePath : str, obj):
 	global mouseButtonsPressed_
