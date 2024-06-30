@@ -26,7 +26,7 @@ Next, run 'make install_UnityToBevy' to install the required parts to translate 
 Currently, only Linux operating systems are supported. Testing has only been done on Ubuntu 23.10 and Ubuntu 24.04.
 
 # Usage
-In BlenderPlugin, the export buttons and export paths are in the World settings. The dropdowns for attaching and detaching scripts are in the Object settings. All other interface items are found in the Text Editor after you make a text block. Having the 'Unity project import path' empty in the World settings will export from Blender rather than exporting from the Unity project at the 'Unity project import path'.
+In BlenderPlugin, the export buttons and export paths are in the World Properties. The dropdowns for attaching and detaching scripts are in the Object Properties. All other interface items are found in the Text Editor after you make a text block. Having the 'Unity project import path' empty in the World Properties will export from Blender rather than exporting from the Unity project at the 'Unity project import path'.
 
 For using UnityToBevy without the BlenderPlugin, in the terminal run 'python3 UnityTobevy.py input={path to Unity project to translate from} output={path to bevy project to translate to}'. Replace '{', '}', and what is in between them with the path to the Unity project and the path to the bevy project respectively. You can also add ' exclude={path or part of a path in the Unity project to exclude from the translation}' in the terminal command to not translate any files in the Unity project that contain what is in between the '{' and '}'. UnityToUnreal uses the same rules.
 
@@ -39,7 +39,7 @@ BlenderPlugin's interface only appears the second time (and the times after that
 
 If you want to want to run BlenderPlugin in a specific blender file then in the terminal run 'blender {path to your Blender file} --python MakeBlenderPlugin.py'. If you want to run BlenderPlugin with a specific Blender executable, then replace 'blender' at the start of the previous terminal command with the path to the Blender executable. You can also leave '{path to your Blender file}' empty to start BlenderPlugin without a Blender file.
 
-In BlenderPlugin, running a C# script won't work if you attach the script to object(s) after checking the 'Run C# Script' checkbox in Blender's Text Editor. It will work if you attach the script to object(s) and then check the checkbox. The dropdowns for attaching and detaching scripts will appear after a text block has been made in the Text Editor and the 3D Viewport is active.
+In BlenderPlugin, running a C# script won't work if you attach the script to object(s) after checking the 'Run C# Script' checkbox in Blender's Text Editor. It will work if you attach the script to object(s) and then check the checkbox. The dropdowns for attaching and detaching scripts will appear after a text block has been made in the Text Editor and the 3D Viewport visible. Sometimes the attach script dropdown will only appear once you mouse over the object name in Object Properties.
 
 Each script needs to be have the same name as the MonoBehaviour class contained within it in BlenderPlugin.
 
