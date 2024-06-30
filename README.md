@@ -35,11 +35,17 @@ Currently, to use the KritaToBlender tool run the Krita program and then mouse o
 Also, I made this project for testing as an input Unity project for translation: 'https://github.com/OpenSourceJesus/Unity2Many-TestUnityProject'.
 
 ## Notes
-Some comments are treated as code (not desired behvaior).
+BlenderPlugin's interface only appears the second time (and the times after that) you run BlenderPlugin.
+
+If you want to want to run BlenderPlugin in a specific blender file then in the terminal run 'blender {path to your Blender file} --python MakeBlenderPlugin.py'. If you want to run BlenderPlugin with a specific Blender executable, then replace 'blender' at the start of the previous terminal command with the path to the Blender executable. You can also leave '{path to your Blender file}' empty to start BlenderPlugin without a Blender file.
+
+In BlenderPlugin, running a C# script won't work if you attach the script to object(s) after checking the 'Run C# Script' checkbox in Blender's Text Editor. It will work if you attach the script to object(s) and then check the checkbox. The dropdowns for attaching and detaching scripts will appear after a text block has been made in the Text Editor and the 3D Viewport is active.
+
+Each script needs to be have the same name as the MonoBehaviour class contained within it in BlenderPlugin.
+
+Some comments are treated as code in the output of translations (not desired behvaior).
 
 In UnityToBevy, when float variables in C# scripts are declared they need to be set to a value that contains a decimal and has an 'f' at the end for proper translation.
-
-In BlenderPlugin, running a C# script won't work if you attach the script to object(s) after checking the 'Run C# Script' checkbox in Blender's Text Editor. It will work if you attach the script to object(s) and then check the checkbox. The dropdowns for attaching and detaching scripts will appear after a text block has been made in the Text Editor.
 
 Currently, there isn't a way to have prefabs when exporting from Blender to Unity.
 
