@@ -35,25 +35,25 @@ def OnKeyRelease (key):
 keyboardListener = keyboard.Listener(on_press=OnKeyPress, on_release=OnKeyRelease)
 keyboardListener.start()
 
-def Dehomogenize (v):
-	ret = mathutils.Vector((v[0] / v[3], v[1] / v[3], v[2] / v[3]))
-	return ret
+def Dehomogenize (vector):
+	output = mathutils.Vector((vector[0] / vector[3], vector[1] / vector[3], vector[2] / vector[3]))
+	return output
 
-def InverseMatrix (m):
+def InverseMatrix (matrix):
 	output = mathutils.Matrix([[0,0,0,0], [0,0,0,0], [0,0,0,0], [0,0,0,0]])
-	determinant = m.determinant()
+	determinant = matrix.determinant()
 	for i in range(4):
 		for j in range(4):
 			temp = mathutils.Matrix([[0,0,0], [0,0,0], [0,0,0]])
-			col = 0
+			column = 0
 			for x in range(4):
 				if x != i:
 					row = 0
 					for y in range(4):
 						if y != j:
-							temp[col][row] = m[x][y]
+							temp[column][row] = matrix[x][y]
 							row += 1
-					col += 1
+					column += 1
 			tempDeterminant = temp.determinant()
 			total = i + j
 			if total % 2:
@@ -73,7 +73,19 @@ def ScreenToWorldPoint (screenPoint):
 	inversePerspectiveMatrix = InverseMatrix(bpy.context.space_data.region_3d.perspective_matrix)
 	output = inversePerspectiveMatrix @ output 
 	output = Dehomogenize(output)
+	bpy.context.scene.cursor.location = (output.x, output.y, output.z)
 	return output
+
+def Cast (value, typeString : str):
+	fromTypeString = str(type(value))
+	if fromTypeString == "<class 'Vector'>":
+		if typeString == 'Vector2':
+			return value.to_2d()
+		elif typeString == 'Vector3':
+			return value.to_3d()
+		elif typeString == 'Vector4':
+			return value.to_4d()
+	raise RuntimeError('Could not cast ' + str(value) + ' to ' + typeString)
 
 def Run (filePath : str, obj):
 	global mouseButtonsPressed_
