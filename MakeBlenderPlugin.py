@@ -1,5 +1,5 @@
 import bpy, subprocess, os, sys, webbrowser, hashlib#, blf
-from random import random
+# from random import random
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from SystemExtensions import *
@@ -1289,10 +1289,13 @@ def SetupObjectContext (self, context):
 	global detachScriptDropdownOptions
 	detachScriptDropdownOptions.clear()
 	attachedScripts = attachedScriptsDict.get(context.object, [])
-	i = 0
-	for attachedScript in attachedScripts:
-		detachScriptDropdownOptions.append((attachedScript, attachedScript, '', '', i))
-		i += 1
+	if len(attachedScripts) > 0:
+		i = 0
+		for attachedScript in attachedScripts:
+			detachScriptDropdownOptions.append((attachedScript, attachedScript, '', '', i))
+			i += 1
+	else:
+		detachScriptDropdownOptions.append(('No scripts attached', 'No scripts attached', '', '', 0))
 
 def DrawDetachScriptDropdown (self, context):
 	self.layout.prop(context.object, 'detach_script_dropdown')
@@ -1308,22 +1311,24 @@ def SetupTextEditorFooterContext (self, context):
 		if textBlock.run_cs:
 			previousRunningScripts.append(textBlock.name)
 
-def DrawAttachedScriptsText (self, context):
-	self.layout.prop(context.edit_text, 'attached_to_objects')
-
 def DrawRunCSToggle (self, context):
 	self.layout.prop(context.edit_text, 'run_cs')
 
 def AttachScript (self, context):
 	global attachedScriptsDict
+	if bpy.context.object.attach_script_dropdown == 'No scripts exist':
+		return
 	attachedScripts = attachedScriptsDict.get(self, [])
 	attachedScripts.append(bpy.context.object.attach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
 
 def DetachScript (self, context):
 	global attachedScriptsDict
+	if bpy.context.object.detach_script_dropdown == 'No scripts attached':
+		return
 	attachedScripts = attachedScriptsDict.get(self, [])
-	attachedScripts.remove(bpy.context.object.detach_script_dropdown)
+	if bpy.context.object.detach_script_dropdown in attachedScripts:
+		attachedScripts.remove(bpy.context.object.detach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
 
 def OnRedrawView ():
@@ -1340,62 +1345,62 @@ def OnRedrawView ():
 			continue
 		if i == 0:
 			defaultScript = textBlock.name
-		attachScriptDropdownOptions.append((textBlock.name, textBlock.name, '', '', i))
-		i += 1
-	if defaultScript != None:
-		bpy.types.Object.attach_script_dropdown = bpy.props.EnumProperty(
-			items = attachScriptDropdownOptions,
-			name = 'Attach script',
-			description = '',
-			default = defaultScript,
-			update = AttachScript
-		)
-		bpy.types.OBJECT_PT_context_object.remove(SetupObjectContext)
-		bpy.types.OBJECT_PT_context_object.append(SetupObjectContext)
 		attachedScripts = attachedScriptsDict.get(bpy.context.object, [])
 		defaultAttachedScript = None
 		for attachedScript in attachedScripts:
 			defaultAttachedScript = attachedScript
 			break
-		if defaultAttachedScript != None:
-			bpy.types.Object.detach_script_dropdown = bpy.props.EnumProperty(
-				items = detachScriptDropdownOptions,
-				name = 'Detach script',
-				description = '',
-				default = defaultAttachedScript,
-				update = DetachScript
-			)
-			bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
-			bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
-		bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
-		bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
-		bpy.types.TEXT_HT_footer.remove(DrawAttachedScriptsText)
-		bpy.types.TEXT_HT_footer.append(DrawAttachedScriptsText)
-		bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
-		bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
-		if currentTextBlock != None:
-			if currentTextBlock.run_cs:
-				import RunCSInBlender as runCSInBlender
-				for obj in attachedScriptsDict:
-					if currentTextBlock.name in attachedScriptsDict[obj]:
-						filePath = os.path.expanduser('/tmp/Unity2Many Data (UnityInBlender)/' + currentTextBlock.name)
-						filePath = filePath.replace('.cs', '.py')
-						if not filePath.endswith('.py'):
-							filePath += '.py'
-						if currentTextBlock.name not in previousRunningScripts:
-							MakeFolderForFile (filePath)
-							open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
-							BuildTool ('UnityInBlender')
-							command = [
-								'dotnet',
-								os.path.expanduser('~/Unity2Many/UnityInBlender/Unity2Many.dll'), 
-								'includeFile=' + filePath,
-								'output=/tmp/Unity2Many Data (UnityInBlender)'
-							]
-							print(command)
+		attachScriptDropdownOptions.append((textBlock.name, textBlock.name, '', '', i))
+		i += 1
+	if defaultScript == None:
+		attachScriptDropdownOptions.append(('No scripts exist', 'No scripts exist', '', '', i))
+	bpy.types.Object.attach_script_dropdown = bpy.props.EnumProperty(
+		items = attachScriptDropdownOptions,
+		name = 'Attach script',
+		description = '',
+		default = defaultScript if defaultScript != None else 'No scripts exist',
+		update = AttachScript
+	)
+	bpy.types.OBJECT_PT_context_object.remove(SetupObjectContext)
+	bpy.types.OBJECT_PT_context_object.append(SetupObjectContext)
+	if len(detachScriptDropdownOptions) == 0:
+		detachScriptDropdownOptions.append(('No scripts attached', 'No scripts attached', '', '', 0))
+	bpy.types.Object.detach_script_dropdown = bpy.props.EnumProperty(
+		items = detachScriptDropdownOptions,
+		name = 'Detach script',
+		description = '',
+		default = defaultAttachedScript if defaultAttachedScript != None else 'No scripts attached',
+		update = DetachScript
+	)
+	bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
+	bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
+	bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
+	bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
+	bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
+	bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
+	if currentTextBlock != None:
+		if currentTextBlock.run_cs:
+			import RunCSInBlender as runCSInBlender
+			for obj in attachedScriptsDict:
+				if currentTextBlock.name in attachedScriptsDict[obj]:
+					filePath = os.path.expanduser('/tmp/Unity2Many Data (UnityInBlender)/' + currentTextBlock.name)
+					filePath = filePath.replace('.cs', '.py')
+					if not filePath.endswith('.py'):
+						filePath += '.py'
+					if currentTextBlock.name not in previousRunningScripts:
+						MakeFolderForFile (filePath)
+						open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
+						BuildTool ('UnityInBlender')
+						command = [
+							'dotnet',
+							os.path.expanduser('~/Unity2Many/UnityInBlender/Unity2Many.dll'), 
+							'includeFile=' + filePath,
+							'output=/tmp/Unity2Many Data (UnityInBlender)'
+						]
+						print(command)
 
-							subprocess.check_call(command)
-						runCSInBlender.Run (filePath, obj)
+						subprocess.check_call(command)
+					runCSInBlender.Run (filePath, obj)
 	# id = 0
 	# size = 32
 	# blf.size(id, size)
@@ -1405,7 +1410,6 @@ def OnRedrawView ():
 	# blf.draw(id, str(random()))
 
 def register ():
-	global attachScriptDropdownOptions
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))

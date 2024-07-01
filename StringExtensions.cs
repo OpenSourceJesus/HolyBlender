@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 public static class StringExtensions
 {
@@ -12,6 +13,25 @@ public static class StringExtensions
 				output = (Math.Min(indexOfFind, output.index), find);
 		}
 		if (output.index == str.Length)
+			return (-1, null);
+		return output;
+	}
+
+	public static bool IsAlphaNumeric (this string str)
+	{
+		return new Regex("[a-zA-Z0-9]*").IsMatch(str);
+	}
+
+	public static (int index, string whatWasFound) LastIndexOfAny (this string str, string[] findAny, int startIndex = 0)
+	{
+		(int index, string whatWasFound) output = (0, null);
+		foreach (string find in findAny)
+		{
+			int indexOfFind = str.LastIndexOf(find, startIndex);
+			if (indexOfFind != -1)
+				output = (Math.Max(indexOfFind, output.index), find);
+		}
+		if (output.whatWasFound == null)
 			return (-1, null);
 		return output;
 	}
