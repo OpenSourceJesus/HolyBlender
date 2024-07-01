@@ -943,18 +943,16 @@ class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		global operatorContext
+		global currentTextBlock
 		BuildTool ('UnityToUnreal')
 		operatorContext = context
 		MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
-		for textBlock in bpy.data.texts:
-			if textBlock.name == '.gltf_auto_export_gltf_settings':
-				continue
-			script = textBlock.name
-			if not textBlock.name.endswith('.cs'):
-				script += '.cs'
-			filePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
-			open(filePath, 'wb').write(textBlock.as_string().encode('utf-8'))
-			ConvertCSFileToCPP (filePath)
+		script = currentTextBlock.name
+		if not currentTextBlock.name.endswith('.cs'):
+			script += '.cs'
+		filePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
+		open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
+		ConvertCSFileToCPP (filePath)
 
 class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
 	bl_idname = 'bevy.translate'
@@ -966,17 +964,15 @@ class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		global operatorContext
+		global currentTextBlock
 		BuildTool ('UnityToBevy')
 		operatorContext = context
-		for textBlock in bpy.data.texts:
-			if textBlock.name == '.gltf_auto_export_gltf_settings':
-				continue
-			script = textBlock.name
-			if not textBlock.name.endswith('.cs'):
-				script += '.cs'
-			filePath = '/tmp/' + script
-			open(filePath, 'wb').write(textBlock.as_string().encode('utf-8'))
-			ConvertCSFileToRust (filePath)
+		script = currentTextBlock.name
+		if not currentTextBlock.name.endswith('.cs'):
+			script += '.cs'
+		filePath = '/tmp/' + script
+		open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
+		ConvertCSFileToRust (filePath)
 
 timer = None
 @bpy.utils.register_class
