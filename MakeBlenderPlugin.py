@@ -1289,13 +1289,10 @@ def SetupObjectContext (self, context):
 	global detachScriptDropdownOptions
 	detachScriptDropdownOptions.clear()
 	attachedScripts = attachedScriptsDict.get(context.object, [])
-	if len(attachedScripts) > 0:
-		i = 0
-		for attachedScript in attachedScripts:
-			detachScriptDropdownOptions.append((attachedScript, attachedScript, '', '', i))
-			i += 1
-	else:
-		detachScriptDropdownOptions.append(('No scripts attached', 'No scripts attached', '', '', 0))
+	i = 0
+	for attachedScript in attachedScripts:
+		detachScriptDropdownOptions.append((attachedScript, attachedScript, '', '', i))
+		i += 1
 
 def DrawDetachScriptDropdown (self, context):
 	self.layout.prop(context.object, 'detach_script_dropdown')
@@ -1372,12 +1369,12 @@ def OnRedrawView ():
 		default = defaultAttachedScript if defaultAttachedScript != None else 'No scripts attached',
 		update = DetachScript
 	)
-	bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
-	bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
 	bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
 	bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
 	bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
 	bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
+	bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
+	bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
 	if currentTextBlock != None:
 		if currentTextBlock.run_cs:
 			import RunCSInBlender as runCSInBlender

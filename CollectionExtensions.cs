@@ -10,4 +10,16 @@ public static class CollectionExtensions
 			collection.Insert(insertAt, insert);
 		}
 	}
+
+	public static T Get<T> (this IEnumerable<T> enumerable, int index)
+	{
+		IEnumerator enumerator = enumerable.GetEnumerator();
+		while (enumerator.MoveNext())
+		{
+			index --;
+			if (index < 0)
+				return (T) enumerator.Current;
+		}
+		return default(T);
+	}
 }
