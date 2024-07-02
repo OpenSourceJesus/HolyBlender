@@ -431,7 +431,7 @@ public class GrowAndShrink : MonoBehaviour
 		transform.localScale = Vector3.one * (Mathf.Abs(Mathf.Sin(speed * Time.time)) * (maxSize - minSize) + minSize);
 	}
 }''',
-  'Keyboard And Mouse Controls' : '''using UnityEngine;
+	'Keyboard And Mouse Controls' : '''using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class WASDAndMouseControls : MonoBehaviour
@@ -1338,6 +1338,7 @@ def AttachScript (self, context):
 	attachedScripts = attachedScriptsDict.get(self, [])
 	attachedScripts.append(bpy.context.object.attach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
+	self['Attach ' + bpy.context.object.attach_script_dropdown] = True
 
 def DetachScript (self, context):
 	global attachedScriptsDict
@@ -1347,6 +1348,7 @@ def DetachScript (self, context):
 	if bpy.context.object.detach_script_dropdown in attachedScripts:
 		attachedScripts.remove(bpy.context.object.detach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
+	self['Attach ' + bpy.context.object.attach_script_dropdown] = False
 
 def OnRedrawView ():
 	global currentTextBlock
@@ -1427,6 +1429,7 @@ def OnRedrawView ():
 	# blf.draw(id, str(random()))
 
 def register ():
+	global attachedScriptsDict
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
@@ -1453,6 +1456,14 @@ def register ():
 	registry = bpy.context.window_manager.components_registry
 	registry.schemaPath = REGISTRY_PATH
 	bpy.ops.object.reload_registry()
+	for obj in bpy.data.objects:
+		attachedScripts = []
+		for key in obj.keys():
+			if key.startswith('Attach '):
+				if obj[key]:
+					attachedScripts.append(key.replace('Attach ', ''))
+		attachedScriptsDict[obj] = attachedScripts
+
 	# bpy.types.View3DShading.color_type = 'OBJECT'
 	for cls in classes:
 		bpy.utils.register_class(cls)
