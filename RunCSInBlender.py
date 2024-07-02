@@ -1,4 +1,4 @@
-import bpy, subprocess, os, mathutils, sys
+import bpy, subprocess, os, mathutils, sys, math, time
 
 sys.path.append('/usr/lib/python3/dist-packages')
 sys.path.append('/usr/local/lib/python3.12/dist-packages')
@@ -7,6 +7,7 @@ from pynput import *
 
 mouseButtonsPressed_ = []
 keysPressed_ = []
+startTime_ = time.perf_counter()
 
 def OnMouseClick (x, y, button, pressed):
 	global mouseButtonsPressed_
@@ -73,7 +74,8 @@ def ScreenToWorldPoint (screenPoint):
 	inversePerspectiveMatrix = InverseMatrix(bpy.context.space_data.region_3d.perspective_matrix)
 	output = inversePerspectiveMatrix @ output 
 	output = Dehomogenize(output)
-	bpy.context.scene.cursor.location = (output.x, output.y, output.z)
+	if os.path.expanduser('~') == '/home/gilead':
+		bpy.context.scene.cursor.location = (output.x, output.y, output.z)
 	return output
 
 def Cast (value, typeString : str):
@@ -91,7 +93,8 @@ def Run (filePath : str, obj):
 	global mouseButtonsPressed_
 	outputCode = 'self = bpy.data.objects[\'' + obj.name + '\']' + '''
 mouseController_ = mouse.Controller()
-mousePosition_ = mathutils.Vector((mouseController_.position[0], mouseController_.position[1]))'''
+mousePosition_ = mathutils.Vector((mouseController_.position[0], mouseController_.position[1]))
+'''
 	outputCode += open(filePath, 'rb').read().decode('utf-8')
 	print(outputCode)
 

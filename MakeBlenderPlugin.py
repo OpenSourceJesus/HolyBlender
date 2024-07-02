@@ -418,6 +418,19 @@ public class Rotate : MonoBehaviour
 		transform.eulerAngles += Vector3.up * rotateSpeed * Time.deltaTime;
 	}
 }''',
+	'Grow And Shrink': '''using UnityEngine;
+
+public class GrowAndShrink : MonoBehaviour
+{
+	public float maxSize = 5.0f; 
+	public float minSize = 0.2f;
+	public float speed = 0.375f;
+
+	void Update ()
+	{
+		transform.localScale = Vector3.one * (Mathf.Abs(Mathf.Sin(speed * Time.time)) * (maxSize - minSize) + minSize);
+	}
+}''',
   'Keyboard And Mouse Controls' : '''using UnityEngine;
 using UnityEngine.InputSystem;
 
