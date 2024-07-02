@@ -436,7 +436,7 @@ using UnityEngine.InputSystem;
 
 public class WASDAndMouseControls : MonoBehaviour
 {
-	public float moveSpeed = 5.0f;
+	public float speed = 5.0f;
 
 	void Update ()
 	{
@@ -451,7 +451,7 @@ public class WASDAndMouseControls : MonoBehaviour
 			move.y += 1.0f;
 		move.Normalize();
 		Vector3 position = transform.position;
-		position += move * moveSpeed * Time.deltaTime;
+		position += move * speed * Time.deltaTime;
 		transform.position = position;
 		Vector3 mousePosition = Mouse.current.position.ReadValue();
 		mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);

@@ -65,6 +65,7 @@ def InverseMatrix (matrix):
 	return output
 
 def ScreenToWorldPoint (screenPoint):
+	screenPoint = Cast(screenPoint, 'Vector3')
 	region = bpy.context.region
 	regionCenter = mathutils.Vector((region.x + region.width / 2, region.y + region.height / 2))
 	output = mathutils.Vector((2 * (screenPoint.x - regionCenter.x) / region.width,
