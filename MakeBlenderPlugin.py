@@ -451,9 +451,36 @@ public class WASDAndMouseControls : MonoBehaviour
 			move.y += 1.0f;
 		move.Normalize();
 		transform.position += move * moveSpeed * Time.deltaTime;
-		Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
-		Vector3 facing = mousePosition - transform.position;
-		transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * Mathf.Rad2Deg - 90.0f);
+    	Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+		transform.up = mousePosition - transform.position;
+	}
+}''',
+	'First Person Controls' : '''using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class FirstPersonControls : MonoBehaviour
+{
+	public float moveSpeed = 5.0f;
+	public float lookSpeed = 50.0f;
+	Vector2 previousMousePosition;
+
+	void Update ()
+	{
+		Vector3 move = Vector3.zero;
+		if (Keyboard.current.aKey.isPressed)
+			move.x -= 1.0f;
+		if (Keyboard.current.dKey.isPressed)
+			move.x += 1.0f;
+		if (Keyboard.current.sKey.isPressed)
+			move.y -= 1.0f;
+		if (Keyboard.current.wKey.isPressed)
+			move.y += 1.0f;
+		move.Normalize();
+		transform.position += move * moveSpeed * Time.deltaTime;
+    	Vector2 mousePosition = Mouse.current.position.ReadValue();
+    	Vector2 look = (mousePosition - previousMousePosition) * lookSpeed;
+    	transform.Rotate(new Vector3(look.y, look.x));
+    	previousMousePosition = mousePosition;
 	}
 }'''
 }
@@ -573,14 +600,15 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 			MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
 			data += '\nScripts'
 			for obj in attachedScriptsDict:
-				data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj])
-				for script in attachedScriptsDict[obj]:
-					for textBlock in bpy.data.texts:
-						if textBlock.name == script:
-							if not script.endswith('.cs'):
-								script += '.cs'
-							open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
-							break
+				if len(attachedScriptsDict[obj]) > 0:
+					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj])
+					for script in attachedScriptsDict[obj]:
+						for textBlock in bpy.data.texts:
+							if textBlock.name == script:
+								if not script.endswith('.cs'):
+									script += '.cs'
+								open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
+								break
 			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):
