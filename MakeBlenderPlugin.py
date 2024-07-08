@@ -1080,15 +1080,7 @@ def ConvertCSFileToCPP (filePath):
 	unrealProjectName = unrealCodePath[unrealCodePath.rfind('/') + 1 :]
 	unrealCodePathSuffix = '/Source/' + unrealProjectName
 	unrealCodePath += unrealCodePathSuffix
-	codeFilesPaths = GetAllFilePathsOfType(os.path.expanduser(operatorContext.scene.world.unity_project_import_path), '.cs')
-	for codeFilePath in codeFilesPaths:
-		isExcluded = False
-		for excludeItem in excludeItems:
-			if excludeItem in codeFilePath:
-				isExcluded = True
-				break
-		if not isExcluded:
-			mainClassNames.append(os.path.split(codeFilePath)[-1].split('.')[0])
+	mainClassNames = [ os.path.split(filePath)[-1].split('.')[0] ]
 	command = [
 		'dotnet',
 		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
@@ -1203,8 +1195,17 @@ def ConvertPythonFileToCPP (filePath):
 	subprocess.check_call(command)
 	
 	for textBlock in bpy.data.texts:
-		if textBlock.name == cppFilePath[cppFilePath.rfind('/') + 1 :].replace('.cpp', '.cs'):
-			textBlock.name = textBlock.name.replace('.cs', '.cpp+.h')
+		textBlockName = cppFilePath[cppFilePath.rfind('/') + 1 :].replace('.cpp', '')
+		if textBlock.name == textBlockName:
+			textBlockName += '.cpp+.h'
+			hasCorrectTextBlock = False
+			for textBlock in bpy.data.texts:
+				if textBlock.name == textBlockName:
+					hasCorrectTextBlock = True
+					break
+			if not hasCorrectTextBlock:
+				bpy.data.texts.new(textBlockName)
+			textBlock = bpy.data.texts[textBlockName]
 			textBlock.clear()
 			textBlock.write(outputFileText)
 			textBlock.write(headerFileText)
