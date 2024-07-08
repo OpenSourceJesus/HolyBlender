@@ -450,13 +450,10 @@ public class WASDAndMouseControls : MonoBehaviour
 		if (Keyboard.current.wKey.isPressed)
 			move.y += 1.0f;
 		move.Normalize();
-		Vector3 position = transform.position;
-		position += move * moveSpeed * Time.deltaTime;
-		transform.position = position;
-		Vector3 mousePosition = Mouse.current.position.ReadValue();
-		mousePosition = Camera.main.ScreenToWorldPoint(mousePosition);
-		Vector3 facing = mousePosition - position;
-		transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * 57.2958f - 90.0f);
+		transform.position += move * moveSpeed * Time.deltaTime;
+		Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+		Vector3 facing = mousePosition - transform.position;
+		transform.eulerAngles = Vector3.forward * (Mathf.Atan2(facing.y, facing.x) * Mathf.Rad2Deg - 90.0f);
 	}
 }'''
 }
@@ -486,9 +483,8 @@ class ExamplesOperator (bpy.types.Operator):
 	template : bpy.props.StringProperty(default = '')
 
 	def invoke (self, context, event):
-		if context.edit_text:
+		if context.edit_text != None:
 			context.edit_text.from_string(EXAMPLES_DICT[self.template])
-
 		return {'FINISHED'}
 
 class ExamplesMenu (bpy.types.Menu):

@@ -75,6 +75,7 @@ def ScreenToWorldPoint (screenPoint):
 	inversePerspectiveMatrix = InverseMatrix(bpy.context.space_data.region_3d.perspective_matrix)
 	output = inversePerspectiveMatrix @ output 
 	output = Dehomogenize(output)
+	output.z *= -1
 	if os.path.expanduser('~') == '/home/gilead':
 		bpy.context.scene.cursor.location = (output.x, output.y, output.z)
 	return output

@@ -5,10 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 public class UnityInBlender : Translator 
 {
-	// public new static Dictionary<string, string> typeConversionsDict = new Dictionary<string, string>() { { "Console.Write" , "printf" } };
-	// public new static Dictionary<string, string> memberConversionsDict = new Dictionary<string, string>() { { "IndexOf", "Find"} };
 	public static string outputFilePath;
-	static string className;
 	static Dictionary<string, List<string>> membersToAddDict = new Dictionary<string, List<string>>();
 	static List<string> codeToSkip = new List<string>();
 
@@ -67,7 +64,21 @@ public class UnityInBlender : Translator
 
 	public override string ConvertSyntaxNode (SyntaxNode node, int outputLineIndex = -1, int outputCharIndex = -1, int indents = 0, bool parsedMainClass = false)
 	{
-		return "" + node;
+		string output = "" + node;
+		if (node.IsKind(SyntaxKind.Block))
+		{
+			AddToMembersToAdd (output);
+			indents ++;
+			outputCharIndex = -1;
+		}
+		foreach (SyntaxNode childNode in node.ChildNodes())
+			ConvertSyntaxNode (childNode, outputLineIndex, outputCharIndex, indents, parsedMainClass);
+		if (node.IsKind(SyntaxKind.Block))
+		{
+			indents --;
+			outputCharIndex = -1;
+		}
+		return output;
 	}
 
 	static void AddToMembersToAdd (string memberToAdd)
