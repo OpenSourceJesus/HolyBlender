@@ -117,7 +117,7 @@ def ConvertPythonFileToCpp (filePath):
 					referenceString = filePathMembersNamesDict[variableName]
 					if referenceString.endswith('.prefab"'):
 						referenceString = referenceString.replace('.prefab"', '')
-						referenceString = referenceString[referenceString.rfind('/') + 1 :] + '_Script'
+						referenceString = referenceString[referenceString.rfind('/') + 1 :]
 						referenceString = '/Game/' + referenceString + '/' + referenceString + '.' + referenceString
 						outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = "' + referenceString + '";\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
 		else:
@@ -283,7 +283,6 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	blueprintFactory = unreal.BlueprintFactory()
 	assetName = scriptAssetPath[scriptAssetPath.rfind('/') + 1 :].replace('.cpp', '')
 	blueprintFactory.set_editor_property('parent_class', unreal.load_class(None, '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName))
-	assetName += '_Script'
 	destinationPath = '/Game/' + assetName
 	unreal.EditorAssetLibrary.delete_asset(destinationPath + '/' + assetName)
 	scriptBlueprintAsset = ASSET_TOOLS.create_asset(assetName, destinationPath, None, blueprintFactory)
@@ -296,7 +295,6 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		blueprintActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
 	if blueprintAsset != None:
 		rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
-		assetName = assetName.replace('_Script', '')
 		classType = unreal.load_class(None, '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName)
 		blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
 		addSubobjectParameters = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)

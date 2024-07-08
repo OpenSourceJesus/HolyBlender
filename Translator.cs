@@ -29,7 +29,7 @@ public class Translator
 	public const string DICTIONARY_INDICATOR = "Dictionary";
 	public const string WHILE_INDICATOR = "while (";
 	public const string SAVE_FILE_NAME = "Save Data";
-	public const string STATIC_CLASS_NAME = "Extensions";
+	public const string STATIC_CLASS_NAME = "Utils";
 	public const string TEMPORARY_INDICATOR = "🛕";
 	public const string DEBUG_INDICATOR = "Debug: ";
 	public static int lineAtLastRunEnd;
