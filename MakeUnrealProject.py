@@ -556,16 +556,18 @@ else:
 	unreal.EditorAssetLibrary.delete_asset(sceneName)
 	LEVEL_EDITOR.new_level(sceneName)
 	EDITOR.get_editor_world().get_world_settings().lightmass_settings.environment_color = unreal.Color(128, 128, 128, 0)
-	stage = 0
 	actorsDict = {}
+	currentStage = ''
 	for line in lines:
 		name = ''
 		localPosition = unreal.Vector()
 		localRotation = unreal.Quat()
 		localSize = unreal.Vector()
-		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts':
-			stage += 1
-		elif stage > 0:
+		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts' or line == 'Prefabs':
+			currentStage = line
+		elif currentStage != '':
+			if currentStage == 'Prefabs':
+				continue
 			objectInfo = line.split('☣️')
 			name = objectInfo[0]
 			actors = actorsDict.get(name, [])
@@ -594,7 +596,7 @@ else:
 			indexOfComma2 = localSizeInfo.find(',', indexOfComma + 1)
 			localSize.z = float(localSizeInfo[indexOfComma + 1 : indexOfComma2])
 			localSize.y = float(localSizeInfo[indexOfComma2 + 1 : localSizeInfo.find(')')])
-			if stage == 1:
+			if currentStage == 'Cameras':
 				horizontalFov = bool(objectInfo[4])
 				fov = float(objectInfo[5])
 				isOrthographic = bool(objectInfo[6])
@@ -603,7 +605,7 @@ else:
 				farClipPlane = float(objectInfo[9])
 				actors.append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
 				actorsDict[name] = actors
-			elif stage == 2:
+			elif currentStage == 'Lights':
 				lightType = int(objectInfo[4])
 				intensity = float(objectInfo[5])
 				colorInfo = objectInfo[6]
@@ -618,10 +620,10 @@ else:
 				color.b = float(colorInfo[indexOfEquals + 1 : colorInfo.find(')')])
 				actors.append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity, color))
 				actorsDict[name] = actors
-			elif stage == 3:
+			elif currentStage == 'Meshes':
 				actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx'))
 				actorsDict[name] = actors
-			elif stage == 4:
+			elif currentStage == 'Scripts':
 				scripts = objectInfo[4 :]
 				for script in scripts:
 					if not script.endswith('.cs'):

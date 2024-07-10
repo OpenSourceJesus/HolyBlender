@@ -503,6 +503,8 @@ attachScriptDropdownOptions = []
 attachedScriptsDict = {}
 detachScriptDropdownOptions = []
 previousRunningScripts = []
+textBlocksTextsDict = {}
+previousTextBlocksTextsDict = {}
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -571,32 +573,18 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 			unrealCodePath += unrealCodePathSuffix
 			data = unrealExportPath + '\n' + bpy.data.filepath + '\nCameras'
 			for camera in bpy.data.cameras:
-				horizontalFov = False
-				if camera.sensor_fit == 'HORIZONTAL':
-					horizontalFov = True
-				isOrthographic = False
-				if camera.type == 'ORTHO':
-					isOrthographic = True
-				data += '\n' + GetBasicObjectData(camera) + '☣️' + str(horizontalFov) + '☣️' + str(camera.angle * (180.0 / PI)) + '☣️' + str(isOrthographic) + '☣️' + str(camera.ortho_scale) + '☣️' + str(camera.clip_start) + '☣️' + str(camera.clip_end)
+				data += '\n' + GetCameraData(camera)
+				print('YA' + 'Y' + camera.name)
 			data += '\nLights'
 			for light in bpy.data.lights:
-				lightType = 0
-				if light.type == 'POINT':
-					lightType = 1
-				elif light.type == 'SPOT':
-					lightType = 2
-				elif lightObject.type == 'AREA':
-					lightType = 3
-				data += '\n' + GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * WATTS_TO_CANDELAS * 100) + '☣️' + str(light.color)
+				data += '\n' + GetLightData(light)
+				print('YA' + 'Y' + light.name)
 			data += '\nMeshes'
 			for obj in bpy.context.scene.objects:
 				if obj.type == 'MESH':
-					meshAssetPath = '/tmp/' + obj.name + '.fbx'
-					bpy.ops.object.select_all(action='DESELECT')
-					bpy.context.view_layer.objects.active = obj
-					obj.select_set(True)
-					bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+					ExportMesh (obj)
 					data += '\n' + GetBasicObjectData(obj)
+					print('YA' + 'Y' + obj.name)
 			MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
 			data += '\nScripts'
 			for obj in attachedScriptsDict:
@@ -609,6 +597,24 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 									script += '.cs'
 								open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
 								break
+			data += '\nPrefabs'
+			for scene in bpy.data.scenes:
+				data += '\n' + scene.name + '\nCameras'
+				for obj in scene.collection.objects:
+					if obj.type == 'CAMERA':
+						data += '\n' + GetCameraData(obj)
+						print('YA' + 'Y' + obj.name)
+				data += '\nLights'
+				for obj in scene.collection.objects:
+					if obj.type == 'LIGHT':
+						data += '\n' + GetLightData(obj)
+						print('YA' + 'Y' + obj.name)
+				data += '\nMeshes'
+				for obj in scene.collection.objects:
+					if obj.type == 'MESH':
+						ExportMesh (obj)
+						data += '\n' + GetBasicObjectData(obj)
+						print('YA' + 'Y' + obj.name)
 			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):
@@ -1057,6 +1063,13 @@ def BuildTool (toolName : str):
 
 	subprocess.check_call(command)
 
+def ExportMesh (obj):
+	meshAssetPath = '/tmp/' + obj.name + '.fbx'
+	bpy.ops.object.select_all(action='DESELECT')
+	bpy.context.view_layer.objects.active = obj
+	obj.select_set(True)
+	bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+
 def GetBasicObjectData (obj):
 	for _obj in bpy.data.objects:
 		if _obj.name == obj.name:
@@ -1067,6 +1080,25 @@ def GetBasicObjectData (obj):
 	output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
 	obj.rotation_mode = previousObjectRotationMode
 	return output
+
+def GetCameraData (camera):
+	horizontalFov = False
+	if camera.sensor_fit == 'HORIZONTAL':
+		horizontalFov = True
+	isOrthographic = False
+	if camera.type == 'ORTHO':
+		isOrthographic = True
+	return GetBasicObjectData(camera) + '☣️' + str(horizontalFov) + '☣️' + str(camera.angle * (180.0 / PI)) + '☣️' + str(isOrthographic) + '☣️' + str(camera.ortho_scale) + '☣️' + str(camera.clip_start) + '☣️' + str(camera.clip_end)
+
+def GetLightData (light):
+	lightType = 0
+	if light.type == 'POINT':
+		lightType = 1
+	elif light.type == 'SPOT':
+		lightType = 2
+	elif lightObject.type == 'AREA':
+		lightType = 3
+	return GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * WATTS_TO_CANDELAS * 100) + '☣️' + str(light.color)
 
 def GetGuid (filePath : str):
 	return hashlib.md5(filePath.encode('utf-8')).hexdigest()
@@ -1212,7 +1244,6 @@ def ConvertPythonFileToCPP (filePath):
 
 def ConvertCSFileToRust (filePath):
 	global mainClassName
-	print('YAY')
 	mainClassName = filePath[filePath.rfind('/') + 1 : filePath.rfind('.')]
 	assert os.path.isfile(filePath)
 	MakeFolderForFile ('/tmp/src/main.rs')
@@ -1363,7 +1394,10 @@ def AttachScript (self, context):
 	attachedScripts = attachedScriptsDict.get(self, [])
 	attachedScripts.append(bpy.context.object.attach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
-	self['Attach ' + bpy.context.object.attach_script_dropdown] = True
+	if bpy.context.object.attach_script_dropdown + ' attach count' in self.keys():
+		self[bpy.context.object.attach_script_dropdown + ' attach count'] += 1
+	else:
+		self[bpy.context.object.attach_script_dropdown + ' attach count'] = 1
 
 def DetachScript (self, context):
 	global attachedScriptsDict
@@ -1373,20 +1407,37 @@ def DetachScript (self, context):
 	if bpy.context.object.detach_script_dropdown in attachedScripts:
 		attachedScripts.remove(bpy.context.object.detach_script_dropdown)
 	attachedScriptsDict[self] = attachedScripts
-	self['Attach ' + bpy.context.object.attach_script_dropdown] = False
+	self[bpy.context.object.attach_script_dropdown + ' attach count'] -= 1
+
+def UpdateInspectorFields (textBlock):
+	text = textBlock.as_string()
+	publicIndicator = 'public '
+	indexOfPublicIndicator = text.find(publicIndicator)
+	while indexOfPublicIndicator != -1:
+		indexOfParenthesis = text.find('(', indexOfPublicIndicator + len(publicIndicator))
+		# if indexOfParenthesis :
+			
+		indexOfVariable = IndexOfAny(text, [ ' ', ';' ], indexOfPublicIndicator + len(publicIndicator))
+
+		indexOfPublicIndicator = text.find(publicIndicator, indexOfPublicIndicator + len(publicIndicator))
 
 def OnRedrawView ():
 	global currentTextBlock
+	global textBlocksTextsDict
 	global attachedScriptsDict
 	global previousRunningScripts
+	global previousTextBlocksTextsDict
 	global attachScriptDropdownOptions
 	global detachScriptDropdownOptions
 	attachScriptDropdownOptions.clear()
 	i = 0
 	defaultScript = None
+	defaultAttachedScript = None
+	textBlocksTextsDict = {}
 	for textBlock in bpy.data.texts:
 		if textBlock.name == '.gltf_auto_export_gltf_settings':
 			continue
+		textBlocksTextsDict[textBlock.name] = textBlock.as_string()
 		if i == 0:
 			defaultScript = textBlock.name
 		attachedScripts = attachedScriptsDict.get(bpy.context.object, [])
@@ -1395,9 +1446,12 @@ def OnRedrawView ():
 			defaultAttachedScript = attachedScript
 			break
 		attachScriptDropdownOptions.append((textBlock.name, textBlock.name, '', '', i))
+		if textBlock.name not in previousTextBlocksTextsDict or previousTextBlocksTextsDict[textBlock.name] != textBlock.as_string():
+			UpdateInspectorFields (textBlock)
 		i += 1
 	if defaultScript == None:
 		attachScriptDropdownOptions.append(('No scripts exist', 'No scripts exist', '', '', i))
+	previousTextBlocksTextsDict = textBlocksTextsDict.copy()
 	bpy.types.Object.attach_script_dropdown = bpy.props.EnumProperty(
 		items = attachScriptDropdownOptions,
 		name = 'Attach script',
@@ -1484,9 +1538,10 @@ def register ():
 	for obj in bpy.data.objects:
 		attachedScripts = []
 		for key in obj.keys():
-			if key.startswith('Attach '):
-				if obj[key]:
-					attachedScripts.append(key.replace('Attach ', ''))
+			attachCountIndicator = ' attach count'
+			if key.endswith(attachCountIndicator):
+				for i in range(obj[key]):
+					attachedScripts.append(key.replace(attachCountIndicator, ''))
 		attachedScriptsDict[obj] = attachedScripts
 
 	# bpy.types.View3DShading.color_type = 'OBJECT'
