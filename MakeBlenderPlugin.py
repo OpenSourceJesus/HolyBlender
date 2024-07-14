@@ -593,7 +593,7 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					for script in attachedScriptsDict[obj]:
 						for textBlock in bpy.data.texts:
 							if textBlock.name == script:
-								if not script.endswith('.cs'):
+								if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
 									script += '.cs'
 								open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
 								break
@@ -1414,11 +1414,17 @@ def UpdateInspectorFields (textBlock):
 	publicIndicator = 'public '
 	indexOfPublicIndicator = text.find(publicIndicator)
 	while indexOfPublicIndicator != -1:
-		indexOfParenthesis = text.find('(', indexOfPublicIndicator + len(publicIndicator))
-		# if indexOfParenthesis :
-			
-		indexOfVariable = IndexOfAny(text, [ ' ', ';' ], indexOfPublicIndicator + len(publicIndicator))
-
+		indexOfVariable = IndexOfAny(text, [ ' ', ';' , '=' ], indexOfPublicIndicator + len(publicIndicator))
+		indexOfLastSpaceAfterPublicIndicator = indexOfPublicIndicator + len(publicIndicator)
+		while True:
+			indexOfLastSpaceAfterPublicIndicator += 1
+			if text[indexOfLastSpaceAfterPublicIndicator] != ' ':
+				break
+		indexOfLastSpaceAfterPublicIndicator -= 1
+		indexOfParenthesis = text.find('(', indexOfLastSpaceAfterPublicIndicator + 1)
+		if indexOfParenthesis == indexOfLastSpaceAfterPublicIndicator + 1:
+			continue
+		
 		indexOfPublicIndicator = text.find(publicIndicator, indexOfPublicIndicator + len(publicIndicator))
 
 def OnRedrawView ():

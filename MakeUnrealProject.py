@@ -626,10 +626,11 @@ else:
 			elif currentStage == 'Scripts':
 				scripts = objectInfo[4 :]
 				for script in scripts:
-					if not script.endswith('.cs'):
+					if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
 						script += '.cs'
 					codeFilePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
-					ConvertCSFileToCPP (codeFilePath)
+					if script.endswith('.cs'):
+						ConvertCSFileToCPP (codeFilePath)
 					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
 					for actor in actorsDict[name]:
 						scriptActor.set_editor_property('root_component', actor.get_editor_property('root_component'))
