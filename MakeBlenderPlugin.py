@@ -428,7 +428,7 @@ public class GrowAndShrink : MonoBehaviour
 
 	void Update ()
 	{
-		transform.localScale = Vector3.one * (Mathf.Abs(Mathf.Sin(speed * Time.time)) * (maxSize - minSize) + minSize);
+		transform.localScale = Vector3.one * (((Mathf.Sin(speed * Time.time) + 1) / 2) * (maxSize - minSize) + minSize);
 	}
 }''',
 	'Keyboard And Mouse Controls' : '''using UnityEngine;
@@ -598,23 +598,23 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 								open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
 								break
 			data += '\nPrefabs'
-			for scene in bpy.data.scenes:
-				data += '\n' + scene.name + '\nCameras'
-				for obj in scene.collection.objects:
-					if obj.type == 'CAMERA':
-						data += '\n' + GetCameraData(obj)
-						print('YA' + 'Y' + obj.name)
-				data += '\nLights'
-				for obj in scene.collection.objects:
-					if obj.type == 'LIGHT':
-						data += '\n' + GetLightData(obj)
-						print('YA' + 'Y' + obj.name)
-				data += '\nMeshes'
-				for obj in scene.collection.objects:
-					if obj.type == 'MESH':
-						ExportMesh (obj)
-						data += '\n' + GetBasicObjectData(obj)
-						print('YA' + 'Y' + obj.name)
+			# for scene in bpy.data.scenes:
+			# 	data += '\n' + scene.name + '\nCameras'
+			# 	for obj in scene.collection.objects:
+			# 		if obj.type == 'CAMERA':
+			# 			data += '\n' + GetCameraData(obj)
+			# 			print('YA' + 'Y' + obj.name)
+			# 	data += '\nLights'
+			# 	for obj in scene.collection.objects:
+			# 		if obj.type == 'LIGHT':
+			# 			data += '\n' + GetLightData(obj)
+			# 			print('YA' + 'Y' + obj.name)
+			# 	data += '\nMeshes'
+			# 	for obj in scene.collection.objects:
+			# 		if obj.type == 'MESH':
+			# 			ExportMesh (obj)
+			# 			data += '\n' + GetBasicObjectData(obj)
+			# 			print('YA' + 'Y' + obj.name)
 			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):

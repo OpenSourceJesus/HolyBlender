@@ -61,7 +61,7 @@ def InverseMatrix (matrix):
 				sign = -1
 			else:
 				sign = 1
-			output[j][i] = (sign * tempDeterminant) / determinant
+			output[j][i] = sign * tempDeterminant / determinant
 	return output
 
 def ScreenToWorldPoint (screenPoint):
