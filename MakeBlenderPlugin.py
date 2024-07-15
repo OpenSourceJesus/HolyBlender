@@ -1410,22 +1410,62 @@ def DetachScript (self, context):
 	self[bpy.context.object.attach_script_dropdown + ' attach count'] -= 1
 
 def UpdateInspectorFields (textBlock):
+	global attachedScriptsDict
 	text = textBlock.as_string()
 	publicIndicator = 'public '
 	indexOfPublicIndicator = text.find(publicIndicator)
 	while indexOfPublicIndicator != -1:
-		indexOfVariable = IndexOfAny(text, [ ' ', ';' , '=' ], indexOfPublicIndicator + len(publicIndicator))
-		indexOfLastSpaceAfterPublicIndicator = indexOfPublicIndicator + len(publicIndicator)
-		while True:
-			indexOfLastSpaceAfterPublicIndicator += 1
-			if text[indexOfLastSpaceAfterPublicIndicator] != ' ':
-				break
-		indexOfLastSpaceAfterPublicIndicator -= 1
-		indexOfParenthesis = text.find('(', indexOfLastSpaceAfterPublicIndicator + 1)
-		if indexOfParenthesis == indexOfLastSpaceAfterPublicIndicator + 1:
+		indexOfType = indexOfPublicIndicator + len(publicIndicator)
+		if text[indexOfType :].startswith('class '):
+			indexOfPublicIndicator = text.find(publicIndicator, indexOfType)
 			continue
-		
-		indexOfPublicIndicator = text.find(publicIndicator, indexOfPublicIndicator + len(publicIndicator))
+		indexOfVariableName = indexOfType
+		while indexOfVariableName < len(text) - 1:
+			indexOfVariableName += 1
+			if text[indexOfVariableName] != ' ':
+				break
+		if text[indexOfVariableName + 1] == '(':
+			indexOfPublicIndicator = text.find(publicIndicator, indexOfType)
+			continue
+		indexOfVariableName = text.find(' ', indexOfVariableName + 1)
+		type = text[indexOfType : indexOfVariableName]
+		indexOfPotentialEndOfVariable = IndexOfAny(text, [ ' '  ';' , '=' ], indexOfVariableName + 1)
+		varaibleName = text[indexOfVariableName : indexOfPotentialEndOfVariable]
+		shouldBreak = False
+		for obj in attachedScriptsDict.keys():
+			for attachedScript in attachedScriptsDict[obj]:
+				if attachedScript == textBlock.name:
+					value = ''
+					isSetToValue = False
+					if text[indexOfPotentialEndOfVariable] == '=':
+						indexOfSemicolon = text.find(';', indexOfPotentialEndOfVariable + 1)
+						value = text[indexOfPotentialEndOfVariable + 1 : indexOfSemicolon]
+						value = value.strip()
+						isSetToValue = True
+					if type == 'int':
+						if not isSetToValue:
+							value = 0
+						else:
+							value = int(value)
+					elif type == 'float' or type == 'double':
+						if not isSetToValue:
+							value = 0.0
+						else:
+							value = value.replace('f', '')
+							value = float(value)
+					elif type == 'bool':
+						if not isSetToValue:
+							value = False
+						elif value == 'true':
+							value = True
+						else:
+							value = False
+					obj[attachedScript + varaibleName + 'value'] = value
+					shouldBreak = True
+					break
+			if shouldBreak:
+				break
+		indexOfPublicIndicator = text.find(publicIndicator, indexOfType)
 
 def OnRedrawView ():
 	global currentTextBlock
