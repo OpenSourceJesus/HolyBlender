@@ -505,6 +505,8 @@ detachScriptDropdownOptions = []
 previousRunningScripts = []
 textBlocksTextsDict = {}
 previousTextBlocksTextsDict = {}
+propertiesDefaultValuesDict = {}
+propertiesTypesDict = {}
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -1409,8 +1411,20 @@ def DetachScript (self, context):
 	attachedScriptsDict[self] = attachedScripts
 	self[bpy.context.object.attach_script_dropdown + ' attach count'] -= 1
 
+def DrawInspectorFields (self, context):
+	global propertiesTypesDict
+	global propertiesDefaultValuesDict
+	propertyIndex = 1
+	for property in context.object.keys():
+		valueIndicator = ' value'
+		if property.endswith(valueIndicator):
+			self.layout.prop(context.object, 'property' + str(propertyIndex))
+			propertyIndex += 1
+
 def UpdateInspectorFields (textBlock):
 	global attachedScriptsDict
+	global propertiesTypesDict
+	global propertiesDefaultValuesDict
 	text = textBlock.as_string()
 	publicIndicator = 'public '
 	indexOfPublicIndicator = text.find(publicIndicator)
@@ -1430,7 +1444,8 @@ def UpdateInspectorFields (textBlock):
 		indexOfVariableName = text.find(' ', indexOfVariableName + 1)
 		type = text[indexOfType : indexOfVariableName]
 		indexOfPotentialEndOfVariable = IndexOfAny(text, [ ' '  ';' , '=' ], indexOfVariableName + 1)
-		varaibleName = text[indexOfVariableName : indexOfPotentialEndOfVariable]
+		variableName = text[indexOfVariableName : indexOfPotentialEndOfVariable]
+		variableName = variableName.strip()
 		shouldBreak = False
 		for obj in attachedScriptsDict.keys():
 			for attachedScript in attachedScriptsDict[obj]:
@@ -1460,7 +1475,9 @@ def UpdateInspectorFields (textBlock):
 							value = True
 						else:
 							value = False
-					obj[attachedScript + varaibleName + 'value'] = value
+					obj[attachedScript + ' ' + variableName + ' value'] = value
+					propertiesTypesDict[variableName] = type
+					propertiesDefaultValuesDict[variableName] = value
 					shouldBreak = True
 					break
 			if shouldBreak:
@@ -1522,6 +1539,27 @@ def OnRedrawView ():
 	bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
 	bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
 	bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
+	propertyIndex = 1
+	for property in bpy.context.object.keys():
+		valueIndicator = ' value'
+		if property.endswith(valueIndicator):
+			indexOfSpace = property.find(' ')
+			property = property[indexOfSpace + 1 : len(property) - len(valueIndicator)]
+			if propertiesTypesDict[property] == 'int':
+				exec('bpy.types.Object.property' + str(propertyIndex) + ''' = bpy.props.IntProperty(
+					name = property,
+					description = '',
+					default = propertiesDefaultValuesDict[property]
+				)''')
+			elif propertiesTypesDict[property] == 'float':
+				exec('bpy.types.Object.property' + str(propertyIndex) + ''' = bpy.props.FloatProperty(
+					name = property,
+					description = '',
+					default = propertiesDefaultValuesDict[property]
+				)''')
+			propertyIndex += 1
+	bpy.types.OBJECT_PT_context_object.remove(DrawInspectorFields)
+	bpy.types.OBJECT_PT_context_object.append(DrawInspectorFields)
 	if currentTextBlock != None:
 		if currentTextBlock.run_cs:
 			import RunCSInBlender as runCSInBlender
@@ -1560,7 +1598,7 @@ def register ():
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
 	toolsPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools')
 	if os.path.isdir(toolsPath):
-		addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
+		addonsPath = os.path.expanduser('~/.config/blender/4.2/scripts/addons')
 		if not os.path.isdir(addonsPath):
 			MakeFolderForFile (addonsPath + '/')
 
@@ -1577,7 +1615,7 @@ def register ():
 	# componentsAddonPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
 	# if os.path.isdir(componentsAddonPath):
 	# 	sys.path.append(componentsAddonPath)
-	bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
+	# bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	registry = bpy.context.window_manager.components_registry
 	registry.schemaPath = REGISTRY_PATH
 	bpy.ops.object.reload_registry()
