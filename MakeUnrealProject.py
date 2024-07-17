@@ -306,7 +306,7 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		subComponent = blueprintLibrary.get_object(subData)
 		subComponent.set_editor_property('relative_location', location)
 		unreal.EditorAssetSubsystem().save_asset(destinationPath)
-	return blueprintActor
+	return (blueprintActor, scriptBlueprintAsset)
 
 def LoadObject (assetPath : str) -> unreal.Object:
 	lastIndexOfPeriod = assetPath.rfind('.')
@@ -367,7 +367,7 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 				if 'MonoBehaviour' in currentTypes:
 					for scriptPath in scriptsPaths:
 						if not scriptPath.endswith('/UniversalAdditionalCameraData.cs') and not scriptPath.endswith('/UniversalAdditionalLightData.cs'):
-							scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), scriptPath)
+							scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), scriptPath)[0]
 							attachRule = unreal.AttachmentRule.KEEP_WORLD
 							for actor in actors:
 								actor.attach_to_actor(scriptActor, '', attachRule, attachRule, attachRule)
@@ -558,7 +558,9 @@ else:
 	EDITOR.get_editor_world().get_world_settings().lightmass_settings.environment_color = unreal.Color(128, 128, 128, 0)
 	actorsDict = {}
 	currentStage = ''
-	for line in lines:
+	i = 0
+	while i < len(lines):
+		line = lines[i]
 		name = ''
 		localPosition = unreal.Vector()
 		localRotation = unreal.Quat()
@@ -567,6 +569,7 @@ else:
 			currentStage = line
 		elif currentStage != '':
 			if currentStage == 'Prefabs':
+				i += 1
 				continue
 			objectInfo = line.split('☣️')
 			name = objectInfo[0]
@@ -625,13 +628,32 @@ else:
 				actorsDict[name] = actors
 			elif currentStage == 'Scripts':
 				scripts = objectInfo[4 :]
+				i += 1
+				objectInfo = lines[i].split('☣️')
 				for script in scripts:
 					if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
 						script += '.cs'
 					codeFilePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
 					if script.endswith('.cs'):
 						ConvertCSFileToCPP (codeFilePath)
-					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
+					scriptActorAndBlueprintAsset = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
+					scriptActor = scriptActorAndBlueprintAsset[0]
+					for i2 in range(0, len(objectInfo), 3):
+						variableName = objectInfo[i2]
+						type = objectInfo[i2 + 1]
+						type = type.split('\'')[1]
+						value = objectInfo[i2 + 2]
+						if type == 'bool':
+							value = bool(value)
+						elif type == 'int':
+							value = int(value)
+						elif type == 'float':
+							value = float(value)
+						try:
+							scriptActor.set_editor_property(variableName, value)
+						except:
+							print(variableName + ' couldn\'t be set to ' + str(value) + ' on ' + str(scriptActor))
 					for actor in actorsDict[name]:
 						scriptActor.set_editor_property('root_component', actor.get_editor_property('root_component'))
+		i += 1
 LEVEL_EDITOR.save_current_level()

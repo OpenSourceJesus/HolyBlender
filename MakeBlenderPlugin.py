@@ -591,7 +591,10 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 			data += '\nScripts'
 			for obj in attachedScriptsDict:
 				if len(attachedScriptsDict[obj]) > 0:
-					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj])
+					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj]) + '\n'
+					for property in obj.keys():
+						data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
+					data = data[: len(data) - 2]
 					for script in attachedScriptsDict[obj]:
 						for textBlock in bpy.data.texts:
 							if textBlock.name == script:
@@ -1411,16 +1414,6 @@ def DetachScript (self, context):
 	attachedScriptsDict[self] = attachedScripts
 	self[bpy.context.object.attach_script_dropdown + ' attach count'] -= 1
 
-def DrawInspectorFields (self, context):
-	global propertiesTypesDict
-	global propertiesDefaultValuesDict
-	propertyIndex = 1
-	for property in context.object.keys():
-		valueIndicator = ' value'
-		if property.endswith(valueIndicator):
-			self.layout.prop(context.object, 'property' + str(propertyIndex))
-			propertyIndex += 1
-
 def UpdateInspectorFields (textBlock):
 	global attachedScriptsDict
 	global propertiesTypesDict
@@ -1475,9 +1468,16 @@ def UpdateInspectorFields (textBlock):
 							value = True
 						else:
 							value = False
-					obj[attachedScript + ' ' + variableName + ' value'] = value
+					attachedScript = attachedScript.replace('.cs', '')
+					attachedScript = attachedScript.replace('.cpp', '')
+					attachedScript = attachedScript.replace('.h', '')
+					propertyName = variableName + '_' + attachedScript
+					if propertyName not in obj.keys():
+						obj[propertyName] = value
+						propertiesDefaultValuesDict[variableName] = value
+					else:
+						propertiesDefaultValuesDict[variableName] = obj[propertyName]
 					propertiesTypesDict[variableName] = type
-					propertiesDefaultValuesDict[variableName] = value
 					shouldBreak = True
 					break
 			if shouldBreak:
@@ -1539,27 +1539,6 @@ def OnRedrawView ():
 	bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
 	bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
 	bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
-	propertyIndex = 1
-	for property in bpy.context.object.keys():
-		valueIndicator = ' value'
-		if property.endswith(valueIndicator):
-			indexOfSpace = property.find(' ')
-			property = property[indexOfSpace + 1 : len(property) - len(valueIndicator)]
-			if propertiesTypesDict[property] == 'int':
-				exec('bpy.types.Object.property' + str(propertyIndex) + ''' = bpy.props.IntProperty(
-					name = property,
-					description = '',
-					default = propertiesDefaultValuesDict[property]
-				)''')
-			elif propertiesTypesDict[property] == 'float':
-				exec('bpy.types.Object.property' + str(propertyIndex) + ''' = bpy.props.FloatProperty(
-					name = property,
-					description = '',
-					default = propertiesDefaultValuesDict[property]
-				)''')
-			propertyIndex += 1
-	bpy.types.OBJECT_PT_context_object.remove(DrawInspectorFields)
-	bpy.types.OBJECT_PT_context_object.append(DrawInspectorFields)
 	if currentTextBlock != None:
 		if currentTextBlock.run_cs:
 			import RunCSInBlender as runCSInBlender
