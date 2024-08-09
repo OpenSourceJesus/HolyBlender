@@ -8,6 +8,7 @@ from pynput import *
 mouseButtonsPressed_ = []
 keysPressed_ = []
 startTime_ = time.perf_counter()
+previousTime_ = startTime_
 
 def OnMouseClick (x, y, button, pressed):
 	global mouseButtonsPressed_
@@ -29,7 +30,8 @@ def OnKeyPress (key):
 def OnKeyRelease (key):
 	global keysPressed_
 	try:
-		keysPressed_.remove(key.char)
+		if key.char in keysPressed_:
+			keysPressed_.remove(key.char)
 	except AttributeError:
 		keysPressed_.remove(key)
 
@@ -92,12 +94,14 @@ def Cast (value, typeString : str):
 	raise RuntimeError('Could not cast ' + str(value) + ' to ' + typeString)
 
 def Run (filePath : str, obj):
-	global mouseButtonsPressed_
+	global previousTime_
+	previousTime_ = time.perf_counter()
 	outputCode = 'self = bpy.data.objects[\'' + obj.name + '\']' + '''
 mouseController_ = mouse.Controller()
 mousePosition_ = mathutils.Vector((mouseController_.position[0], mouseController_.position[1]))
 '''
 	outputCode += open(filePath, 'rb').read().decode('utf-8')
+	outputCode += '\npreviousTime_ = time.perf_counter()'
 	print(outputCode)
 
 	exec(outputCode)
