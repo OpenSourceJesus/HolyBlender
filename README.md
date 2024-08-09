@@ -3,9 +3,6 @@
 
 I am running out of energy for this project, and it is slowing down. Also, please feel free to contribute!
 
-# Name
-Unity2Many
-
 # Description
 A set of tools for game and software development
 
@@ -20,7 +17,9 @@ Inside the terminal program on your computer, type or copy and paste 'cd ~' and 
 
 Then run 'sudo apt -y install make' to install make.
 
-Next, run 'make install_UnityToBevy' to install the required parts to translate a Unity project to a bevy project. To install the parts for any of the other tools like BlenderPlugin, UnityToUnreal, or KritaToBlender, run 'make install_' and then add the name of the tool to run as one command.
+Now, run 'cd Unity2Many' to change directory to Unity2Many.
+
+Next, run 'make install_BlenderPlugin' to install the required parts to use BlenderPlugin. To install the parts for any of the other tools like UnityToUnreal UnityToBevy, or KritaToBlender, run 'make install_' and then add the name of the tool to run as one command.
 
 ## Requirements
 Currently, only Linux operating systems are supported. Testing has only been done on Ubuntu 23.10 and Ubuntu 24.04.
@@ -39,7 +38,7 @@ BlenderPlugin's interface only appears the second time (and the times after that
 
 If you want to want to run BlenderPlugin in a specific blender file then in the terminal run 'blender {path to your Blender file} --python MakeBlenderPlugin.py'. If you want to run BlenderPlugin with a specific Blender executable, then replace 'blender' at the start of the previous terminal command with the path to the Blender executable. You can also leave '{path to your Blender file}' empty to start BlenderPlugin without a Blender file.
 
-In BlenderPlugin, running a C# script won't work if you attach the script to object(s) after checking the 'Run C# Script' checkbox in Blender's Text Editor. It will work if you attach the script to object(s) and then check the checkbox. The dropdowns for attaching and detaching scripts will appear after a text block has been made in the Text Editor and the 3D Viewport visible. Sometimes the attach script dropdown will only appear once you mouse over the object name in Object Properties.
+In BlenderPlugin, running a C# script won't work if you attach the script to object(s) after checking the 'Run C# Script' checkbox in Blender's Text Editor. It will work if you attach the script to object(s) and then check the checkbox. The dropdowns for attaching and detaching scripts will appear only if the 3D Viewport is visible. Sometimes the attach script dropdown will only appear once you mouse over the object name in Object Properties.
 
 Each script needs to be have the same name as the MonoBehaviour class contained within it in BlenderPlugin.
 

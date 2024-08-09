@@ -1,5 +1,4 @@
 import bpy, subprocess, os, sys, webbrowser, hashlib#, blf
-# from random import random
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from SystemExtensions import *
@@ -455,7 +454,7 @@ public class WASDAndMouseControls : MonoBehaviour
 		transform.up = mousePosition - transform.position;
 	}
 }''',
-	'First Person Controls' : '''using UnityEngine;
+	'First Person Controls (Unfinished)' : '''using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class FirstPersonControls : MonoBehaviour
@@ -1568,7 +1567,7 @@ def OnRedrawView ():
 	# blf.color(id, 0, 1, 0, 0.8)
 	# x = 0
 	# y = 0
-	# blf.draw(id, str(random()))
+	# blf.draw(id, 'Hello World!')
 
 def register ():
 	global attachedScriptsDict
