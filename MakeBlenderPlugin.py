@@ -1397,6 +1397,7 @@ def AttachScript (self, context):
 		self[bpy.context.object.attach_script_dropdown + ' attach count'] += 1
 	else:
 		self[bpy.context.object.attach_script_dropdown + ' attach count'] = 1
+	UpdateInspectorFields (bpy.data.texts[bpy.context.object.attach_script_dropdown])
 
 def DetachScript (self, context):
 	global attachedScriptsDict
