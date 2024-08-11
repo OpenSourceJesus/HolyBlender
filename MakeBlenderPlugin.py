@@ -572,53 +572,15 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 			unrealProjectName = unrealExportPath[unrealExportPath.rfind('/') + 1 :]
 			unrealCodePathSuffix = '/Source/' + unrealProjectName
 			unrealCodePath += unrealCodePathSuffix
-			data = unrealExportPath + '\n' + bpy.data.filepath + '\nCameras'
-			for camera in bpy.data.cameras:
-				data += '\n' + GetCameraData(camera)
-				print('YA' + 'Y' + camera.name)
-			data += '\nLights'
-			for light in bpy.data.lights:
-				data += '\n' + GetLightData(light)
-				print('YA' + 'Y' + light.name)
-			data += '\nMeshes'
-			for obj in bpy.context.scene.objects:
-				if obj.type == 'MESH':
-					ExportMesh (obj)
-					data += '\n' + GetBasicObjectData(obj)
-					print('YA' + 'Y' + obj.name)
 			MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
-			data += '\nScripts'
-			for obj in attachedScriptsDict:
-				if len(attachedScriptsDict[obj]) > 0:
-					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj]) + '\n'
-					for property in obj.keys():
-						data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
-					data = data[: len(data) - 2]
-					for script in attachedScriptsDict[obj]:
-						for textBlock in bpy.data.texts:
-							if textBlock.name == script:
-								if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
-									script += '.cs'
-								open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
-								break
-			data += '\nPrefabs'
-			# for scene in bpy.data.scenes:
-			# 	data += '\n' + scene.name + '\nCameras'
-			# 	for obj in scene.collection.objects:
-			# 		if obj.type == 'CAMERA':
-			# 			data += '\n' + GetCameraData(obj)
-			# 			print('YA' + 'Y' + obj.name)
-			# 	data += '\nLights'
-			# 	for obj in scene.collection.objects:
-			# 		if obj.type == 'LIGHT':
-			# 			data += '\n' + GetLightData(obj)
-			# 			print('YA' + 'Y' + obj.name)
-			# 	data += '\nMeshes'
-			# 	for obj in scene.collection.objects:
-			# 		if obj.type == 'MESH':
-			# 			ExportMesh (obj)
-			# 			data += '\n' + GetBasicObjectData(obj)
-			# 			print('YA' + 'Y' + obj.name)
+			data = unrealExportPath + '\n' + bpy.data.filepath + '\n'
+			for collection in bpy.data.collections:
+				for obj in collection.objects:
+					if obj.instance_collection == None:
+						data += GetObjectsData(collection.objects) + '\n'
+			data += '\nScenes\n'
+			for scene in bpy.data.scenes:
+				data += GetObjectsData(scene.objects) + '\n'
 			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):
@@ -1073,6 +1035,39 @@ def ExportMesh (obj):
 	bpy.context.view_layer.objects.active = obj
 	obj.select_set(True)
 	bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+
+def GetObjectsData (objectGroup):
+	data = 'Cameras'
+	for camera in bpy.data.cameras:
+		if camera.name in objectGroup.keys():
+			data += '\n' + GetCameraData(camera)
+			print('YA' + 'Y' + camera.name)
+	data += '\nLights'
+	for light in bpy.data.lights:
+		if light.name in objectGroup.keys():
+			data += '\n' + GetLightData(light)
+			print('YA' + 'Y' + light.name)
+	data += '\nMeshes'
+	for obj in objectGroup:
+		if obj.type == 'MESH':
+			ExportMesh (obj)
+			data += '\n' + GetBasicObjectData(obj)
+			print('YA' + 'Y' + obj.name)
+	data += '\nScripts'
+	for obj in attachedScriptsDict:
+		if len(attachedScriptsDict[obj]) > 0:
+			data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj]) + '\n'
+			for property in obj.keys():
+				data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
+			data = data[: len(data) - 2]
+			for script in attachedScriptsDict[obj]:
+				for textBlock in bpy.data.texts:
+					if textBlock.name == script:
+						if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
+							script += '.cs'
+						open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
+						break
+	return data
 
 def GetBasicObjectData (obj):
 	for _obj in bpy.data.objects:

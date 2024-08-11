@@ -278,6 +278,8 @@ def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : 
 def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, scriptAssetPath : str, parent : unreal.Actor = None):
 	global blueprintAsset
 	scriptAssetPath = CODE_PATH + scriptAssetPath[scriptAssetPath.rfind('/') :]
+	if not scriptAssetPath.endswith('.h') and not scriptAssetPath.endswith('.cpp') and not scriptAssetPath.endswith('.cs'):
+		scriptAssetPath += '.cs'
 	scriptAssetPath = scriptAssetPath.replace('.cs', '.cpp')
 	script = LoadScript(scriptAssetPath)
 	blueprintFactory = unreal.BlueprintFactory()
@@ -306,7 +308,7 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		subComponent = blueprintLibrary.get_object(subData)
 		subComponent.set_editor_property('relative_location', location)
 		unreal.EditorAssetSubsystem().save_asset(destinationPath)
-	return (blueprintActor, scriptBlueprintAsset)
+	return blueprintActor
 
 def LoadObject (assetPath : str) -> unreal.Object:
 	lastIndexOfPeriod = assetPath.rfind('.')
@@ -367,7 +369,7 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 				if 'MonoBehaviour' in currentTypes:
 					for scriptPath in scriptsPaths:
 						if not scriptPath.endswith('/UniversalAdditionalCameraData.cs') and not scriptPath.endswith('/UniversalAdditionalLightData.cs'):
-							scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), scriptPath)[0]
+							scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), scriptPath)
 							attachRule = unreal.AttachmentRule.KEEP_WORLD
 							for actor in actors:
 								actor.attach_to_actor(scriptActor, '', attachRule, attachRule, attachRule)
@@ -558,6 +560,7 @@ else:
 	EDITOR.get_editor_world().get_world_settings().lightmass_settings.environment_color = unreal.Color(128, 128, 128, 0)
 	actorsDict = {}
 	currentStage = ''
+	isMakingScenes = False
 	i = 0
 	while i < len(lines):
 		line = lines[i]
@@ -565,12 +568,11 @@ else:
 		localPosition = unreal.Vector()
 		localRotation = unreal.Quat()
 		localSize = unreal.Vector()
-		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts' or line == 'Prefabs':
+		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts' or line == 'Scenes':
 			currentStage = line
+			if currentStage == 'Scenes':
+				isMakingScenes = True
 		elif currentStage != '':
-			if currentStage == 'Prefabs':
-				i += 1
-				continue
 			objectInfo = line.split('☣️')
 			name = objectInfo[0]
 			actors = actorsDict.get(name, [])
@@ -599,6 +601,15 @@ else:
 			indexOfComma2 = localSizeInfo.find(',', indexOfComma + 1)
 			localSize.z = float(localSizeInfo[indexOfComma + 1 : indexOfComma2])
 			localSize.y = float(localSizeInfo[indexOfComma2 + 1 : localSizeInfo.find(')')])
+			if not isMakingScenes:
+				destinationPath = '/Game/' + name
+				unreal.EditorAssetLibrary.delete_asset(destinationPath)
+				destinationPath += '/' + name + '.' + name
+				blueprintFactory = unreal.BlueprintFactory()
+				blueprintFactory.set_editor_property('parent_class', unreal.Actor)
+				blueprintAsset = ASSET_TOOLS.create_asset(name, destinationPath, None, blueprintFactory)
+				ASSET_REGISTRY.scan_files_synchronous([destinationPath])
+				unreal.EditorAssetSubsystem().save_asset(destinationPath)
 			if currentStage == 'Cameras':
 				horizontalFov = bool(objectInfo[4])
 				fov = float(objectInfo[5])
@@ -636,8 +647,7 @@ else:
 					codeFilePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
 					if script.endswith('.cs'):
 						ConvertCSFileToCPP (codeFilePath)
-					scriptActorAndBlueprintAsset = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
-					scriptActor = scriptActorAndBlueprintAsset[0]
+					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
 					for i2 in range(0, len(objectInfo), 3):
 						variableName = objectInfo[i2]
 						type = objectInfo[i2 + 1]
