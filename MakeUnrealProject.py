@@ -280,7 +280,6 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	scriptAssetPath = CODE_PATH + scriptAssetPath[scriptAssetPath.rfind('/') : scriptAssetPath.rfind('.')]
 	blueprintFactory = unreal.BlueprintFactory()
 	assetName = scriptAssetPath[scriptAssetPath.rfind('/') + 1 :]
-	ASSET_REGISTRY.scan_files_synchronous(['/Script/' + UNREAL_PROJECT_NAME + '.' + assetName])
 	blueprintFactory.set_editor_property('parent_class', unreal.load_class(None, '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName))
 	destinationPath = '/Game/' + assetName
 	unreal.EditorAssetLibrary.delete_asset(destinationPath + '/' + assetName)
