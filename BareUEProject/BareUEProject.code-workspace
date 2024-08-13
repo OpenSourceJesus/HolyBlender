@@ -6,7 +6,7 @@
 		},
 		{
 			"name": "UE5",
-			"path": "/home/gilead/UnrealEngine"
+			"path": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 		}
 	],
 	"settings": {
@@ -16,10 +16,7 @@
 	"extensions": {
 		"recommendations": [
 			"ms-vscode.cpptools",
-			"ms-dotnettools.csharp",
-			"vadimcn.vscode-lldb",
-			"ms-vscode.mono-debug",
-			"dfarley1.file-picker"
+			"ms-dotnettools.csharp"
 		]
 	},
 	"tasks": {
@@ -39,7 +36,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -59,7 +56,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -77,7 +74,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -94,7 +91,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -114,7 +111,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -132,7 +129,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -149,7 +146,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -169,7 +166,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -187,7 +184,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -204,7 +201,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -224,7 +221,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -242,7 +239,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -259,7 +256,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -279,7 +276,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -297,7 +294,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -314,7 +311,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -334,7 +331,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -352,7 +349,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -369,7 +366,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -389,7 +386,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -407,7 +404,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -424,7 +421,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -444,7 +441,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -462,7 +459,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -479,7 +476,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -499,7 +496,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -517,7 +514,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -534,7 +531,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -554,7 +551,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -572,7 +569,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -589,7 +586,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -609,7 +606,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -627,7 +624,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -644,7 +641,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -664,7 +661,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -682,7 +679,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -699,7 +696,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -719,7 +716,7 @@
 				],
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			},
 			{
@@ -737,7 +734,7 @@
 				"problemMatcher": "$msCompile",
 				"type": "shell",
 				"options": {
-					"cwd": "/home/gilead/UnrealEngine"
+					"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 				}
 			}
 		]
@@ -748,100 +745,100 @@
 			{
 				"name": "Launch BareUEProject (Debug)",
 				"request": "launch",
-				"program": "/home/gilead/BareUEProject/Binaries/Linux/BareUEProject-Linux-Debug",
+				"program": "/home/gilead/BareUEProject/Binaries/Linux/UnrealGame-Linux-Debug",
 				"preLaunchTask": "BareUEProject Linux Debug Build",
 				"args": [
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
 				"name": "Launch BareUEProject (DebugGame)",
 				"request": "launch",
-				"program": "/home/gilead/BareUEProject/Binaries/Linux/BareUEProject-Linux-DebugGame",
+				"program": "/home/gilead/BareUEProject/Binaries/Linux/UnrealGame-Linux-DebugGame",
 				"preLaunchTask": "BareUEProject Linux DebugGame Build",
 				"args": [
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
 				"name": "Launch BareUEProject (Development)",
 				"request": "launch",
-				"program": "/home/gilead/BareUEProject/Binaries/Linux/BareUEProject",
+				"program": "/home/gilead/BareUEProject/Binaries/Linux/UnrealGame",
 				"preLaunchTask": "BareUEProject Linux Development Build",
 				"args": [
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
 				"name": "Launch BareUEProject (Test)",
 				"request": "launch",
-				"program": "/home/gilead/BareUEProject/Binaries/Linux/BareUEProject-Linux-Test",
+				"program": "/home/gilead/BareUEProject/Binaries/Linux/UnrealGame-Linux-Test",
 				"preLaunchTask": "BareUEProject Linux Test Build",
 				"args": [
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
 				"name": "Launch BareUEProject (Shipping)",
 				"request": "launch",
-				"program": "/home/gilead/BareUEProject/Binaries/Linux/BareUEProject-Linux-Shipping",
+				"program": "/home/gilead/BareUEProject/Binaries/Linux/UnrealGame-Linux-Shipping",
 				"preLaunchTask": "BareUEProject Linux Shipping Build",
 				"args": [
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
 				"name": "Launch BareUEProjectEditor (Debug)",
 				"request": "launch",
-				"program": "/home/gilead/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Linux-Debug",
+				"program": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Binaries/Linux/UnrealEditor-Linux-Debug",
 				"preLaunchTask": "BareUEProjectEditor Linux Debug Build",
 				"args": [
 					"/home/gilead/BareUEProject/BareUEProject.uproject"
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
 				"name": "Launch BareUEProjectEditor (DebugGame)",
 				"request": "launch",
-				"program": "/home/gilead/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Linux-DebugGame",
+				"program": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Binaries/Linux/UnrealEditor-Linux-DebugGame",
 				"preLaunchTask": "BareUEProjectEditor Linux DebugGame Build",
 				"args": [
 					"/home/gilead/BareUEProject/BareUEProject.uproject"
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
 				"name": "Launch BareUEProjectEditor (Development)",
 				"request": "launch",
-				"program": "/home/gilead/UnrealEngine/Engine/Binaries/Linux/UnrealEditor",
+				"program": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Binaries/Linux/UnrealEditor",
 				"preLaunchTask": "BareUEProjectEditor Linux Development Build",
 				"args": [
 					"/home/gilead/BareUEProject/BareUEProject.uproject"
 				],
-				"cwd": "/home/gilead/UnrealEngine",
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3",
 				"type": "cppdbg",
-				"visualizerFile": "/home/gilead/UnrealEngine/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
+				"visualizerFile": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Extras/VisualStudioDebugging/Unreal.natvis",
 				"showDisplayString": true
 			},
 			{
@@ -849,7 +846,7 @@
 				"type": "coreclr",
 				"request": "launch",
 				"preLaunchTask": "UnrealBuildTool Linux Development Build",
-				"program": "/home/gilead/UnrealEngine/Engine/Build/BatchFiles/RunUBT.bat",
+				"program": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Build/BatchFiles/RunUBT.bat",
 				"args": [
 					"-projectfiles",
 					"-vscode",
@@ -861,7 +858,7 @@
 				"console": "internalConsole",
 				"internalConsoleOptions": "openOnSessionStart",
 				"stopAtEntry": false,
-				"cwd": "/home/gilead/UnrealEngine"
+				"cwd": "/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3"
 			}
 		]
 	}

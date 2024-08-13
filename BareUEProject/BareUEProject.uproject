@@ -1,13 +1,16 @@
 {
 	"FileVersion": 3,
-	"EngineAssociation": "45ED956B-13C2-4415-AE97-F4FE37F6810D",
+	"EngineAssociation": "5.4",
 	"Category": "",
 	"Description": "",
 	"Modules": [
 		{
 			"Name": "BareUEProject",
 			"Type": "Runtime",
-			"LoadingPhase": "Default"
+			"LoadingPhase": "Default",
+			"AdditionalDependencies": [
+				"Engine"
+			]
 		}
 	],
 	"Plugins": [

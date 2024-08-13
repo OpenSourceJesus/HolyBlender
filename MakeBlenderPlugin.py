@@ -547,7 +547,19 @@ class AttachedObjectsMenu (bpy.types.Menu):
 		else:
 			layout.label(text='Script not attached to any objects')
 
-class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
+class PlayButton (bpy.types.Operator):
+	bl_idname = 'blender.play'
+	bl_label = 'Start Playing'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		for textBlock in bpy.data.texts:
+			textBlock.run_cs = True
+
+class UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
 	bl_label = 'Export To Unreal'
 
@@ -581,6 +593,20 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 			data += '\nScenes\n'
 			for scene in bpy.data.scenes:
 				data += GetObjectsData(scene.objects) + '\n'
+			data += '\nScripts'
+			for obj in attachedScriptsDict:
+				if len(attachedScriptsDict[obj]) > 0:
+					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj]) + '\n'
+					for property in obj.keys():
+						data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
+					data = data[: len(data) - 2]
+					for script in attachedScriptsDict[obj]:
+						for textBlock in bpy.data.texts:
+							if textBlock.name == script:
+								if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
+									script += '.cs'
+								open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
+								break
 			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):
@@ -603,6 +629,10 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 				projectFileText = open(projectFilePath, 'rb').read().decode('utf-8')
 				projectFileText = projectFileText.replace('BareUEProject', unrealProjectName)
 				open(projectFilePath, 'wb').write(projectFileText.encode('utf-8'))
+				defaultActorFilePath = unrealCodePath + '/MyActor.h'
+				defaultActorFileText = open(defaultActorFilePath, 'rb').read().decode('utf-8')
+				defaultActorFileText = defaultActorFileText.replace('BAREUEPROJECT', unrealProjectName.upper())
+				open(defaultActorFilePath, 'wb').write(defaultActorFileText.encode('utf-8'))
 				utilsFilePath = unrealCodePath + '/Utils.h'
 				utilsFileText = open(utilsFilePath, 'rb').read().decode('utf-8')
 				utilsFileText = utilsFileText.replace('BAREUEPROJECT', unrealProjectName.upper())
@@ -617,25 +647,26 @@ class TEXT_EDITOR_OT_UnrealExportButton (bpy.types.Operator):
 					os.rename(codeFilePath, codeFilePath.replace('BareUEProject', unrealProjectName))
 			command = 'dotnet ' + os.path.expanduser('~/UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll ') + unrealProjectName + ' Development Linux -Project="' + projectFilePath + '" -TargetType=Editor -Progress'
 			if os.path.expanduser('~') == '/home/gilead':
-				command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.423-linux-x64/dotnet')
+				command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.302-linux-x64/dotnet')
 			print(command)
 
 			os.system(command)
 
-			data = ''
-			open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
-			UNREAL_COMMAND_PATH = os.path.expanduser('~/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd')
-			command = UNREAL_COMMAND_PATH + ' ' + projectFilePath + ' -nullrhi -ExecutePythonScript=' + os.path.expanduser('~/Unity2Many/MakeUnrealProject.py')
+			open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(''.encode('utf-8'))
+			unrealEditorPath = os.path.expanduser('~/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd')
+			if os.path.expanduser('~') == '/home/gilead':
+				unrealEditorPath = '/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Binaries/Linux/UnrealEditor-Cmd'
+			command = unrealEditorPath + ' ' + projectFilePath + ' -nullrhi -ExecutePythonScript=' + os.path.expanduser('~/Unity2Many/MakeUnrealProject.py')
 			print(command)
 
 			os.system(command)
 
-			command = UNREAL_COMMAND_PATH + ' ' + projectFilePath + ' -buildlighting'
+			command = unrealEditorPath + ' ' + projectFilePath + ' -buildlighting'
 			print(command)
 
 			os.system(command)
 
-class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
+class BevyExportButton (bpy.types.Operator):
 	bl_idname = 'bevy.export'
 	bl_label = 'Export To Bevy'
 
@@ -664,7 +695,7 @@ class TEXT_EDITOR_OT_BevyExportButton (bpy.types.Operator):
 			makeBevyBlenderApp.Do ()
 			# webbrowser.open('http://localhost:1334')
 
-class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
+class UnityExportButton (bpy.types.Operator):
 	bl_idname = 'unity.export'
 	bl_label = 'Export To Unity'
 
@@ -915,34 +946,33 @@ class TEXT_EDITOR_OT_UnityExportButton (bpy.types.Operator):
 			
 			subprocess.check_call(command)
 
-class TEXT_EDITOR_OT_PygameExportButton (bpy.types.Operator):
-	bl_idname = 'pygame.export'
-	bl_label = 'Export To Pygame'
+# # class PygameExportButton (bpy.types.Operator):
+# 	bl_idname = 'pygame.export'
+# 	bl_label = 'Export To Pygame'
 
-	@classmethod
-	def poll (cls, context):
-		return True
+# 	@classmethod
+# 	def poll (cls, context):
+# 		return True
 	
-	def execute (self, context):
-		BuildTool ('UnityToPygame')
-		pygameExportPath = os.path.expanduser(context.scene.world.pygame_project_path)
-		if not os.path.isdir(pygameExportPath):
-			MakeFolderForFile (pygameExportPath + '/')
-		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
-		if importPath != '':
-			command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToPygame.py'), 'input=' + importPath, 'output=' + pygameExportPath, 'exclude=/Library' ]
-			print(command)
+# 	def execute (self, context):
+# 		BuildTool ('UnityToPygame')
+# 		pygameExportPath = os.path.expanduser(context.scene.world.pygame_project_path)
+# 		if not os.path.isdir(pygameExportPath):
+# 			MakeFolderForFile (pygameExportPath + '/')
+# 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+# 		if importPath != '':
+# 			command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToPygame.py'), 'input=' + importPath, 'output=' + pygameExportPath, 'exclude=/Library' ]
+# 			print(command)
 
-			subprocess.check_call(command)
+# 			subprocess.check_call(command)
 
-		else:
-			data = pygameExportPath
-			for obj in attachedScriptsDict:
-				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedScriptsDict[obj])
-			open('/tmp/Unity2Many Data (BlenderToPygame)', 'wb').write(data.encode('utf-8'))
-			
+# 		else:
+# 			data = pygameExportPath
+# 			for obj in attachedScriptsDict:
+# 				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedScriptsDict[obj])
+# 			open('/tmp/Unity2Many Data (BlenderToPygame)', 'wb').write(data.encode('utf-8'))
 
-class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
+class UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
 	bl_label = 'Translate To Unreal'
 
@@ -963,7 +993,7 @@ class TEXT_EDITOR_OT_UnrealTranslateButton (bpy.types.Operator):
 		open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
 		ConvertCSFileToCPP (filePath)
 
-class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
+class BevyTranslateButton (bpy.types.Operator):
 	bl_idname = 'bevy.translate'
 	bl_label = 'Translate To Bevy'
 
@@ -984,7 +1014,6 @@ class TEXT_EDITOR_OT_BevyTranslateButton (bpy.types.Operator):
 		ConvertCSFileToRust (filePath)
 
 timer = None
-@bpy.utils.register_class
 class Loop (bpy.types.Operator):
 	bl_idname = 'blender_plugin.start'
 	bl_label = 'blender_plugin_start'
@@ -1012,15 +1041,17 @@ class Loop (bpy.types.Operator):
 		return self.invoke(context, None)
 
 classes = [
-	TEXT_EDITOR_OT_UnrealExportButton,
-	TEXT_EDITOR_OT_BevyExportButton,
-	TEXT_EDITOR_OT_UnityExportButton,
-	TEXT_EDITOR_OT_PygameExportButton,
-	TEXT_EDITOR_OT_UnrealTranslateButton,
-	TEXT_EDITOR_OT_BevyTranslateButton,
+	UnrealExportButton,
+	BevyExportButton,
+	UnityExportButton,
+	# PygameExportButton,
+	PlayButton,
+	UnrealTranslateButton,
+	BevyTranslateButton,
 	ExamplesOperator,
 	ExamplesMenu,
-	AttachedObjectsMenu
+	AttachedObjectsMenu,
+	Loop
 ]
 
 def BuildTool (toolName : str):
@@ -1053,20 +1084,6 @@ def GetObjectsData (objectGroup):
 			ExportMesh (obj)
 			data += '\n' + GetBasicObjectData(obj)
 			print('YA' + 'Y' + obj.name)
-	data += '\nScripts'
-	for obj in attachedScriptsDict:
-		if len(attachedScriptsDict[obj]) > 0:
-			data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj]) + '\n'
-			for property in obj.keys():
-				data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
-			data = data[: len(data) - 2]
-			for script in attachedScriptsDict[obj]:
-				for textBlock in bpy.data.texts:
-					if textBlock.name == script:
-						if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
-							script += '.cs'
-						open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
-						break
 	return data
 
 def GetBasicObjectData (obj):
@@ -1339,22 +1356,25 @@ def DrawPygameExportField (self, context):
 	self.layout.prop(context.world, 'pygame_project_path')
 
 def DrawUnrealExportButton (self, context):
-	self.layout.operator(TEXT_EDITOR_OT_UnrealExportButton.bl_idname, icon='CONSOLE')
+	self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
 
 def DrawBevyExportButton (self, context):
-	self.layout.operator(TEXT_EDITOR_OT_BevyExportButton.bl_idname, icon='CONSOLE')
+	self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
 
 def DrawUnityExportButton (self, context):
-	self.layout.operator(TEXT_EDITOR_OT_UnityExportButton.bl_idname, icon='CONSOLE')
+	self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
 
-def DrawPygameExportButton (self, context):
-	self.layout.operator(TEXT_EDITOR_OT_PygameExportButton.bl_idname, icon='CONSOLE')
+# def DrawPygameExportButton (self, context):
+# 	self.layout.operator(PygameExportButton.bl_idname, icon='CONSOLE')
 
 def DrawUnrealTranslateButton (self, context):
-	self.layout.operator(TEXT_EDITOR_OT_UnrealTranslateButton.bl_idname, icon='CONSOLE')
+	self.layout.operator(UnrealTranslateButton.bl_idname, icon='CONSOLE')
 
 def DrawBevyTranslateButton (self, context):
-	self.layout.operator(TEXT_EDITOR_OT_BevyTranslateButton.bl_idname, icon='CONSOLE')
+	self.layout.operator(BevyTranslateButton.bl_idname, icon='CONSOLE')
+
+def DrawPlayButton (self, context):
+	self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
 
 def DrawAttachScriptDropdown (self, context):
 	self.layout.prop(context.object, 'attach_script_dropdown')
@@ -1630,11 +1650,11 @@ def register ():
 		description = '',
 		default = ''
 	)
-	bpy.types.World.pygame_project_path = bpy.props.StringProperty(
-		name = 'Pygame project path',
-		description = '',
-		default = ''
-	)
+	# bpy.types.World.pygame_project_path = bpy.props.StringProperty(
+	# 	name = 'Pygame project path',
+	# 	description = '',
+	# 	default = ''
+	# )
 	bpy.types.Text.run_cs = bpy.props.BoolProperty(
 		name = 'Run C# Script',
 		description = ''
@@ -1654,6 +1674,7 @@ def register ():
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
 	# bpy.types.WORLD_PT_context_world.append(DrawPygameExportButton)
+	bpy.types.WORLD_PT_context_world.append(DrawPlayButton)
 	handle = bpy.types.SpaceView3D.draw_handler_add(
 		OnRedrawView,
 		tuple([]),
@@ -1676,6 +1697,7 @@ def unregister ():
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportButton)
 	# bpy.types.WORLD_PT_context_world.remove(DrawPygameExportButton)
+	bpy.types.WORLD_PT_context_world.remove(DrawPlayButton)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 

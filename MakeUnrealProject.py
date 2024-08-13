@@ -277,13 +277,10 @@ def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : 
 
 def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, scriptAssetPath : str, parent : unreal.Actor = None):
 	global blueprintAsset
-	scriptAssetPath = CODE_PATH + scriptAssetPath[scriptAssetPath.rfind('/') :]
-	if not scriptAssetPath.endswith('.h') and not scriptAssetPath.endswith('.cpp') and not scriptAssetPath.endswith('.cs'):
-		scriptAssetPath += '.cs'
-	scriptAssetPath = scriptAssetPath.replace('.cs', '.cpp')
-	script = LoadScript(scriptAssetPath)
+	scriptAssetPath = CODE_PATH + scriptAssetPath[scriptAssetPath.rfind('/') : scriptAssetPath.rfind('.')]
 	blueprintFactory = unreal.BlueprintFactory()
-	assetName = scriptAssetPath[scriptAssetPath.rfind('/') + 1 :].replace('.cpp', '')
+	assetName = scriptAssetPath[scriptAssetPath.rfind('/') + 1 :]
+	ASSET_REGISTRY.scan_files_synchronous(['/Script/' + UNREAL_PROJECT_NAME + '.' + assetName])
 	blueprintFactory.set_editor_property('parent_class', unreal.load_class(None, '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName))
 	destinationPath = '/Game/' + assetName
 	unreal.EditorAssetLibrary.delete_asset(destinationPath + '/' + assetName)
@@ -302,7 +299,7 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 		addSubobjectParameters = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)
 		subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(addSubobjectParameters)
 		if not failReason.is_empty():
-			raise Exception('ERROR from SUBOBJECT_DATA.add_new_subobject: {failReason}')
+			raise Exception(f'ERROR from SUBOBJECT_DATA.add_new_subobject: {failReason}')
 		didAttach = SUBOBJECT_DATA.attach_subobject(rootData, subHandle)
 		subData = blueprintLibrary.get_data(subHandle)
 		subComponent = blueprintLibrary.get_object(subData)
@@ -324,11 +321,10 @@ def LoadObject (assetPath : str) -> unreal.Object:
 	unreal.EditorAssetSubsystem().save_asset(destinationPath)
 	return asset
 
-def LoadScript (assetPath : str) -> unreal.Object:
-	lastIndexOfPeriod = assetPath.rfind('.')
-	assetName = assetPath[assetPath.rfind('/') + 1 : lastIndexOfPeriod]
-	destinationPath = '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName
-	return unreal.load_object(None, destinationPath)
+# def LoadScript (assetPath : str) -> unreal.Object:
+# 	assetName = assetPath[assetPath.rfind('/') + 1 : assetPath.rfind('.')]
+# 	destinationPath = '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName
+# 	return unreal.load_object(None, destinationPath)
 
 def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 	sceneOrPrefabFileLines = sceneOrPrefabFileText.split('\n')
@@ -564,6 +560,9 @@ else:
 	i = 0
 	while i < len(lines):
 		line = lines[i]
+		if line == '':
+			i += 1
+			continue
 		name = ''
 		localPosition = unreal.Vector()
 		localRotation = unreal.Quat()
