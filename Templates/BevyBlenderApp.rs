@@ -40,7 +40,8 @@ fn StartLevel (
 	mut meshes : ResMut<Assets<Mesh>>,
 	keys: Res<ButtonInput<KeyCode>>,
 	mouseButtons: Res<ButtonInput<MouseButton>>,
-    mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>,
+	mut cursorEvent: EventReader<CursorMoved>,
+	mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>
 ) {
 	unsafe
 	{

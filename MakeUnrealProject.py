@@ -203,7 +203,7 @@ def ConvertCSFileToCPP (filePath):
 
 	ConvertPythonFileToCpp (outputFilePath)
 
-def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, meshAssetPath : str):
+def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, meshAssetPath : str, parent : unreal.Actor = None):
 	projectFilePath = UNREAL_PROJECT_PATH + '/Content' + meshAssetPath[meshAssetPath.rfind('/') :]
 	os.system('cp \'' + meshAssetPath + '\' \'' + projectFilePath + '\'')
 	staticMesh = LoadObject(meshAssetPath)
@@ -211,9 +211,12 @@ def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, si
 	staticMeshActor.static_mesh_component.set_static_mesh(staticMesh)
 	staticMeshActor.set_actor_scale3d(size)
 	staticMeshActor.set_mobility(unreal.ComponentMobility.MOVABLE)
+	if parent != None:
+		attachRule = unreal.AttachmentRule.KEEP_WORLD
+		staticMeshActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
 	return staticMeshActor
 
-def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, textureAssetPath : str):
+def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, textureAssetPath : str, parent : unreal.Actor = None):
 	texture = LoadObject(textureAssetPath)
 	paperSpriteActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.PaperSpriteActor.static_class(), location, rotation)
 	lastIndexOfPeriod = textureAssetPath.rfind('.')
@@ -245,9 +248,12 @@ def MakePaperSpriteActor (location : unreal.Vector, rotation : unreal.Rotator, s
 	paperSpriteActor.set_actor_scale3d(size)
 	paperSpriteActor.render_component.set_editor_property('source_sprite', paperSprite)
 	paperSpriteActor.set_mobility(unreal.ComponentMobility.MOVABLE)
+	if parent != None:
+		attachRule = unreal.AttachmentRule.KEEP_WORLD
+		paperSpriteActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
 	return paperSpriteActor
 
-def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, horizontalFov : bool, fov : float, isOrthographic : bool, orthographicSize : float, nearClipPlane : float, farClipPlane : float):
+def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, horizontalFov : bool, fov : float, isOrthographic : bool, orthographicSize : float, nearClipPlane : float, farClipPlane : float, parent : unreal.Actor = None):
 	rotation.yaw = 90
 	cameraActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.CameraActor.static_class(), location, rotation)
 	if isOrthographic:
@@ -261,9 +267,12 @@ def MakeCameraActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	cameraActor.set_actor_scale3d(size)
 	cameraActor.set_editor_property('auto_activate_for_player', unreal.AutoReceiveInput.PLAYER0)
 	cameraActor.camera_component.set_mobility(unreal.ComponentMobility.MOVABLE)
+	if parent != None:
+		attachRule = unreal.AttachmentRule.KEEP_WORLD
+		cameraActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
 	return cameraActor
 
-def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, type : int, intensity : float, color : unreal.LinearColor):
+def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, type : int, intensity : float, color : unreal.LinearColor, parent : unreal.Actor = None):
 	lightActor = None
 	if type == 0:
 		lightActor = unreal.EditorLevelLibrary.spawn_actor_from_class(unreal.DirectionalLight.static_class(), location, rotation)
@@ -273,6 +282,9 @@ def MakeLightActor (location : unreal.Vector, rotation : unreal.Rotator, size : 
 	lightActor.set_light_color(color)
 	lightActor.set_actor_scale3d(size)
 	lightActor.light_component.set_mobility(unreal.ComponentMobility.MOVABLE)
+	if parent != None:
+		attachRule = unreal.AttachmentRule.KEEP_WORLD
+		lightActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
 	return lightActor
 
 def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, scriptAssetPath : str, parent : unreal.Actor = None):
@@ -288,12 +300,12 @@ def MakeScriptActor (location : unreal.Vector, rotation : unreal.Rotator, size :
 	ASSET_REGISTRY.scan_files_synchronous([destinationPath])
 	unreal.EditorAssetSubsystem().save_asset(destinationPath)
 	blueprintActor = unreal.EditorLevelLibrary.spawn_actor_from_object(scriptBlueprintAsset, location, rotation)
-	attachRule = unreal.AttachmentRule.KEEP_WORLD
 	if parent != None:
+		attachRule = unreal.AttachmentRule.KEEP_WORLD
 		blueprintActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
 	if blueprintAsset != None:
 		rootData = SUBOBJECT_DATA.k2_gather_subobject_data_for_blueprint(blueprintAsset)[0]
-		classType = unreal.load_class(None, '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName)
+		classType = unreal.Actor.static_class()
 		blueprintLibrary = unreal.SubobjectDataBlueprintFunctionLibrary()
 		addSubobjectParameters = unreal.AddNewSubobjectParams(rootData, classType, blueprintAsset)
 		subHandle, failReason = SUBOBJECT_DATA.add_new_subobject(addSubobjectParameters)
@@ -320,7 +332,7 @@ def LoadObject (assetPath : str) -> unreal.Object:
 	unreal.EditorAssetSubsystem().save_asset(destinationPath)
 	return asset
 
-# def LoadScript (assetPath : str) -> unreal.Object:
+# def LoadScript (assetPath : str) -> unreal.Class:
 # 	assetName = assetPath[assetPath.rfind('/') + 1 : assetPath.rfind('.')]
 # 	destinationPath = '/Script/' + UNREAL_PROJECT_NAME + '.' + assetName
 # 	return unreal.load_object(None, destinationPath)
@@ -484,6 +496,7 @@ for arg in data:
 	elif arg.startswith(EXCLUDE_ITEM_INDICATOR):
 		excludeItems.append(arg[len(EXCLUDE_ITEM_INDICATOR) + 1 :])
 
+parent = None
 if fromUnity:
 	metaFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.meta')
 	fileGuidsDict = {}
@@ -615,7 +628,7 @@ else:
 				orthographicSize = float(objectInfo[7])
 				nearClipPlane = float(objectInfo[8])
 				farClipPlane = float(objectInfo[9])
-				actors.append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
+				actors.append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane, parent))
 				actorsDict[name] = actors
 			elif currentStage == 'Lights':
 				lightType = int(objectInfo[4])
@@ -630,10 +643,10 @@ else:
 				color.g = float(colorInfo[indexOfEquals + 1 : indexOfComma])
 				indexOfEquals = colorInfo.find('=', indexOfEquals + 1)
 				color.b = float(colorInfo[indexOfEquals + 1 : colorInfo.find(')')])
-				actors.append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity, color))
+				actors.append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity, color, parent))
 				actorsDict[name] = actors
 			elif currentStage == 'Meshes':
-				actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx'))
+				actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx', parent))
 				actorsDict[name] = actors
 			elif currentStage == 'Scripts':
 				scripts = objectInfo[4 :]
@@ -645,7 +658,7 @@ else:
 					codeFilePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
 					if script.endswith('.cs'):
 						ConvertCSFileToCPP (codeFilePath)
-					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath)
+					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath, parent)
 					for i2 in range(0, len(objectInfo), 3):
 						variableName = objectInfo[i2]
 						type = objectInfo[i2 + 1]

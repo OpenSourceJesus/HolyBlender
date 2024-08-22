@@ -506,6 +506,7 @@ textBlocksTextsDict = {}
 previousTextBlocksTextsDict = {}
 propertiesDefaultValuesDict = {}
 propertiesTypesDict = {}
+childrenDict = {}
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -569,6 +570,7 @@ class UnrealExportButton (bpy.types.Operator):
 	
 	def execute (self, context):
 		global unrealCodePath
+		global childrenDict
 		global unrealCodePathSuffix
 		BuildTool ('UnityToUnreal')
 		unrealExportPath = os.path.expanduser(context.scene.world.unrealExportPath)
@@ -593,6 +595,8 @@ class UnrealExportButton (bpy.types.Operator):
 			data += '\nScenes\n'
 			for scene in bpy.data.scenes:
 				data += GetObjectsData(scene.objects) + '\n'
+			data += 'Children\n'
+			data += GetObjectsData(childrenDict) + '\n'
 			data += '\nScripts'
 			for obj in attachedScriptsDict:
 				if len(attachedScriptsDict[obj]) > 0:
@@ -648,6 +652,7 @@ class UnrealExportButton (bpy.types.Operator):
 			command = 'dotnet ' + os.path.expanduser('~/UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll ') + unrealProjectName + ' Development Linux -Project="' + projectFilePath + '" -TargetType=Editor -Progress'
 			if os.path.expanduser('~') == '/home/gilead':
 				command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.302-linux-x64/dotnet')
+				command = command.replace(os.path.expanduser('~/UnrealEngine'), os.path.expanduser('~/Downloads/Linux_Unreal_Engine_5.4.3'))
 			print(command)
 
 			os.system(command)
@@ -946,32 +951,6 @@ class UnityExportButton (bpy.types.Operator):
 			
 			subprocess.check_call(command)
 
-# # class PygameExportButton (bpy.types.Operator):
-# 	bl_idname = 'pygame.export'
-# 	bl_label = 'Export To Pygame'
-
-# 	@classmethod
-# 	def poll (cls, context):
-# 		return True
-	
-# 	def execute (self, context):
-# 		BuildTool ('UnityToPygame')
-# 		pygameExportPath = os.path.expanduser(context.scene.world.pygame_project_path)
-# 		if not os.path.isdir(pygameExportPath):
-# 			MakeFolderForFile (pygameExportPath + '/')
-# 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
-# 		if importPath != '':
-# 			command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToPygame.py'), 'input=' + importPath, 'output=' + pygameExportPath, 'exclude=/Library' ]
-# 			print(command)
-
-# 			subprocess.check_call(command)
-
-# 		else:
-# 			data = pygameExportPath
-# 			for obj in attachedScriptsDict:
-# 				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedScriptsDict[obj])
-# 			open('/tmp/Unity2Many Data (BlenderToPygame)', 'wb').write(data.encode('utf-8'))
-
 class UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
 	bl_label = 'Translate To Unreal'
@@ -1025,7 +1004,7 @@ class Loop (bpy.types.Operator):
 				for region in area.regions:
 					if region.type == 'WINDOW':
 						region.tag_redraw()
-		return {'PASS_THROUGH'} # will not supress event bubbles
+		return {'PASS_THROUGH'} # Won't supress event bubbles
 
 	def invoke (self, context, event):
 		global timer
@@ -1044,7 +1023,6 @@ classes = [
 	UnrealExportButton,
 	BevyExportButton,
 	UnityExportButton,
-	# PygameExportButton,
 	PlayButton,
 	UnrealTranslateButton,
 	BevyTranslateButton,
@@ -1087,13 +1065,19 @@ def GetObjectsData (objectGroup):
 	return data
 
 def GetBasicObjectData (obj):
+	global childrenDict
 	for _obj in bpy.data.objects:
 		if _obj.name == obj.name:
 			obj = _obj
 			break
 	previousObjectRotationMode = obj.rotation_mode
 	obj.rotation_mode = 'QUATERNION'
-	output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
+	output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale) + '☣️'
+	if len(obj.children) > 0:
+		for child in obj.children:
+			data += child.name + '🚾'
+			childrenDict[child.name] = child
+		data = data[: len(data) - 1]
 	obj.rotation_mode = previousObjectRotationMode
 	return output
 
@@ -1352,9 +1336,6 @@ def DrawUnrealExportField (self, context):
 def DrawBevyExportField (self, context):
 	self.layout.prop(context.world, 'bevy_project_path')
 
-def DrawPygameExportField (self, context):
-	self.layout.prop(context.world, 'pygame_project_path')
-
 def DrawUnrealExportButton (self, context):
 	self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
 
@@ -1363,9 +1344,6 @@ def DrawBevyExportButton (self, context):
 
 def DrawUnityExportButton (self, context):
 	self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
-
-# def DrawPygameExportButton (self, context):
-# 	self.layout.operator(PygameExportButton.bl_idname, icon='CONSOLE')
 
 def DrawUnrealTranslateButton (self, context):
 	self.layout.operator(UnrealTranslateButton.bl_idname, icon='CONSOLE')
@@ -1650,11 +1628,6 @@ def register ():
 		description = '',
 		default = ''
 	)
-	# bpy.types.World.pygame_project_path = bpy.props.StringProperty(
-	# 	name = 'Pygame project path',
-	# 	description = '',
-	# 	default = ''
-	# )
 	bpy.types.Text.run_cs = bpy.props.BoolProperty(
 		name = 'Run C# Script',
 		description = ''
@@ -1669,11 +1642,9 @@ def register ():
 	# bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportField)
-	# bpy.types.WORLD_PT_context_world.append(DrawPygameExportField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
-	# bpy.types.WORLD_PT_context_world.append(DrawPygameExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawPlayButton)
 	handle = bpy.types.SpaceView3D.draw_handler_add(
 		OnRedrawView,
@@ -1692,11 +1663,9 @@ def unregister ():
 	# bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportField)
-	# bpy.types.WORLD_PT_context_world.remove(DrawPygameExportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportButton)
-	# bpy.types.WORLD_PT_context_world.remove(DrawPygameExportButton)
 	bpy.types.WORLD_PT_context_world.remove(DrawPlayButton)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)

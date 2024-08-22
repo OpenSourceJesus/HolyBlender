@@ -233,7 +233,11 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		# importStatementsText += 'use ' + mainClassName + '::*;\n'
 		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
 	# outputFileText = 'pub mod ' + mainClassName + '\n{\n' + outputFileText + '\n}'
-	outputFileText = outputFileText.replace('fn Start', 'fn Start' + mainClassName)
+	startMethodIndicator = 'fn Start'
+	indexOfStartMethod = outputFileText.find(startMethodIndicator)
+	if indexOfStartMethod != -1:
+		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(OnEnter(MyStates::Next), Start' + mainClassName + ')'
+		outputFileText = outputFileText[: indexOfStartMethod + len(startMethodIndicator)] + mainClassName + outputFileText[indexOfStartMethod + len(startMethodIndicator) :]
 	outputFileText = outputFileText.replace('Time.deltaTime', 'time.delta_seconds()')
 	outputFileText = outputFileText.replace('Vector2', 'Vec2')
 	outputFileText = outputFileText.replace('Vec2.zero', 'Vec2::ZERO')
@@ -477,7 +481,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	indexOfUpdateMethod = outputFileText.find('fn Update')
 	if indexOfUpdateMethod != -1:
 		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
-		outputFileText += CUSTOM_TYPE_TEMPLATE.replace('ꗈ', mainClassName)
+	outputFileText += CUSTOM_TYPE_TEMPLATE.replace('ꗈ', mainClassName)
 	outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
 	addToOutputFileText += '\n\n' + outputFileText
 
@@ -735,7 +739,7 @@ def Do ():
 		bpy.ops.preferences.addon_enable(module='bevy_components')
 		bpy.ops.preferences.addon_enable(module='gltf_auto_export')
 	# sys.path.append('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
-	bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
+	# bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	if fromUnity:
 		codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
@@ -865,7 +869,7 @@ def Do ():
 			indexOfEndOfObjectName = line.find('☢️')
 			if indexOfEndOfObjectName != -1:
 				objectName = line[: indexOfEndOfObjectName]
-				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
+				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')[1 :]
 				for script in scripts:
 					MakeComponent (objectName, 'Unity2Many::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
