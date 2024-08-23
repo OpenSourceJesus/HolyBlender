@@ -527,8 +527,7 @@ def MakeComponent (objectName : str, componentType : str):
 		registry.ComponentsRegistry.type_infos[componentType] = typeInfo
 		import bevy_components.components.metadata as metadata
 		metadata.add_component_to_object(obj, typeInfo)
-		obj[componentType.replace('HolyBlender::', '')] = '()'
-		print('YAY' + componentType)
+		print('YAY ' + objectName + ' ' + componentType)
 
 def RemoveComponent (objectName : str, componentType : str):
 	if objectName != '':
