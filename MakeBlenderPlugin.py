@@ -1,4 +1,4 @@
-import bpy, subprocess, os, sys, webbrowser, hashlib#, blf
+import bpy, subprocess, os, sys, hashlib# , webbrowser, blf
 
 sys.path.append(os.path.expanduser('~/Unity2Many'))
 from SystemExtensions import *
@@ -397,7 +397,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 	}
 }'''
 EXAMPLES_DICT = {
-	'Hello World' : '''using UnityEngine;
+	'Hello World (Unity)' : '''using UnityEngine;
 
 public class HelloWorld : MonoBehaviour
 {
@@ -406,7 +406,7 @@ public class HelloWorld : MonoBehaviour
 		print("Hello World!");
 	}
 }''',
-	'Rotate': '''using UnityEngine;
+	'Rotate (Unity)': '''using UnityEngine;
 
 public class Rotate : MonoBehaviour
 {
@@ -417,7 +417,7 @@ public class Rotate : MonoBehaviour
 		transform.eulerAngles += Vector3.up * rotateSpeed * Time.deltaTime;
 	}
 }''',
-	'Grow And Shrink': '''using UnityEngine;
+	'Grow And Shrink (Unity)': '''using UnityEngine;
 
 public class GrowAndShrink : MonoBehaviour
 {
@@ -430,7 +430,7 @@ public class GrowAndShrink : MonoBehaviour
 		transform.localScale = Vector3.one * (((Mathf.Sin(speed * Time.time) + 1) / 2) * (maxSize - minSize) + minSize);
 	}
 }''',
-	'Keyboard And Mouse Controls' : '''using UnityEngine;
+	'Keyboard And Mouse Controls (Unity)' : '''using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class WASDAndMouseControls : MonoBehaviour
@@ -450,11 +450,11 @@ public class WASDAndMouseControls : MonoBehaviour
 			move.y += 1.0f;
 		move.Normalize();
 		transform.position += move * moveSpeed * Time.deltaTime;
-    	Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
+		Vector3 mousePosition = Camera.main.ScreenToWorldPoint(Mouse.current.position.ReadValue());
 		transform.up = mousePosition - transform.position;
 	}
 }''',
-	'First Person Controls (Unfinished)' : '''using UnityEngine;
+	'First Person Controls (Unity) (Unfinished)' : '''using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class FirstPersonControls : MonoBehaviour
@@ -476,12 +476,14 @@ public class FirstPersonControls : MonoBehaviour
 			move.y += 1.0f;
 		move.Normalize();
 		transform.position += move * moveSpeed * Time.deltaTime;
-    	Vector2 mousePosition = Mouse.current.position.ReadValue();
-    	Vector2 look = (mousePosition - previousMousePosition) * lookSpeed;
-    	transform.Rotate(new Vector3(look.y, look.x));
-    	previousMousePosition = mousePosition;
+		Vector2 mousePosition = Mouse.current.position.ReadValue();
+		Vector2 look = (mousePosition - previousMousePosition) * lookSpeed;
+		transform.Rotate(new Vector3(look.y, look.x));
+		previousMousePosition = mousePosition;
 	}
-}'''
+}''',
+	'Hello World (bevy)' : '''
+'''
 }
 MATERIAL_TEMPLATE = '    - {fileID: ꗈ0, guid: ꗈ1, type: 2}'
 COMPONENT_TEMPLATE = '    - component: {fileID: ꗈ}'
@@ -491,6 +493,7 @@ PI = 3.141592653589793
 TEMPLATES_PATH = os.path.expanduser('~/Unity2Many/Templates')
 TEMPLATE_REGISTRY_PATH = TEMPLATES_PATH + '/registry.json'
 REGISTRY_PATH = '/tmp/registry.json'
+MAX_SCRIPTS_PER_OBJECT = 16
 unrealCodePath = ''
 unrealCodePathSuffix = '/Source/'
 excludeItems = [ '/Library' ]
@@ -498,15 +501,66 @@ lastId = 5
 operatorContext = None
 currentTextBlock = None
 mainClassNames = []
-attachScriptDropdownOptions = []
-attachedScriptsDict = {}
-detachScriptDropdownOptions = []
+attachedUnityScriptsDict = {}
+attachedBevyScriptsDict = {}
+attachedUnrealScriptsDict = {}
 previousRunningScripts = []
 textBlocksTextsDict = {}
 previousTextBlocksTextsDict = {}
 propertiesDefaultValuesDict = {}
 propertiesTypesDict = {}
 childrenDict = {}
+
+class UnityScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Unity_Scripts_Panel'
+	bl_label = 'Unity Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw(self, context):
+		self.layout.label(text='Attach Unity scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasProperty = getattr(context.active_object, 'unity_script' + str(i)) != None
+			if hasProperty or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'unity_script' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasProperty
+
+class BevyScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_bevy_Scripts_Panel'
+	bl_label = 'Bevy Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw(self, context):
+		self.layout.label(text='Attach bevy scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasProperty = getattr(context.active_object, 'bevy_script' + str(i)) != None
+			if hasProperty or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'bevy_script' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasProperty
+
+class UnrealScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Unreal_Scripts_Panel'
+	bl_label = 'Unreal Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw(self, context):
+		self.layout.label(text='Attach Unreal scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasProperty = getattr(context.active_object, 'unreal_script' + str(i)) != None
+			if hasProperty or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'unreal_script' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasProperty
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -529,8 +583,8 @@ class ExamplesMenu (bpy.types.Menu):
 			op.template = name
 
 class AttachedObjectsMenu (bpy.types.Menu):
-	bl_label = 'Unity2Many Attached Objects'
 	bl_idname = 'TEXT_MT_u2m_menu_obj'
+	bl_label = 'Unity2Many Attached Objects'
 
 	def draw (self, context):
 		layout = self.layout
@@ -539,7 +593,13 @@ class AttachedObjectsMenu (bpy.types.Menu):
 			return
 		objs = []
 		for obj in bpy.data.objects:
-			attachedScripts = attachedScriptsDict.get(obj, [])
+			attachedScripts = attachedUnityScriptsDict.get(obj, [])
+			if context.edit_text.name in attachedScripts:
+				objs.append(obj)
+			attachedScripts = attachedBevyScriptsDict.get(obj, [])
+			if context.edit_text.name in attachedScripts:
+				objs.append(obj)
+			attachedScripts = attachedUnrealScriptsDict.get(obj, [])
 			if context.edit_text.name in attachedScripts:
 				objs.append(obj)
 		if objs:
@@ -598,13 +658,13 @@ class UnrealExportButton (bpy.types.Operator):
 			data += 'Children\n'
 			data += GetObjectsData(childrenDict) + '\n'
 			data += '\nScripts'
-			for obj in attachedScriptsDict:
-				if len(attachedScriptsDict[obj]) > 0:
-					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedScriptsDict[obj]) + '\n'
+			for obj in attachedUnrealScriptsDict:
+				if len(attachedUnrealScriptsDict[obj]) > 0:
+					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedUnrealScriptsDict[obj]) + '\n'
 					for property in obj.keys():
 						data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
 					data = data[: len(data) - 2]
-					for script in attachedScriptsDict[obj]:
+					for script in attachedUnrealScriptsDict[obj]:
 						for textBlock in bpy.data.texts:
 							if textBlock.name == script:
 								if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
@@ -693,11 +753,11 @@ class BevyExportButton (bpy.types.Operator):
 
 		else:
 			data = bevyExportPath
-			for obj in attachedScriptsDict:
-				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedScriptsDict[obj])
+			for obj in attachedBevyScriptsDict:
+				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedBevyScriptsDict[obj])
 			open('/tmp/Unity2Many Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
 			import MakeBevyBlenderApp as makeBevyBlenderApp
-			makeBevyBlenderApp.Do ()
+			makeBevyBlenderApp.Do (attachedBevyScriptsDict)
 			# webbrowser.open('http://localhost:1334')
 
 class UnityExportButton (bpy.types.Operator):
@@ -907,7 +967,7 @@ class UnityExportButton (bpy.types.Operator):
 				gameObjectsAndComponentsText += camera + '\n'
 				componentIds.append(lastId)
 				lastId += 1
-			attachedScripts = attachedScriptsDict.get(obj, [])
+			attachedScripts = attachedUnityScriptsDict.get(obj, [])
 			for scriptName in attachedScripts:
 				script = SCRIPT_TEMPLATE
 				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
@@ -1029,7 +1089,10 @@ classes = [
 	ExamplesOperator,
 	ExamplesMenu,
 	AttachedObjectsMenu,
-	Loop
+	Loop,
+	UnityScriptsPanel,
+	BevyScriptsPanel,
+	UnrealScriptsPanel
 ]
 
 def BuildTool (toolName : str):
@@ -1354,61 +1417,47 @@ def DrawBevyTranslateButton (self, context):
 def DrawPlayButton (self, context):
 	self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
 
-def DrawAttachScriptDropdown (self, context):
-	self.layout.prop(context.object, 'attach_script_dropdown')
-
-def SetupObjectContext (self, context):
-	global attachedScriptsDict
-	global detachScriptDropdownOptions
-	detachScriptDropdownOptions.clear()
-	attachedScripts = attachedScriptsDict.get(context.object, [])
-	i = 0
-	for attachedScript in attachedScripts:
-		detachScriptDropdownOptions.append((attachedScript, attachedScript, '', '', i))
-		i += 1
-
-def DrawDetachScriptDropdown (self, context):
-	self.layout.prop(context.object, 'detach_script_dropdown')
-
 def SetupTextEditorFooterContext (self, context):
 	global currentTextBlock
 	global previousRunningScripts
 	currentTextBlock = context.edit_text
 	previousRunningScripts = []
 	for textBlock in bpy.data.texts:
-		if textBlock.name == '.gltf_auto_export_gltf_settings':
-			continue
-		if textBlock.run_cs:
+		if textBlock.run_cs and textBlock.name != '.gltf_auto_export_gltf_settings':
 			previousRunningScripts.append(textBlock.name)
 
 def DrawRunCSToggle (self, context):
 	self.layout.prop(context.edit_text, 'run_cs')
 
-def AttachScript (self, context):
-	global attachedScriptsDict
-	if bpy.context.object.attach_script_dropdown == 'No scripts exist':
-		return
-	attachedScripts = attachedScriptsDict.get(self, [])
-	attachedScripts.append(bpy.context.object.attach_script_dropdown)
-	attachedScriptsDict[self] = attachedScripts
-	if bpy.context.object.attach_script_dropdown + ' attach count' in self.keys():
-		self[bpy.context.object.attach_script_dropdown + ' attach count'] += 1
-	else:
-		self[bpy.context.object.attach_script_dropdown + ' attach count'] = 1
-	UpdateInspectorFields (bpy.data.texts[bpy.context.object.attach_script_dropdown])
+def DrawIsInitScriptToggle (self, context):
+	self.layout.prop(context.edit_text, 'is_init_script')
 
-def DetachScript (self, context):
-	global attachedScriptsDict
-	if bpy.context.object.detach_script_dropdown == 'No scripts attached':
-		return
-	attachedScripts = attachedScriptsDict.get(self, [])
-	if bpy.context.object.detach_script_dropdown in attachedScripts:
-		attachedScripts.remove(bpy.context.object.detach_script_dropdown)
-	attachedScriptsDict[self] = attachedScripts
-	self[bpy.context.object.attach_script_dropdown + ' attach count'] -= 1
+def OnUpdateUnityScripts (self, context):
+	attachedScripts = []
+	for i in range(MAX_SCRIPTS_PER_OBJECT):
+		script = getattr(self, 'unity_script' + str(i))
+		if script != None:
+			attachedScripts.append(script.name)
+	attachedUnityScriptsDict[self] = attachedScripts
+
+def OnUpdateBevyScripts (self, context):
+	attachedScripts = []
+	for i in range(MAX_SCRIPTS_PER_OBJECT):
+		script = getattr(self, 'bevy_script' + str(i))
+		if script != None:
+			attachedScripts.append(script.name)
+	attachedBevyScriptsDict[self] = attachedScripts
+
+def OnUpdateUnrealScripts (self, context):
+	attachedScripts = []
+	for i in range(MAX_SCRIPTS_PER_OBJECT):
+		script = getattr(self, 'unreal_script' + str(i))
+		if script != None:
+			attachedScripts.append(script.name)
+	attachedUnrealScriptsDict[self] = attachedScripts
 
 def UpdateInspectorFields (textBlock):
-	global attachedScriptsDict
+	global attachedUnityScriptsDict
 	global propertiesTypesDict
 	global propertiesDefaultValuesDict
 	text = textBlock.as_string()
@@ -1433,8 +1482,8 @@ def UpdateInspectorFields (textBlock):
 		variableName = text[indexOfVariableName : indexOfPotentialEndOfVariable]
 		variableName = variableName.strip()
 		shouldBreak = False
-		for obj in attachedScriptsDict.keys():
-			for attachedScript in attachedScriptsDict[obj]:
+		for obj in attachedUnityScriptsDict.keys():
+			for attachedScript in attachedUnityScriptsDict[obj]:
 				if attachedScript == textBlock.name:
 					value = ''
 					isSetToValue = False
@@ -1480,63 +1529,24 @@ def UpdateInspectorFields (textBlock):
 def OnRedrawView ():
 	global currentTextBlock
 	global textBlocksTextsDict
-	global attachedScriptsDict
+	global attachedUnityScriptsDict
 	global previousRunningScripts
 	global previousTextBlocksTextsDict
-	global attachScriptDropdownOptions
-	global detachScriptDropdownOptions
-	attachScriptDropdownOptions.clear()
-	i = 0
-	defaultScript = None
-	defaultAttachedScript = None
 	textBlocksTextsDict = {}
 	for textBlock in bpy.data.texts:
 		if textBlock.name == '.gltf_auto_export_gltf_settings':
 			continue
 		textBlocksTextsDict[textBlock.name] = textBlock.as_string()
-		if i == 0:
-			defaultScript = textBlock.name
-		attachedScripts = attachedScriptsDict.get(bpy.context.object, [])
-		defaultAttachedScript = None
-		for attachedScript in attachedScripts:
-			defaultAttachedScript = attachedScript
-			break
-		attachScriptDropdownOptions.append((textBlock.name, textBlock.name, '', '', i))
 		if textBlock.name not in previousTextBlocksTextsDict or previousTextBlocksTextsDict[textBlock.name] != textBlock.as_string():
 			UpdateInspectorFields (textBlock)
-		i += 1
-	if defaultScript == None:
-		attachScriptDropdownOptions.append(('No scripts exist', 'No scripts exist', '', '', i))
 	previousTextBlocksTextsDict = textBlocksTextsDict.copy()
-	bpy.types.Object.attach_script_dropdown = bpy.props.EnumProperty(
-		items = attachScriptDropdownOptions,
-		name = 'Attach script',
-		description = '',
-		default = defaultScript if defaultScript != None else 'No scripts exist',
-		update = AttachScript
-	)
-	bpy.types.OBJECT_PT_context_object.remove(SetupObjectContext)
-	bpy.types.OBJECT_PT_context_object.append(SetupObjectContext)
-	if len(detachScriptDropdownOptions) == 0:
-		detachScriptDropdownOptions.append(('No scripts attached', 'No scripts attached', '', '', 0))
-	bpy.types.Object.detach_script_dropdown = bpy.props.EnumProperty(
-		items = detachScriptDropdownOptions,
-		name = 'Detach script',
-		description = '',
-		default = defaultAttachedScript if defaultAttachedScript != None else 'No scripts attached',
-		update = DetachScript
-	)
 	bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
 	bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
-	bpy.types.OBJECT_PT_context_object.remove(DrawAttachScriptDropdown)
-	bpy.types.OBJECT_PT_context_object.append(DrawAttachScriptDropdown)
-	bpy.types.OBJECT_PT_context_object.remove(DrawDetachScriptDropdown)
-	bpy.types.OBJECT_PT_context_object.append(DrawDetachScriptDropdown)
 	if currentTextBlock != None:
 		if currentTextBlock.run_cs:
 			import RunCSInBlender as runCSInBlender
-			for obj in attachedScriptsDict:
-				if currentTextBlock.name in attachedScriptsDict[obj]:
+			for obj in attachedUnityScriptsDict:
+				if currentTextBlock.name in attachedUnityScriptsDict[obj]:
 					filePath = os.path.expanduser('/tmp/Unity2Many Data (UnityInBlender)/' + currentTextBlock.name)
 					filePath = filePath.replace('.cs', '.py')
 					if not filePath.endswith('.py'):
@@ -1564,7 +1574,7 @@ def OnRedrawView ():
 	# blf.draw(id, 'Hello World!')
 
 def register ():
-	global attachedScriptsDict
+	global attachedUnityScriptsDict
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
@@ -1591,14 +1601,6 @@ def register ():
 	registry = bpy.context.window_manager.components_registry
 	registry.schemaPath = REGISTRY_PATH
 	bpy.ops.object.reload_registry()
-	for obj in bpy.data.objects:
-		attachedScripts = []
-		for key in obj.keys():
-			attachCountIndicator = ' attach count'
-			if key.endswith(attachCountIndicator):
-				for i in range(obj[key]):
-					attachedScripts.append(key.replace(attachCountIndicator, ''))
-		attachedScriptsDict[obj] = attachedScripts
 
 	# bpy.types.View3DShading.color_type = 'OBJECT'
 	for cls in classes:
@@ -1632,11 +1634,16 @@ def register ():
 		name = 'Run C# Script',
 		description = ''
 	)
+	bpy.types.Text.is_init_script = bpy.props.BoolProperty(
+		name = 'Is Initialization Script',
+		description = ''
+	)
 	bpy.types.TEXT_HT_header.append(DrawExamplesMenu)
 	bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
 	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawRunCSToggle)
+	bpy.types.TEXT_HT_footer.append(DrawIsInitScriptToggle)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityImportField)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportField)
 	# bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
@@ -1646,6 +1653,29 @@ def register ():
 	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
 	bpy.types.WORLD_PT_context_world.append(DrawPlayButton)
+	for i in range(MAX_SCRIPTS_PER_OBJECT):
+		setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text, update=OnUpdateUnityScripts))
+		setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text, update=OnUpdateBevyScripts))
+		setattr(bpy.types.Object, 'unreal_script' + str(i), bpy.props.PointerProperty(name='Attach Unreal script', type=bpy.types.Text, update=OnUpdateUnrealScripts))
+	for obj in bpy.data.objects:
+		attachedScripts = []
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			script = getattr(obj, 'unity_script' + str(i))
+			if script != None:
+				attachedScripts.append(script.name)
+		attachedUnityScriptsDict[obj] = attachedScripts
+		attachedScripts = []
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			script = getattr(obj, 'bevy_script' + str(i))
+			if script != None:
+				attachedScripts.append(script.name)
+		attachedBevyScriptsDict[obj] = attachedScripts
+		attachedScripts = []
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			script = getattr(obj, 'unreal_script' + str(i))
+			if script != None:
+				attachedScripts.append(script.name)
+		attachedUnrealScriptsDict[obj] = attachedScripts
 	handle = bpy.types.SpaceView3D.draw_handler_add(
 		OnRedrawView,
 		tuple([]),
@@ -1658,6 +1688,7 @@ def unregister ():
 	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawRunCSToggle)
+	bpy.types.TEXT_HT_footer.remove(DrawIsInitScriptToggle)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityImportField)
 	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportField)
 	# bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)

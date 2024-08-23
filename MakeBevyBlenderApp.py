@@ -13,6 +13,7 @@ except:
 
 from GetUnityProjectInfo import *
 from SystemExtensions import *
+from MakeBlenderPlugin import MAX_SCRIPTS_PER_OBJECT
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
@@ -81,6 +82,19 @@ mut query: Query<&mut Transform, With<ꗈ>>,
 time: Res<Time>,
 mut cursorEvent: EventReader<CursorMoved>,
 mut screenToWorldPointEvent: EventWriter<ScreenToWorldPointEvent>'''
+SYSTEM_TEMPLATE = 'pub fn ꗈ0(' + SYSTEM_ARGUMENTS + ''')
+{
+	unsafe
+	{
+		for mut trs in &mut query
+		{
+			let right = trs.right();
+			let up = trs.up();
+			let forward = trs.forward();
+			ꗈ1
+		}
+	}
+}'''
 PI = 3.141592653589793
 outputFileText = ''
 importStatementsText = ''
@@ -226,264 +240,274 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	global addToOutputFileText
 	global importStatementsText
 	global outputFileTextReplaceClauses
-	ConvertCSFileToRust (scriptPath)
-	MakeComponent (objectName, 'Unity2Many::' + mainClassName)
-	outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
-	if 'fn Update' in outputFileText:
-		# importStatementsText += 'use ' + mainClassName + '::*;\n'
-		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
-	# outputFileText = 'pub mod ' + mainClassName + '\n{\n' + outputFileText + '\n}'
-	startMethodIndicator = 'fn Start'
-	indexOfStartMethod = outputFileText.find(startMethodIndicator)
-	if indexOfStartMethod != -1:
+	# ConvertCSFileToRust (scriptPath)
+	# MakeComponent (objectName, 'Unity2Many::' + mainClassName)
+	# outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
+	scriptText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
+	print('YAY' + scriptText)
+	# if 'fn Update' in outputFileText:
+	# 	# importStatementsText += 'use ' + mainClassName + '::*;\n'
+	# 	outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
+	# # outputFileText = 'pub mod ' + mainClassName + '\n{\n' + outputFileText + '\n}'
+	# startMethodIndicator = 'fn Start'
+	# indexOfStartMethod = outputFileText.find(startMethodIndicator)
+	# if indexOfStartMethod != -1:
+	# 	outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(OnEnter(MyStates::Next), Start' + mainClassName + ')'
+	# 	outputFileText = outputFileText[: indexOfStartMethod + len(startMethodIndicator)] + mainClassName + outputFileText[indexOfStartMethod + len(startMethodIndicator) :]
+	# outputFileText = outputFileText.replace('Time.deltaTime', 'time.delta_seconds()')
+	# outputFileText = outputFileText.replace('Vector2', 'Vec2')
+	# outputFileText = outputFileText.replace('Vec2.zero', 'Vec2::ZERO')
+	# outputFileText = outputFileText.replace('Vector3', 'Vec3')
+	# outputFileText = outputFileText.replace('Vec3.zero', 'Vec3::ZERO')
+	# outputFileText = outputFileText.replace('Vec3.forward', '-Vec3::Y')
+	# outputFileText = outputFileText.replace('Vec3.up', '-Vec3::Z')
+	# SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec2')
+	# SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec3')
+	# outputFileText = outputFileText.replace('.Normalize', '.normalize')
+	# outputFileText = outputFileText.replace(', screenToWorldPointEvent', ', &mut screenToWorldPointEvent')
+	# outputFileText = outputFileText.replace('pub const ', 'let mut ')
+	# outputFileText = outputFileText.replace('pub static ', 'let mut ')
+	# outputFileText = outputFileText.replace('transform.position', 'trs.translation')
+	# outputFileText = outputFileText.replace('transform.rotation', 'trs.rotation')
+	# outputFileText = outputFileText.replace('self, ', '')
+	# outputFileText = outputFileText.replace('&self', '')
+	# outputFileText = outputFileText.replace('self.', '')
+	# outputFileText = outputFileText.replace('self', '')
+	# indexOfTrsUp = 0
+	# while indexOfTrsUp != -1:
+	# 	trsUpIndicator = 'transform.up'
+	# 	indexOfTrsUp = outputFileText.find(trsUpIndicator, indexOfTrsUp + 1)
+	# 	if indexOfTrsUp != -1:
+	# 		indexOfEquals = outputFileText.find('=', indexOfTrsUp)
+	# 		setValue = False
+	# 		if indexOfEquals != -1:
+	# 			betweenTrsUpAndEquals = outputFileText[indexOfTrsUp + len(trsUpIndicator) : indexOfEquals]
+	# 			if betweenTrsUpAndEquals.isspace() or betweenTrsUpAndEquals == '':
+	# 				setValue = True
+	# 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+	# 				value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+	# 				outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(' + value + '.mul(-1.0), Vec3::from(up))')
+	# 		if not setValue:
+	# 			outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
+	# 			outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(forward).mul(-1.0)' + outputFileText[indexOfTrsUp :]
+	# indexOfTrsForward = 0
+	# while indexOfTrsForward != -1:
+	# 	trsForwardIndicator = 'transform.forward'
+	# 	indexOfTrsForward = outputFileText.find(trsForwardIndicator, indexOfTrsForward + 1)
+	# 	if indexOfTrsForward != -1:
+	# 		indexOfEquals = outputFileText.find('=', indexOfTrsForward)
+	# 		setValue = False
+	# 		if indexOfEquals != -1:
+	# 			betweenTrsForwardAndEquals = outputFileText[indexOfTrsForward + len(trsForwardIndicator) : indexOfEquals]
+	# 			if betweenTrsForwardAndEquals.isspace() or betweenTrsForwardAndEquals == '':
+	# 				setValue = True
+	# 				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+	# 				value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+	# 				outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(Vec3::from(forward), ' + value + '.mul(-1.0))')
+	# 		if not setValue:
+	# 			outputFileText = Remove(outputFileText, indexOfTrsForward, len(trsForwardIndicator))
+	# 			outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(up).mul(-1.0)' + outputFileText[indexOfTrsUp :]
+	# indexOfAtan2 = 0
+	# while indexOfAtan2 != -1:
+	# 	atan2Indicator = 'Mathf.Atan2('
+	# 	indexOfAtan2 = outputFileText.find(atan2Indicator, indexOfAtan2 + len(atan2Indicator))
+	# 	if indexOfAtan2 != -1:
+	# 		indexOfComma = outputFileText.find(',', indexOfAtan2)
+	# 		yClause = outputFileText[indexOfAtan2 + len(atan2Indicator) : indexOfComma]
+	# 		indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfAtan2 + len(atan2Indicator))
+	# 		xClause = outputFileText[indexOfComma + 1 : indexOfRightParenthesis]
+	# 		outputFileText = outputFileText.replace(outputFileText[indexOfAtan2 : indexOfRightParenthesis + 1], yClause + '.atan2(' + xClause + ')')
+	# outputFileText = outputFileText.replace('(, ', '(')
+	# indexOfY = 0
+	# while indexOfY != -1:
+	# 	indexOfY = outputFileText.find('.y', indexOfY + 2)
+	# 	if indexOfY != -1:
+	# 		indexOfToken = IndexOfAny(outputFileText, ['=', ' ', '+', '-', '*', '/', ')', ']'], indexOfY + 2)
+	# 		if indexOfToken == indexOfY + 2:
+	# 			indexOfEquals = outputFileText.find('=', indexOfToken + 3)
+	# 			if indexOfEquals == indexOfToken + 1:
+	# 				indexOfToken += 1
+	# 			outputFileText = outputFileText[: indexOfToken + 3] + '-' + outputFileText[indexOfToken + 3 :]
+	# 		outputFileText = Remove(outputFileText, indexOfY + 1, 1)
+	# 		outputFileText = outputFileText[: indexOfY + 1] + 'z' + outputFileText[indexOfY + 1 :]
+	# indexOfTrsEulerAngles = 0
+	# while indexOfTrsEulerAngles != -1:
+	# 	trsEulerAnglesIndicator = 'transform.eulerAngles'
+	# 	indexOfTrsEulerAngles = outputFileText.find(trsEulerAnglesIndicator, indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
+	# 	if indexOfTrsEulerAngles != -1:
+	# 		indexOfEquals = outputFileText.find('=', indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
+	# 		textBetweenTrsEulerAnglesAndEquals = outputFileText[indexOfTrsEulerAngles + len(trsEulerAnglesIndicator) : indexOfEquals]
+	# 		if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals.isspace():
+	# 			indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+	# 			valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+	# 			outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z)')
+	# 		elif textBetweenTrsEulerAnglesAndEquals.strip() == '+':
+	# 			indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+	# 			valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+	# 			outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z))')
+	# 		elif textBetweenTrsEulerAnglesAndEquals.strip() == '-':
+	# 			indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+	# 			valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+	# 			outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, -_rotation.x, -_rotation.y, -_rotation.z))')
+	# 		else:
+	# 			outputFileText = Remove(outputFileText, indexOfTrsEulerAngles, len(trsEulerAnglesIndicator))
+	# 			outputFileText = outputFileText[: indexOfTrsEulerAngles] + 'Vec3::from(trs.rotation.to_euler(EulerRot::ZYX))' + outputFileText[indexOfTrsEulerAngles :]
+	# outputFileText = outputFileText.replace(mainClassName + '::', '')
+	# outputFileText = outputFileText.replace('&' + mainClassName + ' {}', '')
+	# indexOfMacro = 0
+	# while indexOfMacro != -1:
+	# 	indexOfMacro = outputFileText.find('#![')
+	# 	if indexOfMacro != -1:
+	# 		indexOfNewLine = outputFileText.find('\n', indexOfMacro)
+	# 		outputFileText = RemoveStartEnd(outputFileText, indexOfMacro, indexOfNewLine)
+	# indexOfDefaultComment = 0
+	# while indexOfDefaultComment != -1:
+	# 	indexOfDefaultComment = outputFileText.find('//! ')
+	# 	if indexOfDefaultComment != -1:
+	# 		indexOfNewLine = outputFileText.find('\n', indexOfDefaultComment)
+	# 		outputFileText = RemoveStartEnd(outputFileText, indexOfDefaultComment, indexOfNewLine)
+	# mainClassIndicator = 'impl ' + mainClassName + ' {'
+	# indexOfMainClass = outputFileText.find(mainClassIndicator)
+	# if indexOfMainClass != -1:
+	# 	indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
+	# 	outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
+	# 	outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
+	# mainClassIndicator = 'pub struct ' + mainClassName + ' {'
+	# indexOfMainClass = outputFileText.find(mainClassIndicator)
+	# if indexOfMainClass != -1:
+	# 	indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
+	# 	mainClassContents = outputFileText[indexOfMainClass + len(mainClassIndicator) : indexOfMainClassEnd]
+	# 	outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
+	# 	outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
+	# 	newMainClassContents = mainClassContents.replace('pub ', 'static mut ')
+	# 	newMainClassContents = newMainClassContents.replace(',', ';')
+	# 	pythonFileText = open(OUTPUT_FILE_PATH.replace('.rs', '.py'), 'rb').read().decode('utf-8')
+	# 	pythonFileLines = pythonFileText.split('\n')
+	# 	pythonFileLines.pop(0)
+	# 	for line in pythonFileLines:
+	# 		if line.startswith(CLASS_MEMBER_INDICATOR):
+	# 			indexOfColon = line.find(':')
+	# 			memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
+	# 			memberValue = membersDict.get(memberName + '_' + mainClassName, None)
+	# 			if memberValue == None:
+	# 				memberValue = line[indexOfColon + 1 :]
+	# 			if IsNumber(memberValue) and '.' not in memberValue:
+	# 				memberValue += '.0'
+	# 				membersDict[memberName + '_' + mainClassName] = memberValue
+	# 			indexOfMemberName = 0
+	# 			while indexOfMemberName != -1:
+	# 				indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
+	# 				if indexOfMemberName != -1:
+	# 					indexOfSemicolon = newMainClassContents.find(';', indexOfMemberName)
+	# 					newMainClassContents = newMainClassContents[: indexOfSemicolon] + ' = ' + memberValue + newMainClassContents[indexOfSemicolon :]
+	# 		else:
+	# 			break
+	# 	outputFileText = outputFileText.replace(mainClassContents, newMainClassContents)
+	# mainMethodIndicator = 'pub fn main() {'
+	# indexOfMainMethod = outputFileText.find(mainMethodIndicator)
+	# if indexOfMainMethod != -1:
+	# 	indexOfMainMethodEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
+	# 	outputFileText = RemoveStartEnd(outputFileText, indexOfMainMethod, indexOfMainMethodEnd)
+	# publicMethodIndicator = 'pub fn '
+	# indexOfPublicMethodIndicator = 0
+	# while indexOfPublicMethodIndicator != -1:
+	# 	indexOfPublicMethodIndicator = outputFileText.find(publicMethodIndicator, indexOfPublicMethodIndicator + len(publicMethodIndicator))
+	# 	if indexOfPublicMethodIndicator != -1:
+	# 		indexOfLeftParenthesis = outputFileText.find('(', indexOfPublicMethodIndicator)
+	# 		outputFileText = outputFileText[: indexOfLeftParenthesis + 1] + SYSTEM_ARGUMENTS.replace('ꗈ', mainClassName) + outputFileText[indexOfLeftParenthesis + 1 :]
+	# 		indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_ARGUMENTS))
+	# 		indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
+	# 		query = '\nunsafe\n{\nfor mut trs in &mut query\n{\nlet right = trs.right();\nlet up = trs.up();\nlet forward = trs.forward();\n'
+	# 		outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + query + outputFileText[indexOfLeftCurlyBrace + 1 :]
+	# 		outputFileText = outputFileText[: indexOfRightCurlyBrace + len(query)] + '}\n}\n' + outputFileText[indexOfRightCurlyBrace + len(query) :]
+	# indexOfStaticVariableIndicator = 0
+	# while indexOfStaticVariableIndicator != -1:
+	# 	staticVariableIndicator = 'static mut '
+	# 	indexOfStaticVariableIndicator = outputFileText.find(staticVariableIndicator, indexOfStaticVariableIndicator + 1)
+	# 	if indexOfStaticVariableIndicator != -1:
+	# 		indexOfColon = outputFileText.find(':', indexOfStaticVariableIndicator + len(staticVariableIndicator))
+	# 		variableName = outputFileText[indexOfStaticVariableIndicator + len(staticVariableIndicator) : indexOfColon]
+	# 		newValue = membersDict.get(variableName, None)
+	# 		if newValue != None:
+	# 			if newValue.startswith('"'):
+	# 				indexOfVariableType = indexOfColon + 2
+	# 				indexOfEndOfVariableType = outputFileText.find(' ', indexOfColon + 1)
+	# 				variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
+	# 				outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
+	# 				outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
+	# 			indexOfEquals = outputFileText.find('=', indexOfColon)
+	# 			indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+	# 			value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
+	# 			outputFileText = Remove(outputFileText, indexOfEquals + 1, len(value))
+	# 			outputFileText = outputFileText[: indexOfEquals + 1] + newValue + outputFileText[indexOfEquals + 1 :]
+	# 		else:
+	# 			indexOfEquals = outputFileText.find('=', indexOfColon)
+	# 			indexOfSemicolon = outputFileText.find(';', indexOfEquals)
+	# 			value = outputFileText[indexOfEquals + 2 : indexOfSemicolon]
+	# 			if value.startswith('"'):
+	# 				indexOfVariableType = indexOfColon + 2
+	# 				indexOfEndOfVariableType = outputFileText.find(' ', indexOfVariableType)
+	# 				variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
+	# 				outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
+	# 				outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
+	# 		outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
+	# indexOfInstantiate = 0
+	# while indexOfInstantiate != -1:
+	# 	instantiateIndicator = 'Instantiate('
+	# 	indexOfInstantiate = outputFileText.find(instantiateIndicator)
+	# 	if indexOfInstantiate != -1:
+	# 		indexOfSemicolon = outputFileText.find(';', indexOfInstantiate)
+	# 		instantiateCommand = outputFileText[indexOfInstantiate : indexOfSemicolon]
+	# 		indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
+	# 		position = ''
+	# 		rotation = ''
+	# 		if indexOfEndOfWhatToInstantiate > indexOfSemicolon:
+	# 			indexOfEndOfWhatToInstantiate = indexOfSemicolon
+	# 		elif indexOfEndOfWhatToInstantiate != -1:
+	# 			indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate) + 1
+	# 			indexOfRotation = outputFileText.find(',', indexOfPosition) + 1
+	# 			position = outputFileText[indexOfPosition : indexOfRotation - 1]
+	# 			rotation = outputFileText[indexOfRotation : indexOfSemicolon]
+	# 			rotation = Remove(rotation, len(rotation) - 1, 1)
+	# 		whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
+	# 		assetName = assetsPathsDict[whatToInstantiate]
+	# 		assetName = assetName[assetName.rfind('/') + 1 :]
+	# 		assetName = assetName.replace('.prefab', '_Prefab')
+	# 		assetPath = assetName + '.glb#Scene0'
+	# 		if position == '':
+	# 			position = 'Vec3::ZERO'
+	# 			rotation = 'Quat::IDENTITY'
+	# 		indexOfEquals = outputFileText.rfind('=', indexOfInstantiate)
+	# 		newInstantiateCommand = 'SpawnEntity(&mut commands, &assetServer, &"' + assetPath + '", ' + position + ', ' + rotation + ')'
+	# 		if indexOfEquals != -1:
+	# 			betweenEqualsAndInstantiate = outputFileText[indexOfEquals : indexOfInstantiate]
+	# 			if not betweenEqualsAndInstantiate.isspace() and betweenEqualsAndInstantiate != '':
+	# 				newInstantiateCommand = 'let entity_' + assetName + ' = ' + newInstantiateCommand
+	# 		outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
+	# indexOfGameObjectFind = 0
+	# while indexOfGameObjectFind != -1:
+	# 	indexOfGameObjectFind = outputFileText.find(GAME_OBJECT_FIND_INDICATOR)
+	# 	if indexOfGameObjectFind != -1:
+	# 		indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfGameObjectFind + len(GAME_OBJECT_FIND_INDICATOR))
+	# 		gameObjectFind = outputFileText.SubstringStartEnd(indexOfGameObjectFind, indexOfRightParenthesis)
+	# 		print('YAY' + gameObjectFind)
+	# 		whatToFind = gameObjectFind.SubstringStartEnd(len(GAME_OBJECT_FIND_INDICATOR), len(gameObjectFind) - 2)
+	# 		entitytFind = '\nunsafe\n{\nfor mut enitty in &mut nameQuery\n{if enitty == ' + whatToFind + '\n{'
+	# 		outputLine = outputLine.replace(gameObjectFind, entitytFind)
+	# indexOfUpdateMethod = outputFileText.find('fn Update')
+	# if indexOfUpdateMethod != -1:
+	# 	outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
+	addToOutputFileText += CUSTOM_TYPE_TEMPLATE.replace('ꗈ', mainClassName)
+	textBlock = bpy.data.texts[mainClassName]
+	methodNamePrefix = 'Start'
+	if textBlock.is_init_script:
 		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(OnEnter(MyStates::Next), Start' + mainClassName + ')'
-		outputFileText = outputFileText[: indexOfStartMethod + len(startMethodIndicator)] + mainClassName + outputFileText[indexOfStartMethod + len(startMethodIndicator) :]
-	outputFileText = outputFileText.replace('Time.deltaTime', 'time.delta_seconds()')
-	outputFileText = outputFileText.replace('Vector2', 'Vec2')
-	outputFileText = outputFileText.replace('Vec2.zero', 'Vec2::ZERO')
-	outputFileText = outputFileText.replace('Vector3', 'Vec3')
-	outputFileText = outputFileText.replace('Vec3.zero', 'Vec3::ZERO')
-	outputFileText = outputFileText.replace('Vec3.forward', '-Vec3::Y')
-	outputFileText = outputFileText.replace('Vec3.up', '-Vec3::Z')
-	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec2')
-	SetVariableTypeAndRemovePrimitiveCastsFromOutputFile ('Vec3')
-	outputFileText = outputFileText.replace('.Normalize', '.normalize')
-	outputFileText = outputFileText.replace(', screenToWorldPointEvent', ', &mut screenToWorldPointEvent')
-	outputFileText = outputFileText.replace('pub const ', 'let mut ')
-	outputFileText = outputFileText.replace('pub static ', 'let mut ')
-	outputFileText = outputFileText.replace('transform.position', 'trs.translation')
-	outputFileText = outputFileText.replace('transform.rotation', 'trs.rotation')
-	outputFileText = outputFileText.replace('self, ', '')
-	outputFileText = outputFileText.replace('&self', '')
-	outputFileText = outputFileText.replace('self.', '')
-	outputFileText = outputFileText.replace('self', '')
-	indexOfTrsUp = 0
-	while indexOfTrsUp != -1:
-		trsUpIndicator = 'transform.up'
-		indexOfTrsUp = outputFileText.find(trsUpIndicator, indexOfTrsUp + 1)
-		if indexOfTrsUp != -1:
-			indexOfEquals = outputFileText.find('=', indexOfTrsUp)
-			setValue = False
-			if indexOfEquals != -1:
-				betweenTrsUpAndEquals = outputFileText[indexOfTrsUp + len(trsUpIndicator) : indexOfEquals]
-				if betweenTrsUpAndEquals.isspace() or betweenTrsUpAndEquals == '':
-					setValue = True
-					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsUpIndicator + betweenTrsUpAndEquals + '=' + value, 'trs.look_to(' + value + '.mul(-1.0), Vec3::from(up))')
-			if not setValue:
-				outputFileText = Remove(outputFileText, indexOfTrsUp, len(trsUpIndicator))
-				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(forward).mul(-1.0)' + outputFileText[indexOfTrsUp :]
-	indexOfTrsForward = 0
-	while indexOfTrsForward != -1:
-		trsForwardIndicator = 'transform.forward'
-		indexOfTrsForward = outputFileText.find(trsForwardIndicator, indexOfTrsForward + 1)
-		if indexOfTrsForward != -1:
-			indexOfEquals = outputFileText.find('=', indexOfTrsForward)
-			setValue = False
-			if indexOfEquals != -1:
-				betweenTrsForwardAndEquals = outputFileText[indexOfTrsForward + len(trsForwardIndicator) : indexOfEquals]
-				if betweenTrsForwardAndEquals.isspace() or betweenTrsForwardAndEquals == '':
-					setValue = True
-					indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-					value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-					outputFileText = outputFileText.replace(trsForwardIndicator + betweenTrsForwardAndEquals + '=' + value, 'trs.look_to(Vec3::from(forward), ' + value + '.mul(-1.0))')
-			if not setValue:
-				outputFileText = Remove(outputFileText, indexOfTrsForward, len(trsForwardIndicator))
-				outputFileText = outputFileText[: indexOfTrsUp] + 'Vec3::from(up).mul(-1.0)' + outputFileText[indexOfTrsUp :]
-	indexOfAtan2 = 0
-	while indexOfAtan2 != -1:
-		atan2Indicator = 'Mathf.Atan2('
-		indexOfAtan2 = outputFileText.find(atan2Indicator, indexOfAtan2 + len(atan2Indicator))
-		if indexOfAtan2 != -1:
-			indexOfComma = outputFileText.find(',', indexOfAtan2)
-			yClause = outputFileText[indexOfAtan2 + len(atan2Indicator) : indexOfComma]
-			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfAtan2 + len(atan2Indicator))
-			xClause = outputFileText[indexOfComma + 1 : indexOfRightParenthesis]
-			outputFileText = outputFileText.replace(outputFileText[indexOfAtan2 : indexOfRightParenthesis + 1], yClause + '.atan2(' + xClause + ')')
-	outputFileText = outputFileText.replace('(, ', '(')
-	indexOfY = 0
-	while indexOfY != -1:
-		indexOfY = outputFileText.find('.y', indexOfY + 2)
-		if indexOfY != -1:
-			indexOfToken = IndexOfAny(outputFileText, ['=', ' ', '+', '-', '*', '/', ')', ']'], indexOfY + 2)
-			if indexOfToken == indexOfY + 2:
-				indexOfEquals = outputFileText.find('=', indexOfToken + 3)
-				if indexOfEquals == indexOfToken + 1:
-					indexOfToken += 1
-				outputFileText = outputFileText[: indexOfToken + 3] + '-' + outputFileText[indexOfToken + 3 :]
-			outputFileText = Remove(outputFileText, indexOfY + 1, 1)
-			outputFileText = outputFileText[: indexOfY + 1] + 'z' + outputFileText[indexOfY + 1 :]
-	indexOfTrsEulerAngles = 0
-	while indexOfTrsEulerAngles != -1:
-		trsEulerAnglesIndicator = 'transform.eulerAngles'
-		indexOfTrsEulerAngles = outputFileText.find(trsEulerAnglesIndicator, indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
-		if indexOfTrsEulerAngles != -1:
-			indexOfEquals = outputFileText.find('=', indexOfTrsEulerAngles + len(trsEulerAnglesIndicator))
-			textBetweenTrsEulerAnglesAndEquals = outputFileText[indexOfTrsEulerAngles + len(trsEulerAnglesIndicator) : indexOfEquals]
-			if textBetweenTrsEulerAnglesAndEquals == '' or textBetweenTrsEulerAnglesAndEquals.isspace():
-				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotation = Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z)')
-			elif textBetweenTrsEulerAnglesAndEquals.strip() == '+':
-				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, _rotation.x, _rotation.y, _rotation.z))')
-			elif textBetweenTrsEulerAnglesAndEquals.strip() == '-':
-				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-				valueAfterEquals = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = outputFileText.replace(trsEulerAnglesIndicator + textBetweenTrsEulerAnglesAndEquals + '=' + valueAfterEquals, 'let _rotation = ' + valueAfterEquals + ' * ' + str(PI) + ' / 180.0;\ntrs.rotate(Quat::from_euler(EulerRot::ZYX, -_rotation.x, -_rotation.y, -_rotation.z))')
-			else:
-				outputFileText = Remove(outputFileText, indexOfTrsEulerAngles, len(trsEulerAnglesIndicator))
-				outputFileText = outputFileText[: indexOfTrsEulerAngles] + 'Vec3::from(trs.rotation.to_euler(EulerRot::ZYX))' + outputFileText[indexOfTrsEulerAngles :]
-	outputFileText = outputFileText.replace(mainClassName + '::', '')
-	outputFileText = outputFileText.replace('&' + mainClassName + ' {}', '')
-	indexOfMacro = 0
-	while indexOfMacro != -1:
-		indexOfMacro = outputFileText.find('#![')
-		if indexOfMacro != -1:
-			indexOfNewLine = outputFileText.find('\n', indexOfMacro)
-			outputFileText = RemoveStartEnd(outputFileText, indexOfMacro, indexOfNewLine)
-	indexOfDefaultComment = 0
-	while indexOfDefaultComment != -1:
-		indexOfDefaultComment = outputFileText.find('//! ')
-		if indexOfDefaultComment != -1:
-			indexOfNewLine = outputFileText.find('\n', indexOfDefaultComment)
-			outputFileText = RemoveStartEnd(outputFileText, indexOfDefaultComment, indexOfNewLine)
-	mainClassIndicator = 'impl ' + mainClassName + ' {'
-	indexOfMainClass = outputFileText.find(mainClassIndicator)
-	if indexOfMainClass != -1:
-		indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
-		outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
-		outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
-	mainClassIndicator = 'pub struct ' + mainClassName + ' {'
-	indexOfMainClass = outputFileText.find(mainClassIndicator)
-	if indexOfMainClass != -1:
-		indexOfMainClassEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
-		mainClassContents = outputFileText[indexOfMainClass + len(mainClassIndicator) : indexOfMainClassEnd]
-		outputFileText = Remove(outputFileText, indexOfMainClassEnd, 1)
-		outputFileText = Remove(outputFileText, indexOfMainClass, len(mainClassIndicator))
-		newMainClassContents = mainClassContents.replace('pub ', 'static mut ')
-		newMainClassContents = newMainClassContents.replace(',', ';')
-		pythonFileText = open(OUTPUT_FILE_PATH.replace('.rs', '.py'), 'rb').read().decode('utf-8')
-		pythonFileLines = pythonFileText.split('\n')
-		pythonFileLines.pop(0)
-		for line in pythonFileLines:
-			if line.startswith(CLASS_MEMBER_INDICATOR):
-				indexOfColon = line.find(':')
-				memberName = line[len(CLASS_MEMBER_INDICATOR) : indexOfColon]
-				memberValue = membersDict.get(memberName + '_' + mainClassName, None)
-				if memberValue == None:
-					memberValue = line[indexOfColon + 1 :]
-				if IsNumber(memberValue) and '.' not in memberValue:
-					memberValue += '.0'
-					membersDict[memberName + '_' + mainClassName] = memberValue
-				indexOfMemberName = 0
-				while indexOfMemberName != -1:
-					indexOfMemberName = newMainClassContents.find(memberName, indexOfMemberName + 1)
-					if indexOfMemberName != -1:
-						indexOfSemicolon = newMainClassContents.find(';', indexOfMemberName)
-						newMainClassContents = newMainClassContents[: indexOfSemicolon] + ' = ' + memberValue + newMainClassContents[indexOfSemicolon :]
-			else:
-				break
-		outputFileText = outputFileText.replace(mainClassContents, newMainClassContents)
-	mainMethodIndicator = 'pub fn main() {'
-	indexOfMainMethod = outputFileText.find(mainMethodIndicator)
-	if indexOfMainMethod != -1:
-		indexOfMainMethodEnd = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfMainClass + len(mainClassIndicator))
-		outputFileText = RemoveStartEnd(outputFileText, indexOfMainMethod, indexOfMainMethodEnd)
-	publicMethodIndicator = 'pub fn '
-	indexOfPublicMethodIndicator = 0
-	while indexOfPublicMethodIndicator != -1:
-		indexOfPublicMethodIndicator = outputFileText.find(publicMethodIndicator, indexOfPublicMethodIndicator + len(publicMethodIndicator))
-		if indexOfPublicMethodIndicator != -1:
-			indexOfLeftParenthesis = outputFileText.find('(', indexOfPublicMethodIndicator)
-			outputFileText = outputFileText[: indexOfLeftParenthesis + 1] + SYSTEM_ARGUMENTS.replace('ꗈ', mainClassName) + outputFileText[indexOfLeftParenthesis + 1 :]
-			indexOfLeftCurlyBrace = outputFileText.find('{', indexOfLeftParenthesis + 1 + len(SYSTEM_ARGUMENTS))
-			indexOfRightCurlyBrace = IndexOfMatchingRightCurlyBrace(outputFileText, indexOfLeftCurlyBrace)
-			query = '\nunsafe\n{\nfor mut trs in &mut query\n{\nlet right = trs.right();\nlet up = trs.up();\nlet forward = trs.forward();\n'
-			outputFileText = outputFileText[: indexOfLeftCurlyBrace + 1] + query + outputFileText[indexOfLeftCurlyBrace + 1 :]
-			outputFileText = outputFileText[: indexOfRightCurlyBrace + len(query)] + '}\n}\n' + outputFileText[indexOfRightCurlyBrace + len(query) :]
-	indexOfStaticVariableIndicator = 0
-	while indexOfStaticVariableIndicator != -1:
-		staticVariableIndicator = 'static mut '
-		indexOfStaticVariableIndicator = outputFileText.find(staticVariableIndicator, indexOfStaticVariableIndicator + 1)
-		if indexOfStaticVariableIndicator != -1:
-			indexOfColon = outputFileText.find(':', indexOfStaticVariableIndicator + len(staticVariableIndicator))
-			variableName = outputFileText[indexOfStaticVariableIndicator + len(staticVariableIndicator) : indexOfColon]
-			newValue = membersDict.get(variableName, None)
-			if newValue != None:
-				if newValue.startswith('"'):
-					indexOfVariableType = indexOfColon + 2
-					indexOfEndOfVariableType = outputFileText.find(' ', indexOfColon + 1)
-					variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
-					outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
-					outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
-				indexOfEquals = outputFileText.find('=', indexOfColon)
-				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-				value = outputFileText[indexOfEquals + 1 : indexOfSemicolon]
-				outputFileText = Remove(outputFileText, indexOfEquals + 1, len(value))
-				outputFileText = outputFileText[: indexOfEquals + 1] + newValue + outputFileText[indexOfEquals + 1 :]
-			else:
-				indexOfEquals = outputFileText.find('=', indexOfColon)
-				indexOfSemicolon = outputFileText.find(';', indexOfEquals)
-				value = outputFileText[indexOfEquals + 2 : indexOfSemicolon]
-				if value.startswith('"'):
-					indexOfVariableType = indexOfColon + 2
-					indexOfEndOfVariableType = outputFileText.find(' ', indexOfVariableType)
-					variableType = outputFileText[indexOfVariableType : indexOfEndOfVariableType]
-					outputFileText = Remove(outputFileText, indexOfVariableType, len(variableType))
-					outputFileText = outputFileText[: indexOfVariableType] + '&str' + outputFileText[indexOfVariableType :]
-			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
-	indexOfInstantiate = 0
-	while indexOfInstantiate != -1:
-		instantiateIndicator = 'Instantiate('
-		indexOfInstantiate = outputFileText.find(instantiateIndicator)
-		if indexOfInstantiate != -1:
-			indexOfSemicolon = outputFileText.find(';', indexOfInstantiate)
-			instantiateCommand = outputFileText[indexOfInstantiate : indexOfSemicolon]
-			indexOfEndOfWhatToInstantiate = outputFileText.find(',', indexOfInstantiate)
-			position = ''
-			rotation = ''
-			if indexOfEndOfWhatToInstantiate > indexOfSemicolon:
-				indexOfEndOfWhatToInstantiate = indexOfSemicolon
-			elif indexOfEndOfWhatToInstantiate != -1:
-				indexOfPosition = outputFileText.find(',', indexOfEndOfWhatToInstantiate) + 1
-				indexOfRotation = outputFileText.find(',', indexOfPosition) + 1
-				position = outputFileText[indexOfPosition : indexOfRotation - 1]
-				rotation = outputFileText[indexOfRotation : indexOfSemicolon]
-				rotation = Remove(rotation, len(rotation) - 1, 1)
-			whatToInstantiate = outputFileText[indexOfInstantiate + len(instantiateIndicator) : indexOfEndOfWhatToInstantiate]
-			assetName = assetsPathsDict[whatToInstantiate]
-			assetName = assetName[assetName.rfind('/') + 1 :]
-			assetName = assetName.replace('.prefab', '_Prefab')
-			assetPath = assetName + '.glb#Scene0'
-			if position == '':
-				position = 'Vec3::ZERO'
-				rotation = 'Quat::IDENTITY'
-			indexOfEquals = outputFileText.rfind('=', indexOfInstantiate)
-			newInstantiateCommand = 'SpawnEntity(&mut commands, &assetServer, &"' + assetPath + '", ' + position + ', ' + rotation + ')'
-			if indexOfEquals != -1:
-				betweenEqualsAndInstantiate = outputFileText[indexOfEquals : indexOfInstantiate]
-				if not betweenEqualsAndInstantiate.isspace() and betweenEqualsAndInstantiate != '':
-					newInstantiateCommand = 'let entity_' + assetName + ' = ' + newInstantiateCommand
-			outputFileText = outputFileText.replace(instantiateCommand, newInstantiateCommand)
-	indexOfGameObjectFind = 0
-	while indexOfGameObjectFind != -1:
-		indexOfGameObjectFind = outputFileText.find(GAME_OBJECT_FIND_INDICATOR)
-		if indexOfGameObjectFind != -1:
-			indexOfRightParenthesis = IndexOfMatchingRightParenthesis(outputFileText, indexOfGameObjectFind + len(GAME_OBJECT_FIND_INDICATOR))
-			gameObjectFind = outputFileText.SubstringStartEnd(indexOfGameObjectFind, indexOfRightParenthesis)
-			print('YAY' + gameObjectFind)
-			whatToFind = gameObjectFind.SubstringStartEnd(len(GAME_OBJECT_FIND_INDICATOR), len(gameObjectFind) - 2)
-			entitytFind = '\nunsafe\n{\nfor mut enitty in &mut nameQuery\n{if enitty == ' + whatToFind + '\n{'
-			outputLine = outputLine.replace(gameObjectFind, entitytFind)
-	indexOfUpdateMethod = outputFileText.find('fn Update')
-	if indexOfUpdateMethod != -1:
-		outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
-	outputFileText += CUSTOM_TYPE_TEMPLATE.replace('ꗈ', mainClassName)
+	else:
+		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
+		methodNamePrefix = 'Update'
+	addToOutputFileText += SYSTEM_TEMPLATE.replace('ꗈ0', methodNamePrefix + mainClassName).replace('ꗈ1', scriptText).replace('ꗈ', mainClassName)
 	outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
-	addToOutputFileText += '\n\n' + outputFileText
+	# addToOutputFileText += '\n\n' + outputFileText
 
 def MakeComponent (objectName : str, componentType : str):
 	if objectName != '':
@@ -719,10 +743,15 @@ for arg in sys.argv:
 		data += arg + '\n'
 open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 
-def Do ():
+def Do (attachedScriptsDict = {}):
 	global CODE_PATH
+	global mainClassName
 	global OUTPUT_FILE_PATH
 	global UNITY_PROJECT_PATH
+	attachedScripts = []
+	for scripts in attachedScriptsDict.values():
+		for script in scripts:
+			attachedScripts.append(script)
 	toolsPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools')
 	if os.path.isdir(toolsPath):
 		addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
@@ -772,10 +801,8 @@ def Do ():
 		MakeFolderForFile (ASSETS_PATH + '/')
 		MakeFolderForFile (CODE_PATH + '/')
 		open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(('output=' + BEVY_PROJECT_PATH).encode('utf-8'))
-		for textBlock in bpy.data.texts:
-			if textBlock.name == '.gltf_auto_export_gltf_settings':
-				continue
-			mainClassName = textBlock.name.replace('.cs', '')
+		for script in attachedScripts:
+			mainClassName = script.replace('.rs', '')
 			indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
 			componentText = ',\n' + COMPONENT_TEMPLATE
 			componentText = componentText.replace('ꗈ', mainClassName)
@@ -857,11 +884,10 @@ def Do ():
 				bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
 				outputFileTextReplaceClauses[2] = sceneName
 	else:
-		for textBlock in bpy.data.texts:
-			if textBlock.name == '.gltf_auto_export_gltf_settings':
-				continue
-			mainClassName = textBlock.name.replace('.cs', '')
-			codeFilePath = '/tmp/' + mainClassName + '.cs'
+		for script in attachedScripts:
+			textBlock = bpy.data.texts[script]
+			mainClassName = script.replace('.rs', '')
+			codeFilePath = '/tmp/' + mainClassName + '.rs'
 			open(codeFilePath, 'wb').write(textBlock.as_string().encode('utf-8'))
 			MakeScript ([], [], [1, 1, 1], '', codeFilePath)
 		lines = data.split('\n')
@@ -869,9 +895,10 @@ def Do ():
 			indexOfEndOfObjectName = line.find('☢️')
 			if indexOfEndOfObjectName != -1:
 				objectName = line[: indexOfEndOfObjectName]
-				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')[1 :]
+				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
 				for script in scripts:
-					MakeComponent (objectName, 'Unity2Many::' + script)
+					if script != '':
+						MakeComponent (objectName, 'Unity2Many::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
