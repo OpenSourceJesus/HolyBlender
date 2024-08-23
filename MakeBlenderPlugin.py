@@ -511,9 +511,27 @@ propertiesDefaultValuesDict = {}
 propertiesTypesDict = {}
 childrenDict = {}
 
+class WorldPanel (bpy.types.Panel):
+	bl_idname = 'WORLD_PT_World_Panel'
+	bl_label = 'HolyBlender Export'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'world'
+
+	def draw(self, context):
+		self.layout.prop(context.world, 'unity_project_import_path')
+		self.layout.prop(context.world, 'unity_project_export_path')
+		self.layout.prop(context.world, 'unrealExportPath')
+		self.layout.prop(context.world, 'bevy_project_path')
+		self.layout.prop(context.world, 'html_code')
+		self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
+
 class UnityScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_Unity_Scripts_Panel'
-	bl_label = 'Unity Scripts'
+	bl_label = 'HolyBlender Unity Scripts'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
@@ -530,7 +548,7 @@ class UnityScriptsPanel (bpy.types.Panel):
 
 class BevyScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_bevy_Scripts_Panel'
-	bl_label = 'Bevy Scripts'
+	bl_label = 'HolyBlender Bevy Scripts'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
@@ -547,7 +565,7 @@ class BevyScriptsPanel (bpy.types.Panel):
 
 class UnrealScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_Unreal_Scripts_Panel'
-	bl_label = 'Unreal Scripts'
+	bl_label = 'HolyBlender Unreal Scripts'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
@@ -610,7 +628,7 @@ class AttachedObjectsMenu (bpy.types.Menu):
 
 class PlayButton (bpy.types.Operator):
 	bl_idname = 'blender.play'
-	bl_label = 'Start Playing'
+	bl_label = 'Start Playing (Unfinished)'
 
 	@classmethod
 	def poll (cls, context):
@@ -1092,7 +1110,8 @@ classes = [
 	Loop,
 	UnityScriptsPanel,
 	BevyScriptsPanel,
-	UnrealScriptsPanel
+	UnrealScriptsPanel,
+	WorldPanel
 ]
 
 def BuildTool (toolName : str):
@@ -1384,38 +1403,11 @@ def DrawExamplesMenu (self, context):
 def DrawAttachedObjectsMenu (self, context):
 	self.layout.menu(AttachedObjectsMenu.bl_idname)
 
-def DrawUnityImportField (self, context):
-	self.layout.prop(context.world, 'unity_project_import_path')
-
-def DrawUnityExportField (self, context):
-	self.layout.prop(context.world, 'unity_project_export_path')
-
-# def DrawUnityExportVersionField (self, context):
-# 	self.layout.prop(context.world, 'unity_export_version')
-
-def DrawUnrealExportField (self, context):
-	self.layout.prop(context.world, 'unrealExportPath')
-
-def DrawBevyExportField (self, context):
-	self.layout.prop(context.world, 'bevy_project_path')
-
-def DrawUnrealExportButton (self, context):
-	self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
-
-def DrawBevyExportButton (self, context):
-	self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
-
-def DrawUnityExportButton (self, context):
-	self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
-
 def DrawUnrealTranslateButton (self, context):
 	self.layout.operator(UnrealTranslateButton.bl_idname, icon='CONSOLE')
 
 def DrawBevyTranslateButton (self, context):
 	self.layout.operator(BevyTranslateButton.bl_idname, icon='CONSOLE')
-
-def DrawPlayButton (self, context):
-	self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
 
 def SetupTextEditorFooterContext (self, context):
 	global currentTextBlock
@@ -1630,6 +1622,7 @@ def register ():
 		description = '',
 		default = ''
 	)
+	bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
 	bpy.types.Text.run_cs = bpy.props.BoolProperty(
 		name = 'Run C# Script',
 		description = ''
@@ -1644,15 +1637,6 @@ def register ():
 	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawRunCSToggle)
 	bpy.types.TEXT_HT_footer.append(DrawIsInitScriptToggle)
-	bpy.types.WORLD_PT_context_world.append(DrawUnityImportField)
-	bpy.types.WORLD_PT_context_world.append(DrawUnityExportField)
-	# bpy.types.WORLD_PT_context_world.append(DrawUnityExportVersionField)
-	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportField)
-	bpy.types.WORLD_PT_context_world.append(DrawBevyExportField)
-	bpy.types.WORLD_PT_context_world.append(DrawUnrealExportButton)
-	bpy.types.WORLD_PT_context_world.append(DrawBevyExportButton)
-	bpy.types.WORLD_PT_context_world.append(DrawUnityExportButton)
-	bpy.types.WORLD_PT_context_world.append(DrawPlayButton)
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
 		setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text, update=OnUpdateUnityScripts))
 		setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text, update=OnUpdateBevyScripts))
@@ -1689,17 +1673,26 @@ def unregister ():
 	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
 	bpy.types.TEXT_HT_footer.remove(DrawRunCSToggle)
 	bpy.types.TEXT_HT_footer.remove(DrawIsInitScriptToggle)
-	bpy.types.WORLD_PT_context_world.remove(DrawUnityImportField)
-	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportField)
-	# bpy.types.WORLD_PT_context_world.remove(DrawUnityExportVersionField)
-	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportField)
-	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportField)
-	bpy.types.WORLD_PT_context_world.remove(DrawUnrealExportButton)
-	bpy.types.WORLD_PT_context_world.remove(DrawBevyExportButton)
-	bpy.types.WORLD_PT_context_world.remove(DrawUnityExportButton)
-	bpy.types.WORLD_PT_context_world.remove(DrawPlayButton)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 
+INIT_HTML = '''
+<script>
+function Test ()
+{
+	alert("Ok");
+	//TODO xmlhttprequest
+}
+</script>
+<button onclick="Test ()">Hello World!</button>
+'''
+
+def InitHTML():
+	if bpy.data.worlds[0].html_code is None:
+		textBlock = bpy.data.texts.new(name='__html__.html')
+		textBlock.from_string(INIT_HTML)
+		bpy.data.worlds[0].html_code = textBlock
+
 if __name__ == '__main__':
 	register ()
+	InitHTML ()

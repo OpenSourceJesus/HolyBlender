@@ -1,4 +1,4 @@
-import os, subprocess, bpy, sys
+import os, subprocess, bpy, sys, urllib.request, urllib.error, urllib.parse, asyncio
 from math import radians
 from mathutils import *
 
@@ -743,6 +743,18 @@ for arg in sys.argv:
 		data += arg + '\n'
 open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 
+def WriteWebpageToFile (url : str, filePath : str):
+	response = urllib.request.urlopen(url)
+	webContent = response.read().decode('utf-8')
+	open(filePath, 'wb').write(webContent)
+
+async def WriteWebpagesToProject ():
+	await asyncio.sleep(20)
+	WriteWebpageToFile ('http://127.0.0.1:1334/index.html', BEVY_PROJECT_PATH + '/index.html')
+	MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
+	WriteWebpageToFile ('http://127.0.0.1:1334/api/wasm.js', BEVY_PROJECT_PATH + '/api/wasm.js')
+	WriteWebpageToFile ('http://127.0.0.1:1334/api/wasm.wasm', BEVY_PROJECT_PATH + '/api/wasm.js')
+
 def Do (attachedScriptsDict = {}):
 	global CODE_PATH
 	global mainClassName
@@ -912,11 +924,20 @@ def Do (attachedScriptsDict = {}):
 	outputFileText = outputFileText.replace('ꗈ3', outputFileTextReplaceClauses[3])
 	outputFileText += addToOutputFileText
 	open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
+	MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
+
+	htmlText = open(TEMPLATES_PATH + '/index.html', 'rb').read().decode('utf-8')
+	if bpy.context.world.html_code != None:
+		htmlText = htmlText.replace('ꗈ', bpy.context.world.html_code.as_string())
+	else:
+		htmlText = htmlText.replace('ꗈ', '')
+	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
+	os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + BEVY_PROJECT_PATH + '/Server.py')
 
 	os.environ['WGPU_BACKEND'] = 'gl'
 	os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
 
-	command = [ 'cargo', 'run' ]
+	command = [ 'cargo', 'build' ]
 	if WEBGL_INDICATOR in sys.argv:
 		command.append('--target')
 		command.append('wasm32-unknown-unknown')
@@ -924,8 +945,11 @@ def Do (attachedScriptsDict = {}):
 		command.append('--features')
 		command.append('bevy/dynamic_linking')
 	print(command)
+	# asyncio.run(WriteWebpagesToProject ())
 
 	os.system('cd ' + BEVY_PROJECT_PATH + '\n' + ' '.join(command))
+
+	subprocess.check_call(['python3', 'Server.py'], cwd=BEVY_PROJECT_PATH)
 
 if fromUnity:
 	Do ()
