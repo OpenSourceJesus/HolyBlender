@@ -1,9 +1,9 @@
 import os, sys, subprocess
 
-sys.path.append(os.path.expanduser('~/Unity2Many/svg.path'))
-sys.path.append(os.path.expanduser('~/Unity2Many/svg.path/src'))
-sys.path.append(os.path.expanduser('~/Unity2Many/svg.path/src/svg'))
-sys.path.append(os.path.expanduser('~/Unity2Many/svg.path/src/svg/path'))
+sys.path.append(os.path.expanduser('~/HolyBlender/svg.path'))
+sys.path.append(os.path.expanduser('~/HolyBlender/svg.path/src'))
+sys.path.append(os.path.expanduser('~/HolyBlender/svg.path/src/svg'))
+sys.path.append(os.path.expanduser('~/HolyBlender/svg.path/src/svg/path'))
 from svg.path import *
 
 from krita import *

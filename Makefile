@@ -4,7 +4,7 @@ install_UnityToGodot:
 
 build_UnityToGodot:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:StartupObject=UnityToGodot -o=UnityToGodot
+	dotnet build HolyBlender.csproj -p:StartupObject=UnityToGodot -o=UnityToGodot
 
 UnityToGodot:
 	python3 UnityToGodot.py exclude=/Library
@@ -15,10 +15,10 @@ install_UnityToUnreal:
 
 build_UnityToUnreal:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:TargetFramwork=net6.0 -p:StartupObject=UnityToUnreal -o=UnityToUnreal
+	dotnet build HolyBlender.csproj -p:TargetFramwork=net6.0 -p:StartupObject=UnityToUnreal -o=UnityToUnreal
 
 UnityToUnreal:
-	python3 UnityToUnreal.py input=~/Unity2Many-TestUnityProject output=~/Unity2Many/BareUEProject exclude=/Library
+	python3 UnityToUnreal.py input=~/HolyBlender-TestUnityProject output=~/HolyBlender/BareUEProject exclude=/Library
 
 new_Unreal_project:
 	echo 'Not made yet'
@@ -29,10 +29,10 @@ install_UnityToBevy:
 
 build_UnityToBevy:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityToBevy -o=UnityToBevy
+	dotnet build HolyBlender.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityToBevy -o=UnityToBevy
 
 UnityToBevy:
-	python3 UnityToBevy.py input=~/Unity2Many-TestUnityProject output=~/Unity2Many exclude=/Library
+	python3 UnityToBevy.py input=~/HolyBlender-TestUnityProject output=~/HolyBlender exclude=/Library
 
 install_KritaToBlender:
 	# sudo apt install python3
@@ -57,14 +57,14 @@ UnityToStride:
 
 build_UnityInBlender:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityInBlender -o=UnityInBlender
+	dotnet build HolyBlender.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityInBlender -o=UnityInBlender
 
 build_CSToPython:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:TargetFramwork=net8.0 -p:StartupObject=CSToPython -o=CSToPython
+	dotnet build HolyBlender.csproj -p:TargetFramwork=net8.0 -p:StartupObject=CSToPython -o=CSToPython
 
 build_UnityToPygame:
 	rm obj -r -f
-	dotnet build Unity2Many.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityToPygame -o=UnityToPygame
+	dotnet build HolyBlender.csproj -p:TargetFramwork=net8.0 -p:StartupObject=UnityToPygame -o=UnityToPygame
 
 .PHONY: install_UnityToGodot build_UnityToGodot UnityToGodot install_UnityToUnreal build_UnityToUnreal UnityToUnreal new_Unreal_project install_UnityToBevy build_UnityToBevy UnityToBevy install_KritaToBlender KritaToBlender install_BlenderPlugin BlenderPlugin install_UnityToStride UnityToStride build_UnityInBlender build_CSToPython build_UnityToPygame

@@ -7,7 +7,7 @@ UNITY_PROJECT_PATH = ''
 UNREAL_COMMAND_PATH = os.path.expanduser('~/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd')
 UNREAL_PROJECT_PATH = ''
 UNREAL_PROJECT_NAME = ''
-MAKE_UNREAL_PROJECT_SCRIPT_PATH = os.path.expanduser('~/Unity2Many/MakeUnrealProject.py')
+MAKE_UNREAL_PROJECT_SCRIPT_PATH = os.path.expanduser('~/HolyBlender/MakeUnrealProject.py')
 CODE_PATH = UNREAL_PROJECT_PATH + '/Source/' + UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
 INPUT_PATH_INDICATOR = 'input='
 OUTPUT_PATH_INDICATOR = 'output='
@@ -49,7 +49,7 @@ for metaFilePath in metaFilesPaths:
 	fileGuidsDict[guid] = metaFilePath.replace('.meta', '')
 
 command = 'rm -r ' + UNREAL_PROJECT_PATH + '''
-	cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + ' ' + UNREAL_PROJECT_PATH + '''
+	cp -r ''' + os.path.expanduser('~/HolyBlender/BareUEProject') + ' ' + UNREAL_PROJECT_PATH + '''
 	mv ''' + UNREAL_PROJECT_PATH + '/Source/BareUEProject ' + CODE_PATH + '''
 	make build_UnityToUnreal'''
 print(command)
@@ -58,7 +58,7 @@ os.system(command)
 
 projectFilePath = UNREAL_PROJECT_PATH + '/' + UNREAL_PROJECT_NAME + '.uproject'
 if not os.path.isdir(UNREAL_PROJECT_PATH):
-	command = 'cp -r ''' + os.path.expanduser('~/Unity2Many/BareUEProject') + ' ' + UNREAL_PROJECT_PATH
+	command = 'cp -r ''' + os.path.expanduser('~/HolyBlender/BareUEProject') + ' ' + UNREAL_PROJECT_PATH
 	print(command)
 
 	os.system(command)
@@ -94,7 +94,7 @@ def ConvertPythonFileToCpp (filePath):
 	text = '\n'.join(lines)
 	open(filePath, 'wb').write(text.encode('utf-8'))
 	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
-	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
+	command = [ 'python3', os.path.expanduser('~/HolyBlender') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
 	command.append(UNITY_PROJECT_PATH)
@@ -208,7 +208,7 @@ def ConvertCSFileToCPP (filePath):
 	assert os.path.isfile(filePath)
 	command = [
 		'dotnet',
-		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
+		os.path.expanduser('~/HolyBlender/UnityToUnreal/HolyBlender.dll'),
 		'includeFile=' + filePath,
 		'unreal=true',
 		'output=' + CODE_PATH,
@@ -283,7 +283,7 @@ print(command)
 os.system(command)
 
 data = '\n'.join(sys.argv)
-open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
+open('/tmp/HolyBlender Data (UnityToUnreal)', 'wb').write(data.encode('utf-8'))
 command = UNREAL_COMMAND_PATH + ' ' + UNREAL_PROJECT_PATH + '/BareUEProject.uproject -nullrhi -ExecutePythonScript=' + MAKE_UNREAL_PROJECT_SCRIPT_PATH
 print(command)
 

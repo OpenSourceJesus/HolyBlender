@@ -1,6 +1,6 @@
 import subprocess, sys, os
 
-os.system('rm -r ' + os.path.expanduser('~/Unity2Many/UnityToBevy') + '''
+os.system('rm -r ' + os.path.expanduser('~/HolyBlender/UnityToBevy') + '''
     make build_UnityToBevy''')
 
 command = [ 'blender' ]

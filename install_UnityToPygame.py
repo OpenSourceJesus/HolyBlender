@@ -1,6 +1,6 @@
 import os
 
-UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
+UNITY_2_MANY_PATH = os.path.expanduser('~/HolyBlender')
 
 def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
@@ -23,7 +23,7 @@ os.system('''sudo apt -y install python3-pygame
 	dotnet add package Microsoft.CodeAnalysis.CSharp
 	dotnet add package IronPython
 	dotnet add package System.Resources.Extensions''')
-filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
+filePath = UNITY_2_MANY_PATH + '/HolyBlender.csproj'
 fileLines = open(filePath, 'rb').read().decode('utf-8').split('\n')
 ExcludeFolder ('BareUEProject')
 ExcludeFolder ('obj')

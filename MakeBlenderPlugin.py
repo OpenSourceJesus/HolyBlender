@@ -1,6 +1,6 @@
 import bpy, subprocess, os, sys, hashlib# , webbrowser, blf
 
-sys.path.append(os.path.expanduser('~/Unity2Many'))
+sys.path.append(os.path.expanduser('~/HolyBlender'))
 from SystemExtensions import *
 from StringExtensions import *
 from CollectionExtensions import *
@@ -393,7 +393,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 				}
 			}
 		}
-		File.WriteAllText("/tmp/Unity2Many Data (BlenderToUnity)", outputText);
+		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
 	}
 }'''
 EXAMPLES_DICT = {
@@ -490,7 +490,7 @@ COMPONENT_TEMPLATE = '    - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
-TEMPLATES_PATH = os.path.expanduser('~/Unity2Many/Templates')
+TEMPLATES_PATH = os.path.expanduser('~/HolyBlender/Templates')
 TEMPLATE_REGISTRY_PATH = TEMPLATES_PATH + '/registry.json'
 REGISTRY_PATH = '/tmp/registry.json'
 MAX_SCRIPTS_PER_OBJECT = 16
@@ -574,7 +574,7 @@ class ExamplesOperator (bpy.types.Operator):
 
 class ExamplesMenu (bpy.types.Menu):
 	bl_idname = 'TEXT_MT_u2m_menu'
-	bl_label = 'Unity2Many Templates'
+	bl_label = 'HolyBlender Templates'
 
 	def draw (self, context):
 		layout = self.layout
@@ -584,7 +584,7 @@ class ExamplesMenu (bpy.types.Menu):
 
 class AttachedObjectsMenu (bpy.types.Menu):
 	bl_idname = 'TEXT_MT_u2m_menu_obj'
-	bl_label = 'Unity2Many Attached Objects'
+	bl_label = 'HolyBlender Attached Objects'
 
 	def draw (self, context):
 		layout = self.layout
@@ -636,7 +636,7 @@ class UnrealExportButton (bpy.types.Operator):
 		unrealExportPath = os.path.expanduser(context.scene.world.unrealExportPath)
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath != '':
-			command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToUnreal.py'), 'input=' + importPath, 'output=' + unrealExportPath, 'exclude=/Library' ]
+			command = [ 'python3', os.path.expanduser('~/HolyBlender/UnityToUnreal.py'), 'input=' + importPath, 'output=' + unrealExportPath, 'exclude=/Library' ]
 			print(command)
 
 			subprocess.check_call(command)
@@ -646,7 +646,7 @@ class UnrealExportButton (bpy.types.Operator):
 			unrealProjectName = unrealExportPath[unrealExportPath.rfind('/') + 1 :]
 			unrealCodePathSuffix = '/Source/' + unrealProjectName
 			unrealCodePath += unrealCodePathSuffix
-			MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
+			MakeFolderForFile ('/tmp/HolyBlender (Unreal Scripts)/')
 			data = unrealExportPath + '\n' + bpy.data.filepath + '\n'
 			for collection in bpy.data.collections:
 				for obj in collection.objects:
@@ -669,13 +669,13 @@ class UnrealExportButton (bpy.types.Operator):
 							if textBlock.name == script:
 								if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
 									script += '.cs'
-								open('/tmp/Unity2Many (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
+								open('/tmp/HolyBlender (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
 								break
-			open('/tmp/Unity2Many Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
+			open('/tmp/HolyBlender Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
 			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
 			if not os.path.isdir(unrealExportPath):
 				MakeFolderForFile (unrealExportPath + '/')
-				bareProjectPath = os.path.expanduser('~/Unity2Many/BareUEProject')
+				bareProjectPath = os.path.expanduser('~/HolyBlender/BareUEProject')
 				filesAndFolders = os.listdir(bareProjectPath)
 				for fileOrFolder in filesAndFolders:
 					command = 'cp -r ''' + bareProjectPath + '/' + fileOrFolder + ' ' + unrealExportPath
@@ -717,11 +717,11 @@ class UnrealExportButton (bpy.types.Operator):
 
 			os.system(command)
 
-			open('/tmp/Unity2Many Data (UnityToUnreal)', 'wb').write(''.encode('utf-8'))
+			open('/tmp/HolyBlender Data (UnityToUnreal)', 'wb').write(''.encode('utf-8'))
 			unrealEditorPath = os.path.expanduser('~/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd')
 			if os.path.expanduser('~') == '/home/gilead':
 				unrealEditorPath = '/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Binaries/Linux/UnrealEditor-Cmd'
-			command = unrealEditorPath + ' ' + projectFilePath + ' -nullrhi -ExecutePythonScript=' + os.path.expanduser('~/Unity2Many/MakeUnrealProject.py')
+			command = unrealEditorPath + ' ' + projectFilePath + ' -nullrhi -ExecutePythonScript=' + os.path.expanduser('~/HolyBlender/MakeUnrealProject.py')
 			print(command)
 
 			os.system(command)
@@ -746,7 +746,7 @@ class BevyExportButton (bpy.types.Operator):
 			MakeFolderForFile (bevyExportPath + '/')
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath != '':
-			command = [ 'python3', os.path.expanduser('~/Unity2Many/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
+			command = [ 'python3', os.path.expanduser('~/HolyBlender/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
 			print(command)
 
 			subprocess.check_call(command)
@@ -755,7 +755,7 @@ class BevyExportButton (bpy.types.Operator):
 			data = bevyExportPath
 			for obj in attachedBevyScriptsDict:
 				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedBevyScriptsDict[obj])
-			open('/tmp/Unity2Many Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
+			open('/tmp/HolyBlender Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
 			import MakeBevyBlenderApp as makeBevyBlenderApp
 			makeBevyBlenderApp.Do (attachedBevyScriptsDict)
 			# webbrowser.open('http://localhost:1334')
@@ -799,7 +799,7 @@ class UnityExportButton (bpy.types.Operator):
 				for materialSlot in obj.material_slots:
 					fileExportPath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 					MakeFolderForFile (fileExportPath)
-					material = open(os.path.expanduser('~/Unity2Many/Templates/Material.mat'), 'rb').read().decode('utf-8')
+					material = open(os.path.expanduser('~/HolyBlender/Templates/Material.mat'), 'rb').read().decode('utf-8')
 					material = material.replace(REPLACE_INDICATOR + '0', materialSlot.material.name)
 					materialColor = materialSlot.material.diffuse_color
 					material = material.replace(REPLACE_INDICATOR + '1', str(materialColor[0]))
@@ -820,7 +820,7 @@ class UnityExportButton (bpy.types.Operator):
 			MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
 			open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
 
-			os.system('cp ' + os.path.expanduser('~/Unity2Many/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
+			os.system('cp ' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
 
 			command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
 			print(command)
@@ -835,7 +835,7 @@ class UnityExportButton (bpy.types.Operator):
 		if scenePath == '':
 			scenePath = 'Test.unity'
 		scenePath = scenesFolderPath + '/' + scenePath
-		sceneTemplateText = open(os.path.expanduser('~/Unity2Many/Templates/Scene.unity'), 'rb').read().decode('utf-8')
+		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
 		gameObjectsAndComponentsText = ''
 		transformIds = []
 		for obj in bpy.data.objects:
@@ -908,7 +908,7 @@ class UnityExportButton (bpy.types.Operator):
 				meshGuid = GetGuid(filePath)
 				open(filePath, 'wb').write(MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
 				if unityVersionPath != '':
-					dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+					dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 					fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
 					indexOfFile = dataText.find(fileIdIndicator)
 					indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
@@ -930,7 +930,7 @@ class UnityExportButton (bpy.types.Operator):
 					materialGuid = GetGuid(filePath)
 					open(filePath, 'wb').write(MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
 					if unityVersionPath != '':
-						dataText = open('/tmp/Unity2Many Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+						dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 						fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 						indexOfFile = dataText.find(fileIdIndicator)
 						indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
@@ -1024,11 +1024,11 @@ class UnrealTranslateButton (bpy.types.Operator):
 		global currentTextBlock
 		BuildTool ('UnityToUnreal')
 		operatorContext = context
-		MakeFolderForFile ('/tmp/Unity2Many (Unreal Scripts)/')
+		MakeFolderForFile ('/tmp/HolyBlender (Unreal Scripts)/')
 		script = currentTextBlock.name
 		if not currentTextBlock.name.endswith('.cs'):
 			script += '.cs'
-		filePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
+		filePath = '/tmp/HolyBlender (Unreal Scripts)/' + script
 		open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
 		ConvertCSFileToCPP (filePath)
 
@@ -1178,7 +1178,7 @@ def ConvertCSFileToCPP (filePath):
 	mainClassNames = [ os.path.split(filePath)[-1].split('.')[0] ]
 	command = [
 		'dotnet',
-		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
+		os.path.expanduser('~/HolyBlender/UnityToUnreal/HolyBlender.dll'),
 		'includeFile=' + filePath,
 		'unreal=true',
 		'output=' + unrealCodePath,
@@ -1221,7 +1221,7 @@ def ConvertPythonFileToCPP (filePath):
 	textBlock.clear()
 	textBlock.write(text)
 	outputFilePath = unrealCodePath + '/' + textBlockName
-	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + unrealCodePath ]
+	command = [ 'python3', os.path.expanduser('~/HolyBlender') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + unrealCodePath ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
 	command.append(os.path.expanduser(operatorContext.scene.world.unrealExportPath))
@@ -1312,10 +1312,10 @@ def ConvertCSFileToRust (filePath):
 	MakeFolderForFile ('/tmp/src/main.rs')
 	MakeFolderForFile ('/tmp/assets/registry.json')
 	data = 'output=/tmp\n' + filePath
-	open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
+	open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 	command = [
 		'dotnet',
-		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
+		os.path.expanduser('~/HolyBlender/UnityToBevy/HolyBlender.dll'), 
 		'includeFile=' + filePath,
 		'bevy=true',
 		'output=/tmp'
@@ -1369,7 +1369,7 @@ def ConvertPythonFileToRust (filePath):
 
 	os.system('cat ' + outputFilePath)
 	
-	data = open('/tmp/Unity2Many Data (UnityToBevy)', 'rb').read().decode('utf-8')
+	data = open('/tmp/HolyBlender Data (UnityToBevy)', 'rb').read().decode('utf-8')
 	filePath = data[data.find('\n') + 1 :]
 	for textBlock in bpy.data.texts:
 		if textBlock.name == filePath[filePath.rfind('/') + 1 :].replace('.rs', '.cs'):
@@ -1547,7 +1547,7 @@ def OnRedrawView ():
 			import RunCSInBlender as runCSInBlender
 			for obj in attachedUnityScriptsDict:
 				if currentTextBlock.name in attachedUnityScriptsDict[obj]:
-					filePath = os.path.expanduser('/tmp/Unity2Many Data (UnityInBlender)/' + currentTextBlock.name)
+					filePath = os.path.expanduser('/tmp/HolyBlender Data (UnityInBlender)/' + currentTextBlock.name)
 					filePath = filePath.replace('.cs', '.py')
 					if not filePath.endswith('.py'):
 						filePath += '.py'
@@ -1557,9 +1557,9 @@ def OnRedrawView ():
 						BuildTool ('UnityInBlender')
 						command = [
 							'dotnet',
-							os.path.expanduser('~/Unity2Many/UnityInBlender/Unity2Many.dll'), 
+							os.path.expanduser('~/HolyBlender/UnityInBlender/HolyBlender.dll'), 
 							'includeFile=' + filePath,
-							'output=/tmp/Unity2Many Data (UnityInBlender)'
+							'output=/tmp/HolyBlender Data (UnityInBlender)'
 						]
 						print(command)
 
@@ -1578,7 +1578,7 @@ def register ():
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
-	toolsPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools')
+	toolsPath = os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools')
 	if os.path.isdir(toolsPath):
 		addonsPath = os.path.expanduser('~/.config/blender/4.2/scripts/addons')
 		if not os.path.isdir(addonsPath):
@@ -1594,7 +1594,7 @@ def register ():
 		bpy.ops.preferences.addon_enable(module='bevy_components')
 		bpy.ops.preferences.addon_enable(module='gltf_auto_export')
 
-	# componentsAddonPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
+	# componentsAddonPath = os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools/bevy_components')
 	# if os.path.isdir(componentsAddonPath):
 	# 	sys.path.append(componentsAddonPath)
 	# bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')

@@ -18,7 +18,7 @@ def ConvertGDFileToCS (filePath):
 	assert os.path.isfile(filePath)
 	mainClassName = filePath[filePath.rfind('/') + 1 : filePath.rfind('.')]
 	command = [
-		'dotnet', os.path.expanduser('~/Unity2Many') + '/UnityToGodot/Unity2Many.dll',
+		'dotnet', os.path.expanduser('~/HolyBlender') + '/UnityToGodot/HolyBlender.dll',
 		'includeFile=' + filePath,
 		'unreal=true',
 		'output=' + CODE_PATH,

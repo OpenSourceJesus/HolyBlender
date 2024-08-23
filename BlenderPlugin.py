@@ -1,7 +1,7 @@
 import subprocess, sys, os
 
-os.system('''rm /tmp/Unity2Many Data (UnityToBevy)
-	rm /tmp/Unity2Many Data (UnityToUnreal)''')
+os.system('''rm /tmp/HolyBlender Data (UnityToBevy)
+	rm /tmp/HolyBlender Data (UnityToUnreal)''')
 
 blender = 'blender'
 if sys.platform == 'win32': # Windows

@@ -5,7 +5,7 @@ from mathutils import *
 sys.path.append('/usr/lib/python3/dist-packages')
 sys.path.append('/usr/local/lib/python3.12/dist-packages')
 sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
-sys.path.append(os.path.expanduser('~/Unity2Many'))
+sys.path.append(os.path.expanduser('~/HolyBlender'))
 try:
 	from PIL import Image
 except:
@@ -17,7 +17,7 @@ from MakeBlenderPlugin import MAX_SCRIPTS_PER_OBJECT
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
-TEMPLATES_PATH = os.path.expanduser('~/Unity2Many/Templates')
+TEMPLATES_PATH = os.path.expanduser('~/HolyBlender/Templates')
 TEMPLATE_APP_PATH = TEMPLATES_PATH + '/BevyBlenderApp.rs'
 TEMPLATE_REGISTRY_PATH = TEMPLATES_PATH + '/registry.json'
 ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
@@ -48,14 +48,14 @@ NEAR_CLIP_PLANE_INDICATOR = '  near clip plane: '
 FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 CLASS_MEMBER_INDICATOR = '#💠'
 GAME_OBJECT_FIND_INDICATOR = 'GameObject.Find('
-COMPONENT_TEMPLATE = '''    "Unity2Many::ꗈ": {
+COMPONENT_TEMPLATE = '''    "HolyBlender::ꗈ": {
       "additionalProperties": false,
       "isComponent": true,
       "isResource": false,
       "properties": {},
       "required": [],
       "short_name": "ꗈ",
-      "title": "Unity2Many::ꗈ",
+      "title": "HolyBlender::ꗈ",
       "type": "object",
       "typeInfo": "Struct"
     }'''
@@ -111,7 +111,7 @@ def ConvertCSFileToRust (filePath):
 	assert os.path.isfile(filePath)
 	command = [
 		'dotnet',
-		os.path.expanduser('~/Unity2Many/UnityToBevy/Unity2Many.dll'), 
+		os.path.expanduser('~/HolyBlender/UnityToBevy/HolyBlender.dll'), 
 		'includeFile=' + filePath,
 		'bevy=true',
 		'output=/tmp'
@@ -241,7 +241,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	global importStatementsText
 	global outputFileTextReplaceClauses
 	# ConvertCSFileToRust (scriptPath)
-	# MakeComponent (objectName, 'Unity2Many::' + mainClassName)
+	# MakeComponent (objectName, 'HolyBlender::' + mainClassName)
 	# outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
 	scriptText = open(scriptPath, 'rb').read().decode('utf-8')
 	# if 'fn Update' in outputFileText:
@@ -511,7 +511,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 def MakeComponent (objectName : str, componentType : str):
 	if objectName != '':
 		obj = bpy.data.objects[objectName]
-		sys.path.append(os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools'))
+		sys.path.append(os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools'))
 		import bevy_components.registry.registry as registry
 		typeInfo = {
 			'additionalProperties': False,
@@ -520,20 +520,20 @@ def MakeComponent (objectName : str, componentType : str):
 			'properties': {},
 			'required': [],
 			'short_name': mainClassName,
-			'title': 'Unity2Many::' + mainClassName,
+			'title': 'HolyBlender::' + mainClassName,
 			'type': 'object',
 			'typeInfo': 'Struct'
 		}
 		registry.ComponentsRegistry.type_infos[componentType] = typeInfo
 		import bevy_components.components.metadata as metadata
 		metadata.add_component_to_object(obj, typeInfo)
-		obj[componentType.replace('Unity2Many::', '')] = '()'
+		obj[componentType.replace('HolyBlender::', '')] = '()'
 		print('YAY' + componentType)
 
 def RemoveComponent (objectName : str, componentType : str):
 	if objectName != '':
 		obj = bpy.data.objects[objectName]
-		sys.path.append(os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools'))
+		sys.path.append(os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools'))
 		import bevy_components.components.metadata as metadata
 		metadata.remove_component_to_object(obj, componentType.replace('Unit2Many::', ''))
 
@@ -598,7 +598,7 @@ def MakeSceneOrPrefab (sceneOrPrefabFilePath : str):
 					for scriptPath in currentScriptsPaths:
 						if not scriptPath.endswith('/UniversalAdditionalCameraData.cs') and not scriptPath.endswith('/UniversalAdditionalLightData.cs'):
 							mainClassName = scriptPath[scriptPath.rfind('/') + 1 : scriptPath.rfind('.')]
-							MakeComponent (objectName, 'Unity2Many::' + mainClassName)
+							MakeComponent (objectName, 'HolyBlender::' + mainClassName)
 							# scriptComponent = MakeScript([], [], [1, 1, 1], objectName, scriptPath)
 				# 			for component in components:
 				# 				component.attach_to(scriptComponent.root_component)
@@ -742,7 +742,7 @@ for arg in sys.argv:
 		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
 		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
 		data += arg + '\n'
-open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
+open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 
 def Do (attachedScriptsDict = {}):
 	global CODE_PATH
@@ -753,7 +753,7 @@ def Do (attachedScriptsDict = {}):
 	for scripts in attachedScriptsDict.values():
 		for script in scripts:
 			attachedScripts.append(script)
-	toolsPath = os.path.expanduser('~/Unity2Many/Blender_bevy_components_workflow/tools')
+	toolsPath = os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools')
 	if os.path.isdir(toolsPath):
 		addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
 		if not os.path.isdir(addonsPath):
@@ -768,7 +768,7 @@ def Do (attachedScriptsDict = {}):
 
 		bpy.ops.preferences.addon_enable(module='bevy_components')
 		bpy.ops.preferences.addon_enable(module='gltf_auto_export')
-	# sys.path.append('~/Unity2Many/Blender_bevy_components_workflow/tools/bevy_components')
+	# sys.path.append('~/HolyBlender/Blender_bevy_components_workflow/tools/bevy_components')
 	# bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	if fromUnity:
@@ -793,7 +793,7 @@ def Do (attachedScriptsDict = {}):
 			componentText = componentText.replace('ꗈ', mainClassName)
 			registryText = registryText[: indexOfAddRegistryTextIndicator] + componentText + registryText[indexOfAddRegistryTextIndicator :]
 	else:
-		data = open('/tmp/Unity2Many Data (BlenderToBevy)', 'rb').read().decode('utf-8')
+		data = open('/tmp/HolyBlender Data (BlenderToBevy)', 'rb').read().decode('utf-8')
 		BEVY_PROJECT_PATH = data.split('\n')[0]
 		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
 		CODE_PATH = BEVY_PROJECT_PATH + '/src'
@@ -801,7 +801,7 @@ def Do (attachedScriptsDict = {}):
 		REGISTRY_PATH = ASSETS_PATH + '/registry.json'
 		MakeFolderForFile (ASSETS_PATH + '/')
 		MakeFolderForFile (CODE_PATH + '/')
-		open('/tmp/Unity2Many Data (UnityToBevy)', 'wb').write(('output=' + BEVY_PROJECT_PATH).encode('utf-8'))
+		open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(('output=' + BEVY_PROJECT_PATH).encode('utf-8'))
 		for script in attachedScripts:
 			mainClassName = script.replace('.rs', '')
 			indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
@@ -898,7 +898,7 @@ def Do (attachedScriptsDict = {}):
 				objectName = line[: indexOfEndOfObjectName]
 				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
 				for script in scripts:
-					MakeComponent (objectName, 'Unity2Many::' + script)
+					MakeComponent (objectName, 'HolyBlender::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)

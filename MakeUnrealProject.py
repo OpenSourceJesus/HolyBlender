@@ -1,5 +1,5 @@
 import unreal, os, sys, subprocess
-sys.path.append(os.path.expanduser('~/Unity2Many'))
+sys.path.append(os.path.expanduser('~/HolyBlender'))
 from StringExtensions import *
 from SystemExtensions import *
 
@@ -26,7 +26,7 @@ IS_ORTHOGRAPHIC_INDICATOR = '  orthographic: '
 ORTHOGRAPHIC_SIZE_INDICATOR = '  orthographic size: '
 NEAR_CLIP_PLANE_INDICATOR = '  near clip plane: '
 FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
-UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
+UNITY_2_MANY_PATH = os.path.expanduser('~/HolyBlender')
 UNITY_PROJECT_PATH = ''
 UNREAL_PROJECT_PATH = ''
 UNREAL_PROJECT_NAME = ''
@@ -61,13 +61,13 @@ def ConvertPythonFileToCpp (filePath):
 	text = '\n'.join(lines)
 	open(filePath, 'wb').write(text.encode('utf-8'))
 	outputFilePath = CODE_PATH + filePath[filePath.rfind('/') :]
-	command = [ 'python3', os.path.expanduser('~/Unity2Many') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
+	command = [ 'python3', os.path.expanduser('~/HolyBlender') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + CODE_PATH ]
 	# for arg in sys.argv:
 	# 	command.append(arg)
 	if fromUnity:
 		command.append(UNITY_PROJECT_PATH)
 	else:
-		command.append('/tmp/Unity2Many (Unreal Scripts)')
+		command.append('/tmp/HolyBlender (Unreal Scripts)')
 	print(command)
 	
 	subprocess.check_call(command)
@@ -179,7 +179,7 @@ def ConvertCSFileToCPP (filePath):
 	assert os.path.isfile(filePath)
 	command = [
 		'dotnet',
-		os.path.expanduser('~/Unity2Many/UnityToUnreal/Unity2Many.dll'),
+		os.path.expanduser('~/HolyBlender/UnityToUnreal/HolyBlender.dll'),
 		'includeFile=' + filePath,
 		'unreal=true',
 		'output=' + CODE_PATH,
@@ -189,7 +189,7 @@ def ConvertCSFileToCPP (filePath):
 	if fromUnity:
 		command.append(UNITY_PROJECT_PATH)
 	else:
-		command.append('/tmp/Unity2Many (Unreal Scripts)')
+		command.append('/tmp/HolyBlender (Unreal Scripts)')
 	print(command)
 
 	subprocess.check_call(command)
@@ -483,7 +483,7 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 				indexOfGuid = line.find(GUID_INDICATOR)
 				textureAssetPath = fileGuidsDict[line[indexOfGuid + len(GUID_INDICATOR) : line.rfind(',')]]
 
-data = open('/tmp/Unity2Many Data (UnityToUnreal)', 'rb').read().decode('utf-8').split('\n')
+data = open('/tmp/HolyBlender Data (UnityToUnreal)', 'rb').read().decode('utf-8').split('\n')
 fromUnity = False
 for arg in data:
 	if arg.startswith(INPUT_PATH_INDICATOR):
@@ -553,7 +553,7 @@ if fromUnity:
 			sceneFileText = open(sceneFilePath, 'rb').read().decode('utf-8')
 			MakeLevelOrPrefab (sceneFileText)
 else:
-	data = open('/tmp/Unity2Many Data (BlenderToUnreal)', 'rb').read().decode('utf-8')
+	data = open('/tmp/HolyBlender Data (BlenderToUnreal)', 'rb').read().decode('utf-8')
 	lines = data.split('\n')
 	UNREAL_PROJECT_PATH = lines[0]
 	UNREAL_PROJECT_NAME = UNREAL_PROJECT_PATH[UNREAL_PROJECT_PATH.rfind('/') + 1 :]
@@ -655,7 +655,7 @@ else:
 				for script in scripts:
 					if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
 						script += '.cs'
-					codeFilePath = '/tmp/Unity2Many (Unreal Scripts)/' + script
+					codeFilePath = '/tmp/HolyBlender (Unreal Scripts)/' + script
 					if script.endswith('.cs'):
 						ConvertCSFileToCPP (codeFilePath)
 					scriptActor = MakeScriptActor(unreal.Vector(), unreal.Rotator(), unreal.Vector(1, 1, 1), codeFilePath, parent)

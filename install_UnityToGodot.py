@@ -1,11 +1,11 @@
 import os
 
-UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
+UNITY_2_MANY_PATH = os.path.expanduser('~/HolyBlender')
 
 def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
 
-filePath = UNITY_2_MANY_PATH + "/Unity2Many.csproj"
+filePath = UNITY_2_MANY_PATH + "/HolyBlender.csproj"
 fileLines = open(filePath, "r").readlines()
 ExcludeFolder ("BareUEProject")
 ExcludeFolder ("obj")

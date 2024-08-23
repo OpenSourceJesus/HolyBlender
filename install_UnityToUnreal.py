@@ -1,6 +1,6 @@
 import os
 
-UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
+UNITY_2_MANY_PATH = os.path.expanduser('~/HolyBlender')
 
 def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
@@ -18,7 +18,7 @@ os.system('''sudo apt -y install python3-setuptools
 	./Setup.sh
 	./GenerateProjectFiles.sh
 	make
-	cd ~/Unity2Many
+	cd ~/HolyBlender
 	wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
 	chmod +x ./dotnet-install.sh
 	./dotnet-install.sh --version 6.0.423
@@ -29,7 +29,7 @@ os.system('''sudo apt -y install python3-setuptools
 	dotnet add package IronPython
 	dotnet add package System.Resources.Extensions''')
 
-filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
+filePath = UNITY_2_MANY_PATH + '/HolyBlender.csproj'
 fileLines = open(filePath, "rb").read().decode('utf-8').split('\n')
 ExcludeFolder ('BareUEProject')
 ExcludeFolder ('obj')

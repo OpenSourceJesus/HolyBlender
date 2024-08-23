@@ -1,6 +1,6 @@
 import os
 
-UNITY_2_MANY_PATH = os.path.expanduser('~/Unity2Many')
+UNITY_2_MANY_PATH = os.path.expanduser('~/HolyBlender')
 
 def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
@@ -20,7 +20,7 @@ os.system('''sudo snap install blender --classic
 	dotnet add package System.Resources.Extensions
 	pip install pynput --break-system-packages''')
 
-filePath = UNITY_2_MANY_PATH + '/Unity2Many.csproj'
+filePath = UNITY_2_MANY_PATH + '/HolyBlender.csproj'
 fileLines = open(filePath, "rb").read().decode('utf-8').split('\n')
 ExcludeFolder ('BareUEProject')
 ExcludeFolder ('obj')
