@@ -1,7 +1,7 @@
-![alt text](image-1.png)
-![alt text](image-2.png)
+![alt text](Images/image-1.png)
+![alt text](Images/image-2.png)
 
-I am running out of energy for this project, and it is slowing down. Also, please feel free to contribute!
+Please feel free to contribute!
 
 # Description
 This project is for people to use Blender to write code, attach scripts to objects, and then export to Unity, Unreal, or bevy.
@@ -29,7 +29,7 @@ In BlenderPlugin, the export buttons and export paths are in the World Propertie
 
 For using UnityToBevy without the BlenderPlugin, in the terminal run 'python3 UnityTobevy.py input={path to Unity project to translate from} output={path to bevy project to translate to}'. Replace '{', '}', and what is in between them with the path to the Unity project and the path to the bevy project respectively. You can also add ' exclude={path or part of a path in the Unity project to exclude from the translation}' in the terminal command to not translate any files in the Unity project that contain what is in between the '{' and '}'. UnityToUnreal uses the same rules.
 
-Currently, to use the KritaToBlender tool run the Krita program and then mouse over the 'Tools' dropdown at the top of Krita. Mouse over 'Scripts' and then click on 'Scripter'. Then, mouse over 'File' and click on 'Open'. Navigate to MakeKritaBlenderFile.py in the file browser that automatically opens and then double-click on that file in this file browser. Finally, click on the play button circled in this image:![alt text](image.png) to run the script.
+Currently, to use the KritaToBlender tool run the Krita program and then mouse over the 'Tools' dropdown at the top of Krita. Mouse over 'Scripts' and then click on 'Scripter'. Then, mouse over 'File' and click on 'Open'. Navigate to MakeKritaBlenderFile.py in the file browser that automatically opens and then double-click on that file in this file browser. Finally, click on the play button circled in this image:![alt text](Images/image.png) to run the script.
 
 Also, I made this project for testing as an input Unity project for translation: 'https://github.com/OpenSourceJesus/HolyBlender-TestUnityProject'.
 
