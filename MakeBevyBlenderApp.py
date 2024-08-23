@@ -243,8 +243,7 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	# ConvertCSFileToRust (scriptPath)
 	# MakeComponent (objectName, 'Unity2Many::' + mainClassName)
 	# outputFileText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
-	scriptText = open(OUTPUT_FILE_PATH, 'rb').read().decode('utf-8')
-	print('YAY' + scriptText)
+	scriptText = open(scriptPath, 'rb').read().decode('utf-8')
 	# if 'fn Update' in outputFileText:
 	# 	# importStatementsText += 'use ' + mainClassName + '::*;\n'
 	# 	outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
@@ -528,6 +527,8 @@ def MakeComponent (objectName : str, componentType : str):
 		registry.ComponentsRegistry.type_infos[componentType] = typeInfo
 		import bevy_components.components.metadata as metadata
 		metadata.add_component_to_object(obj, typeInfo)
+		obj[componentType.replace('Unity2Many::', '')] = '()'
+		print('YAY' + componentType)
 
 def RemoveComponent (objectName : str, componentType : str):
 	if objectName != '':
@@ -897,8 +898,7 @@ def Do (attachedScriptsDict = {}):
 				objectName = line[: indexOfEndOfObjectName]
 				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
 				for script in scripts:
-					if script != '':
-						MakeComponent (objectName, 'Unity2Many::' + script)
+					MakeComponent (objectName, 'Unity2Many::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
