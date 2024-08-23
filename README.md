@@ -4,20 +4,20 @@
 I am running out of energy for this project, and it is slowing down. Also, please feel free to contribute!
 
 # Description
-A set of tools for game and software development
+This project is for people to use Blender to write code, attach scripts to objects, and then export to Unity, Unreal, or bevy.
 
-Three tools can be used (as well as an addon for Blender); UnityToUnreaal, UnityToBevy, and KritaToBlender.
+Additionally, three tools can be used from the command line: UnityToUnreaal, UnityToBevy, and KritaToBlender.
 
-UnityToUnreal and UnityToBevy translates a Unity project to an Unreal or bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated.
+UnityToUnreal and UnityToBevy translate a Unity project to an Unreal or bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated.
 
-MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project (KritaToBlender can't be used from BlenderPlugin yet). It can also export from Blender to Unity, Unreal, and bevy. Additionally, BlenderPlugin can attach Unity C# scripts (Blender text blocks) to Blender objects and run the scripts.
+MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project (KritaToBlender can't be used from BlenderPlugin yet). It can export from Blender to Unity, Unreal, and bevy. Additionally, BlenderPlugin can attach Unity C# scripts (Blender text blocks) to Blender objects and run the scripts. BlenderPlugin can also export from Unity to Unreal and bevy.
 
 # Installation
-Inside the terminal program on your computer, type or copy and paste 'cd ~' and press the Enter key to change directory to your account folder. Then run (type or copy and paste the following and then press Enter) 'git clone https://github.com/OpenSourceJesus/Unity2Many --depth=1' to download the files and folders of this project to the current folder (your account folder). Note that these installation steps except for the first step require internet connection.
+Inside the terminal program on your computer, type or copy and paste 'cd ~' and press the Enter key to change directory to your account folder. Then run (type or copy and paste the following and then press Enter) 'git clone https://github.com/OpenSourceJesus/HolyBlender --depth=1' to download the files and folders of this project to the current folder (your account folder). Note that these installation steps except for the first step require internet connection.
 
 Then run 'sudo apt -y install make' to install make.
 
-Now, run 'cd Unity2Many' to change directory to Unity2Many.
+Now, run 'cd HolyBlender' to change directory to HolyBlender.
 
 Next, run 'make install_BlenderPlugin' to install the required parts to use BlenderPlugin. To install the parts for any of the other tools like UnityToUnreal UnityToBevy, or KritaToBlender, run 'make install_' and then add the name of the tool to run as one command.
 
@@ -31,7 +31,7 @@ For using UnityToBevy without the BlenderPlugin, in the terminal run 'python3 Un
 
 Currently, to use the KritaToBlender tool run the Krita program and then mouse over the 'Tools' dropdown at the top of Krita. Mouse over 'Scripts' and then click on 'Scripter'. Then, mouse over 'File' and click on 'Open'. Navigate to MakeKritaBlenderFile.py in the file browser that automatically opens and then double-click on that file in this file browser. Finally, click on the play button circled in this image:![alt text](image.png) to run the script.
 
-Also, I made this project for testing as an input Unity project for translation: 'https://github.com/OpenSourceJesus/Unity2Many-TestUnityProject'.
+Also, I made this project for testing as an input Unity project for translation: 'https://github.com/OpenSourceJesus/HolyBlender-TestUnityProject'.
 
 ## Notes
 BlenderPlugin's interface only appears the second time (and the times after that) you run BlenderPlugin.
@@ -53,10 +53,10 @@ Currently, exporting mesh objects from Blender won't work properly unless a vers
 This project's translation tools rely on my forks of CSharpToPython (https://github.com/OpenSourceJesus/CSharpToPython) and py2many (https://github.com/OpenSourceJesus/py2many). Additionally, UnityToBevy relies on my fork of Blender_bevy_components_workflow (https://github.com/OpenSourceJesus/Blender_bevy_components_workflow). Running the 'make install_' commands will install the corresponding forks.
 
 # Support
-Use this webpage to know what should be done in the future of this project (and what has been done) and feel free to add issues (entries) to it: 'https://github.com/OpenSourceJesus/Unity2Many/issues'. Also, my email is 'gileadcosman@gmail.com', and I would love to respond to any questions or comments you have.
+Use this webpage to know what should be done in the future of this project (and what has been done) and feel free to add issues (entries) to it: 'https://github.com/OpenSourceJesus/HolyBlender/issues'. Also, my email is 'gileadcosman@gmail.com', and I would love to respond to any questions or comments you have.
 
 # Roadmap
-The tools UnityToStride, UnityToGodot, and UnityToPygame have been started and will hopefully be done eventually. Also, adding spawning and prefab support to the translation tools will hopefully be done eventually. Additionally, support for using KritaToBlender, UnityToStride, UnityToGodot, and UnityToPygame should be added to BlenderPlugin eventually. For viewing or contributing to the list of what should get be done in the future of this project (and what has been done), use this webpage: 'https://github.com/OpenSourceJesus/Unity2Many/issues'.
+The tools UnityToStride, UnityToGodot, and UnityToPygame have been started and will hopefully be done eventually. Also, adding spawning and prefab support to the translation tools will hopefully be done eventually. Additionally, support for using KritaToBlender, UnityToStride, UnityToGodot, and UnityToPygame should be added to BlenderPlugin eventually. For viewing or contributing to the list of what should get be done in the future of this project (and what has been done), use this webpage: 'https://github.com/OpenSourceJesus/HolyBlender/issues'.
 
 # Contributing
 I will accept all contributions.
