@@ -924,20 +924,21 @@ def Do (attachedScriptsDict = {}):
 	outputFileText = outputFileText.replace('ꗈ3', outputFileTextReplaceClauses[3])
 	outputFileText += addToOutputFileText
 	open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
-	MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
+	# htmlText = open(TEMPLATES_PATH + '/index.html', 'rb').read().decode('utf-8')
+	# if bpy.context.world.html_code != None:
+	# 	htmlText = htmlText.replace('ꗈ', bpy.context.world.html_code.as_string())
+	# else:
+	# 	htmlText = htmlText.replace('ꗈ', '')
+	# open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
+	# MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
 
-	htmlText = open(TEMPLATES_PATH + '/index.html', 'rb').read().decode('utf-8')
-	if bpy.context.world.html_code != None:
-		htmlText = htmlText.replace('ꗈ', bpy.context.world.html_code.as_string())
-	else:
-		htmlText = htmlText.replace('ꗈ', '')
-	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
-	os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + BEVY_PROJECT_PATH + '/Server.py')
+	# os.system('cp ' + TEMPLATES_PATH + '/wasm.js' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.js')
+	# os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + BEVY_PROJECT_PATH + '/Server.py')
 
 	os.environ['WGPU_BACKEND'] = 'gl'
 	os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
 
-	command = [ 'cargo', 'build' ]
+	command = [ 'cargo', 'run' ]
 	if WEBGL_INDICATOR in sys.argv:
 		command.append('--target')
 		command.append('wasm32-unknown-unknown')
@@ -946,10 +947,12 @@ def Do (attachedScriptsDict = {}):
 		command.append('bevy/dynamic_linking')
 	print(command)
 	# asyncio.run(WriteWebpagesToProject ())
+	bpy.ops.wm.save_as_mainfile(filepath=BEVY_PROJECT_PATH + '/Test.blend')
+	# projectName = BEVY_PROJECT_PATH[BEVY_PROJECT_PATH.rfind('/') + 1 :]
 
-	os.system('cd ' + BEVY_PROJECT_PATH + '\n' + ' '.join(command))
-
-	subprocess.check_call(['python3', 'Server.py'], cwd=BEVY_PROJECT_PATH)
+	subprocess.check_call(command, cwd=BEVY_PROJECT_PATH)
+	# os.system('cp ' + BEVY_PROJECT_PATH + '/target/wasm32-unknown-unknown/debug/' + projectName + '.wasm' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.wasm')
+	# subprocess.check_call(['python3', 'Server.py'], cwd=BEVY_PROJECT_PATH)
 
 if fromUnity:
 	Do ()
