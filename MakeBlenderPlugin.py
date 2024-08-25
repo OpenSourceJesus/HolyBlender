@@ -306,6 +306,55 @@ MeshRenderer:
     m_SortingLayer: 0
     m_SortingOrder: 0
     m_AdditionalVertexStreams: {fileID: 0}'''
+MESH_COLLIDER_TEMPLATE = '''--- !u!64 &ꗈ0
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: ꗈ2
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: ꗈ3
+  m_CookingOptions: 30
+  m_Mesh: {fileID: ꗈ4, guid: ꗈ5, type: 3}'''
+RIGIDBODY_TEMPLATE = '''--- !u!54 &ꗈ0
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  serializedVersion: 4
+  m_Mass: ꗈ2
+  m_Drag: ꗈ3
+  m_AngularDrag: ꗈ4
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0 w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: ꗈ5
+  m_IsKinematic: ꗈ6
+  m_Interpolate: ꗈ7
+  m_Constraints: ꗈ8
+  m_CollisionDetection: ꗈ9'''
 CAMERA_TEMPLATE = '''--- !u!20 &ꗈ0
 Camera:
     m_ObjectHideFlags: 0
@@ -870,7 +919,7 @@ class BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		BuildTool ('UnityToBevy')
+		# BuildTool ('UnityToBevy')
 		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
 		if not os.path.isdir(bevyExportPath):
 			MakeFolderForFile (bevyExportPath + '/')
@@ -903,14 +952,6 @@ class UnityExportButton (bpy.types.Operator):
 		projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
 		if not os.path.isdir(projectExportPath):
 			os.mkdir(projectExportPath)
-		for textBlock in bpy.data.texts:
-			script = textBlock.name
-			if not textBlock.name.endswith('.cs'):
-				script += '.cs'
-			text = textBlock.as_string()
-			fileExportPath = projectExportPath + '/Assets/Standard Assets/Scripts/' + script
-			MakeFolderForFile (fileExportPath)
-			open(fileExportPath, 'wb').write(text.encode('utf-8'))
 		meshesDict = {}
 		for mesh in bpy.data.meshes:
 			meshesDict[mesh.name] = []
@@ -1051,6 +1092,33 @@ class UnityExportButton (bpy.types.Operator):
 				gameObjectsAndComponentsText += meshFilter + '\n'
 				componentIds.append(lastId)
 				lastId += 1
+				for modifier in obj.modifiers:
+					if modifier.type == 'COLLISION':
+						meshCollider = MESH_COLLIDER_TEMPLATE
+						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(lastId))
+						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '2', '0')
+						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '3', '0')
+						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '4', fileId)
+						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '5', meshGuid)
+						gameObjectsAndComponentsText += meshCollider + '\n'
+						componentIds.append(lastId)
+						lastId += 1
+				if obj.rigid_body != None:
+					rigidbody = RIGIDBODY_TEMPLATE
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '0', str(lastId))
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '2', str(obj.rigid_body.mass))
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '3', str(obj.rigid_body.linear_damping))
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '4', str(obj.rigid_body.angular_damping))
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '5', '1')
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '6', str(int(obj.rigid_body.enabled)))
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '7', '0')
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '8', '0')
+					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '9', '0')
+					gameObjectsAndComponentsText += rigidbody + '\n'
+					componentIds.append(lastId)
+					lastId += 1
 				meshRenderer = MESH_RENDERER_TEMPLATE
 				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
 				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
@@ -1102,14 +1170,13 @@ class UnityExportButton (bpy.types.Operator):
 				script = SCRIPT_TEMPLATE
 				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
 				script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				MakeFolderForFile (filePath)
 				filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + scriptName
+				MakeFolderForFile (filePath)
 				for textBlock in bpy.data.texts:
 					if textBlock.name == scriptName:
 						if not scriptName.endswith('.cs'):
 							filePath += '.cs'
 						scriptText = textBlock.as_string()
-						scriptText = scriptText.replace('Vector3.up', 'Vector3.forward')
 						open(filePath, 'wb').write(scriptText.encode('utf-8'))
 						break
 				filePath += '.meta'
@@ -1679,6 +1746,7 @@ def OnRedrawView ():
 
 def register ():
 	global attachedUnityScriptsDict
+	MakeFolderForFile ('/tmp/')
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
@@ -1768,15 +1836,15 @@ def unregister ():
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
 
-def InitHTML():
+def InitTexts ():
 	if bpy.data.worlds[0].html_code is None:
-		textBlock = bpy.data.texts.new(name='__html__.html')
+		textBlock = bpy.data.texts.new(name='__Html__.html')
 		textBlock.from_string(INIT_HTML)
 		bpy.data.worlds[0].html_code = textBlock
-	if 'Server.py' not in bpy.data.texts:
-		textBlock = bpy.data.texts.new(name='Server.py')
+	if '__Server__.py' not in bpy.data.texts:
+		textBlock = bpy.data.texts.new(name='__Server__.py')
 		textBlock.from_string(BLENDER_SERVER)
 
 if __name__ == '__main__':
 	register ()
-	InitHTML ()
+	InitTexts ()
