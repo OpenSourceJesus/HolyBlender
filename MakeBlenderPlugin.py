@@ -1,6 +1,16 @@
 import bpy, subprocess, os, sys, hashlib# , webbrowser, blf
 
-sys.path.append(os.path.expanduser('~/HolyBlender'))
+__thisdir = os.path.split(os.path.abspath(__file__))[0]
+sys.path.append( __thisdir )
+sys.path.append( os.path.join(__thisdir, 'Blender_bevy_components_workflow/tools') )
+print(sys.path)
+import bevy_components
+print(bevy_components)
+import gltf_auto_export
+print(gltf_auto_export)
+bpy.ops.preferences.addon_enable(module='bevy_components')
+bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+
 from SystemExtensions import *
 from StringExtensions import *
 from CollectionExtensions import *
@@ -1672,26 +1682,6 @@ def register ():
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
 	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
-	toolsPath = os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools')
-	if os.path.isdir(toolsPath):
-		addonsPath = os.path.expanduser('~/.config/blender/4.2/scripts/addons')
-		if not os.path.isdir(addonsPath):
-			MakeFolderForFile (addonsPath + '/')
-
-		os.system('cd ' + toolsPath + '''
-			python3 internal_generate_release_zips.py''')
-		if not os.path.isdir(addonsPath + '/bevy_components'):
-			os.system('unzip ' + toolsPath + '/bevy_components.zip -d ' + addonsPath)
-		if not os.path.isdir(addonsPath + '/gltf_auto_export'):
-			os.system('unzip ' + toolsPath + '/gltf_auto_export.zip -d ' + addonsPath)
-
-		bpy.ops.preferences.addon_enable(module='bevy_components')
-		bpy.ops.preferences.addon_enable(module='gltf_auto_export')
-
-	# componentsAddonPath = os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools/bevy_components')
-	# if os.path.isdir(componentsAddonPath):
-	# 	sys.path.append(componentsAddonPath)
-	# bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	registry = bpy.context.window_manager.components_registry
 	registry.schemaPath = REGISTRY_PATH
 	bpy.ops.object.reload_registry()

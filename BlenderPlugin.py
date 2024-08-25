@@ -1,7 +1,6 @@
 import subprocess, sys, os
 
-os.system('''rm /tmp/HolyBlender Data (UnityToBevy)
-	rm /tmp/HolyBlender Data (UnityToUnreal)''')
+os.system('rm /tmp/HolyBlender*')
 
 blender = 'blender'
 if sys.platform == 'win32': # Windows
@@ -21,5 +20,10 @@ for arg in sys.argv:
 
 command = [blender] + command + [ '--python', 'MakeBlenderPlugin.py' ]
 print(command)
+
+if not os.path.isdir('./Blender_bevy_components_workflow'):
+	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
+	print(cmd)
+	subprocess.check_call(cmd.split())
 
 subprocess.check_call(command)
