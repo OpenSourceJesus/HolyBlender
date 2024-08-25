@@ -485,6 +485,108 @@ public class FirstPersonControls : MonoBehaviour
 	'Hello World (bevy)' : 'println!("Hello World!");',
 	'Rotate (bevy)' : 'trs.rotate_y(5.0 * time.delta_seconds());)'
 }
+INIT_HTML = '''
+<script>
+function Test ()
+{
+	alert("Ok");
+	//TODO xmlhttprequest
+}
+</script>
+<button onclick="Test ()">Hello World!</button>
+<a href="/bpy/data/objects/Cube">Cube</a>
+'''
+BLENDER_SERVER = '''
+import bpy
+from http.server import HTTPServer
+from http.server import BaseHTTPRequestHandler
+
+LOCALHOST_PORT = 8000
+
+class BlenderServer (BaseHTTPRequestHandler):
+	def do_GET (self):
+		self.send_response(200)
+		self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+		self.send_header("Pragma", "no-cache")
+		self.send_header("Expires", "0")
+
+		ret = 'OK'
+		hint = ''
+		if self.path.endswith('.ico'):
+			pass
+		elif self.path == '/':
+			if '__index__.html' in bpy.data.texts:
+				ret = bpy.data.texts['__index__.html'].as_string()
+			else:
+				for t in bpy.data.texts:
+					if t.name.endswith('.html'):
+						ret = t.as_string()
+						break
+		elif self.path.startswith('/bpy/data/objects/'):
+			name = self.path.split('/')[-1]
+			if name in bpy.data.objects:
+				ret = str(bpy.data.objects[name])
+		elif os.path.isfile(self.path[1:]): # the .wasm file
+			ret = open(self.path[1:], 'rb').read()
+		elif self.path.endswith('.glb'):
+			bpy.ops.object.select_all(action='DESELECT')
+			name = self.path.split('/')[-1][: -len('.glb') ]
+			if name in bpy.data.objects:
+				ob = bpy.data.objects[name]
+				ob.select_set(True)
+				tmp = '/tmp/__httpd__.glb'
+				bpy.ops.export_scene.gltf(filepath=tmp, export_selected = True)
+				ret = open(tmp,'rb').read()
+
+		if ret is None:
+			ret = 'None?'
+		if type(ret) is not bytes:
+			ret = ret.encode('utf-8')
+
+		self.send_header("Content-Length", str(len(ret)))
+		self.end_headers()
+
+		try:
+			self.wfile.write( ret )
+		except BrokenPipeError:
+			print('CLIENT WRITE ERROR: failed bytes', len(ret))
+
+
+httpd = HTTPServer(('localhost', LOCALHOST_PORT), BlenderServer)
+httpd.timeout=0.1
+print(httpd)
+
+timer = None
+
+@bpy.utils.register_class
+class HttpServerOperator (bpy.types.Operator):
+	"HolyBlender HTTP Server"
+	bl_idname = "httpd.run"
+	bl_label = "httpd"
+	bl_options = {'REGISTER'}
+	def modal(self, context, event):
+		if event.type == "TIMER":
+			if HTTPD_ACTIVE:
+				httpd.handle_request() # this blocks for a short time
+		return {'PASS_THROUGH'} # will not supress event bubbles
+
+	def invoke (self, context, event):
+		global timer
+		if timer is None:
+			timer = self._timer = context.window_manager.event_timer_add(
+				time_step=0.016666667,
+				window=context.window
+			)
+			context.window_manager.modal_handler_add(self)
+			return {'RUNNING_MODAL'}
+		return {'FINISHED'}
+
+	def execute (self, context):
+		return self.invoke(context, None)
+
+HTTPD_ACTIVE = True
+bpy.ops.httpd.run()
+'''
 MATERIAL_TEMPLATE = '    - {fileID: ꗈ0, guid: ꗈ1, type: 2}'
 COMPONENT_TEMPLATE = '    - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
@@ -1675,109 +1777,6 @@ def unregister ():
 	bpy.types.TEXT_HT_footer.remove(DrawIsInitScriptToggle)
 	for cls in classes:
 		bpy.utils.unregister_class(cls)
-
-INIT_HTML = '''
-<script>
-function Test ()
-{
-	alert("Ok");
-	//TODO xmlhttprequest
-}
-</script>
-<button onclick="Test ()">Hello World!</button>
-<a href="/bpy/data/objects/Cube">Cube</a>
-'''
-
-BLENDER_SERVER = '''
-import bpy
-from http.server import HTTPServer
-from http.server import BaseHTTPRequestHandler
-
-LOCALHOST_PORT = 8000
-
-class BlenderServer (BaseHTTPRequestHandler):
-	def do_GET (self):
-		self.send_response(200)
-		self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-		self.send_header("Pragma", "no-cache")
-		self.send_header("Expires", "0")
-
-		ret = 'OK'
-		hint = ''
-		if self.path.endswith('.ico'):
-			pass
-		elif self.path == '/':
-			if '__index__.html' in bpy.data.texts:
-				ret = bpy.data.texts['__index__.html'].as_string()
-			else:
-				for t in bpy.data.texts:
-					if t.name.endswith('.html'):
-						ret = t.as_string()
-						break
-		elif self.path.startswith('/bpy/data/objects/'):
-			name = self.path.split('/')[-1]
-			if name in bpy.data.objects:
-				ret = str(bpy.data.objects[name])
-		elif os.path.isfile(self.path[1:]): # the .wasm file
-			ret = open(self.path[1:], 'rb').read()
-		elif self.path.endswith('.glb'):
-			bpy.ops.object.select_all(action='DESELECT')
-			name = self.path.split('/')[-1][: -len('.glb') ]
-			if name in bpy.data.objects:
-				ob = bpy.data.objects[name]
-				ob.select_set(True)
-				tmp = '/tmp/__httpd__.glb'
-				bpy.ops.export_scene.gltf(filepath=tmp, export_selected = True)
-				ret = open(tmp,'rb').read()
-
-		if ret is None:
-			ret = 'None?'
-		if type(ret) is not bytes:
-			ret = ret.encode('utf-8')
-
-		self.send_header("Content-Length", str(len(ret)))
-		self.end_headers()
-
-		try:
-			self.wfile.write( ret )
-		except BrokenPipeError:
-			print('CLIENT WRITE ERROR: failed bytes', len(ret))
-
-
-httpd = HTTPServer(('localhost', LOCALHOST_PORT), BlenderServer)
-httpd.timeout=0.1
-print(httpd)
-
-timer = None
-@bpy.utils.register_class
-class HttpServerOperator (bpy.types.Operator):
-	"HolyBlender HTTP Server"
-	bl_idname = "httpd.run"
-	bl_label = "httpd"
-	bl_options = {'REGISTER'}
-	def modal(self, context, event):
-		if event.type == "TIMER":
-			if HTTPD_ACTIVE:
-				httpd.handle_request() # this blocks for a short time
-		return {'PASS_THROUGH'} # will not supress event bubbles
-
-	def invoke (self, context, event):
-		global timer
-		if timer is None:
-			timer = self._timer = context.window_manager.event_timer_add(
-				time_step=0.016666667,
-				window=context.window
-			)
-			context.window_manager.modal_handler_add(self)
-			return {'RUNNING_MODAL'}
-		return {'FINISHED'}
-
-	def execute (self, context):
-		return self.invoke(context, None)
-
-HTTPD_ACTIVE = True
-bpy.ops.httpd.run()
-'''
 
 def InitHTML():
 	if bpy.data.worlds[0].html_code is None:

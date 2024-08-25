@@ -1,4 +1,4 @@
-import os, subprocess, bpy, sys, urllib.request, urllib.error, urllib.parse, asyncio
+import os, subprocess, bpy, sys, urllib.request, urllib.error, urllib.parse, atexit
 from math import radians
 from mathutils import *
 
@@ -49,16 +49,16 @@ FAR_CLIP_PLANE_INDICATOR = '  far clip plane: '
 CLASS_MEMBER_INDICATOR = '#💠'
 GAME_OBJECT_FIND_INDICATOR = 'GameObject.Find('
 COMPONENT_TEMPLATE = '''    "HolyBlender::ꗈ": {
-      "additionalProperties": false,
-      "isComponent": true,
-      "isResource": false,
-      "properties": {},
-      "required": [],
-      "short_name": "ꗈ",
-      "title": "HolyBlender::ꗈ",
-      "type": "object",
-      "typeInfo": "Struct"
-    }'''
+	  "additionalProperties": false,
+	  "isComponent": true,
+	  "isResource": false,
+	  "properties": {},
+	  "required": [],
+	  "short_name": "ꗈ",
+	  "title": "HolyBlender::ꗈ",
+	  "type": "object",
+	  "typeInfo": "Struct"
+	}'''
 CUSTOM_TYPE_TEMPLATE = '''#[derive(Component, Reflect, Default, Debug)]
 #[reflect(Component)]
 struct ꗈ;'''
@@ -743,18 +743,6 @@ for arg in sys.argv:
 		data += arg + '\n'
 open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 
-def WriteWebpageToFile (url : str, filePath : str):
-	response = urllib.request.urlopen(url)
-	webContent = response.read().decode('utf-8')
-	open(filePath, 'wb').write(webContent)
-
-async def WriteWebpagesToProject ():
-	await asyncio.sleep(20)
-	WriteWebpageToFile ('http://127.0.0.1:1334/index.html', BEVY_PROJECT_PATH + '/index.html')
-	MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
-	WriteWebpageToFile ('http://127.0.0.1:1334/api/wasm.js', BEVY_PROJECT_PATH + '/api/wasm.js')
-	WriteWebpageToFile ('http://127.0.0.1:1334/api/wasm.wasm', BEVY_PROJECT_PATH + '/api/wasm.js')
-
 def Do (attachedScriptsDict = {}):
 	global CODE_PATH
 	global mainClassName
@@ -924,16 +912,15 @@ def Do (attachedScriptsDict = {}):
 	outputFileText = outputFileText.replace('ꗈ3', outputFileTextReplaceClauses[3])
 	outputFileText += addToOutputFileText
 	open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
-	# htmlText = open(TEMPLATES_PATH + '/index.html', 'rb').read().decode('utf-8')
-	# if bpy.context.world.html_code != None:
-	# 	htmlText = htmlText.replace('ꗈ', bpy.context.world.html_code.as_string())
-	# else:
-	# 	htmlText = htmlText.replace('ꗈ', '')
-	# open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
-	# MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
+	htmlText = open(TEMPLATES_PATH + '/index.html', 'rb').read().decode('utf-8')
+	if bpy.context.world.html_code != None:
+		htmlText = htmlText.replace('ꗈ', bpy.context.world.html_code.as_string())
+	else:
+		htmlText = htmlText.replace('ꗈ', '')
+	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
 
 	# os.system('cp ' + TEMPLATES_PATH + '/wasm.js' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.js')
-	# os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + BEVY_PROJECT_PATH + '/Server.py')
+	os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + BEVY_PROJECT_PATH + '/Server.py')
 
 	os.environ['WGPU_BACKEND'] = 'gl'
 	os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
@@ -946,13 +933,26 @@ def Do (attachedScriptsDict = {}):
 		command.append('--features')
 		command.append('bevy/dynamic_linking')
 	print(command)
-	# asyncio.run(WriteWebpagesToProject ())
-	bpy.ops.wm.save_as_mainfile(filepath=BEVY_PROJECT_PATH + '/Test.blend')
+	# bpy.ops.wm.save_as_mainfile(filepath=BEVY_PROJECT_PATH + '/Test.blend')
 	# projectName = BEVY_PROJECT_PATH[BEVY_PROJECT_PATH.rfind('/') + 1 :]
 
-	subprocess.check_call(command, cwd=BEVY_PROJECT_PATH)
+	process = subprocess.Popen(command, cwd=BEVY_PROJECT_PATH)
+	atexit.register(lambda:process.kill())
+	waiting = True
+	while waiting:
+		try:
+			MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
+			subprocess.Popen(['python3', 'WriteWebpagesToBevyProject.py', BEVY_PROJECT_PATH])
+			waiting = False
+		except subprocess.CalledProcessError:
+			time.sleep()
+	try:
+		process.kill()
+	except:
+		pass
+
 	# os.system('cp ' + BEVY_PROJECT_PATH + '/target/wasm32-unknown-unknown/debug/' + projectName + '.wasm' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.wasm')
-	# subprocess.check_call(['python3', 'Server.py'], cwd=BEVY_PROJECT_PATH)
+	subprocess.check_call(['python3', 'Server.py'], cwd=BEVY_PROJECT_PATH)
 
 if fromUnity:
 	Do ()
