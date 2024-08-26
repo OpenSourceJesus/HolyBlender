@@ -940,7 +940,8 @@ def Do (attachedScriptsDict = {}):
 	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
 
 	# os.system('cp ' + TEMPLATES_PATH + '/wasm.js' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.js')
-	os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + BEVY_PROJECT_PATH + '/Server.py')
+	subprocess.check_call(['cp', '-v', os.path.join(__thisdir, 'Server.py'), os.path.join(BEVY_PROJECT_PATH,'Server.py')])
+	subprocess.check_call(['chmod', '+x', os.path.join(BEVY_PROJECT_PATH,'Server.py')])
 
 	os.environ['WGPU_BACKEND'] = 'gl'
 	os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
