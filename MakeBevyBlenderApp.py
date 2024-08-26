@@ -2,14 +2,21 @@ import os, subprocess, bpy, sys, urllib.request, urllib.error, urllib.parse, ate
 from math import radians
 from mathutils import *
 
+## install notes:
+## fedora: sudo dnf install blender cargo
+
+__thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append('/usr/lib/python3/dist-packages')
 sys.path.append('/usr/local/lib/python3.12/dist-packages')
 sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
-sys.path.append(os.path.expanduser('~/HolyBlender'))
+#sys.path.append(os.path.expanduser('~/HolyBlender'))
 try:
 	from PIL import Image
 except:
-	from wand.image import Image
+	try:
+		from wand.image import Image
+	except:
+		Image = None
 
 from GetUnityProjectInfo import *
 from SystemExtensions import *
@@ -17,7 +24,7 @@ from MakeBlenderPlugin import MAX_SCRIPTS_PER_OBJECT
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
-TEMPLATES_PATH = os.path.expanduser('~/HolyBlender/Templates')
+TEMPLATES_PATH = os.path.join( __thisdir,'Templates')
 TEMPLATE_APP_PATH = TEMPLATES_PATH + '/BevyBlenderApp.rs'
 TEMPLATE_REGISTRY_PATH = TEMPLATES_PATH + '/registry.json'
 ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
@@ -794,6 +801,8 @@ def Do (attachedScriptsDict = {}):
 	else:
 		data = open('/tmp/HolyBlender Data (BlenderToBevy)', 'rb').read().decode('utf-8')
 		BEVY_PROJECT_PATH = data.split('\n')[0]
+		if not BEVY_PROJECT_PATH.strip() or BEVY_PROJECT_PATH.strip()=='/':
+			BEVY_PROJECT_PATH = '/tmp'
 		ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
 		CODE_PATH = BEVY_PROJECT_PATH + '/src'
 		OUTPUT_FILE_PATH = CODE_PATH + '/main.rs'
