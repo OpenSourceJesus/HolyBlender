@@ -962,20 +962,24 @@ def Do (attachedScriptsDict = {}):
 
 	process = subprocess.Popen(command, cwd=BEVY_PROJECT_PATH)
 	atexit.register(lambda:process.kill())
+	import time
+	time.sleep(10)
+	MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
 	waiting = True
 	while waiting:
 		try:
-			MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
-			subprocess.Popen(['python3', 'WriteWebpagesToBevyProject.py', BEVY_PROJECT_PATH])
+			print('ping...')
+			subprocess.check_call(['curl', 'http://127.0.0.1:1334/api/wasm.js', '-o', BEVY_PROJECT_PATH+'/api/wasm.js'])
+			subprocess.check_call(['curl', 'http://127.0.0.1:1334/api/wasm.wasm','-o', BEVY_PROJECT_PATH+'/api/wasm.wasm'])
 			waiting = False
 		except subprocess.CalledProcessError:
-			time.sleep()
+			time.sleep(3)
+			print('waiting for http://127.0.0.1:1334')
 	try:
 		process.kill()
 	except:
 		pass
 
-	# os.system('cp ' + BEVY_PROJECT_PATH + '/target/wasm32-unknown-unknown/debug/' + projectName + '.wasm' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.wasm')
 	subprocess.check_call(['python3', 'Server.py'], cwd=BEVY_PROJECT_PATH)
 
 if fromUnity:
