@@ -2,8 +2,13 @@ import os, subprocess, bpy, sys, urllib.request, urllib.error, urllib.parse, ate
 from math import radians
 from mathutils import *
 
-## install notes:
-## fedora: sudo dnf install blender cargo
+'''
+INSTALL NOTES:
+	Fedora: 
+		sudo dnf install blender rustup
+		rustup-init
+		~/.cargo/bin/rustup target add wasm32-unknown-unknown
+'''
 
 __thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append('/usr/lib/python3/dist-packages')
