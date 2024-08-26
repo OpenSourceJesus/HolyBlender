@@ -504,6 +504,10 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	# if indexOfUpdateMethod != -1:
 	# 	outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
 	addToOutputFileText += CUSTOM_TYPE_TEMPLATE.replace('ꗈ', mainClassName)
+	if mainClassName not in bpy.data.texts:
+		if mainClassName+'.py' in bpy.data.texts: mainClassName += '.py'
+		elif mainClassName+'.rs' in bpy.data.texts: mainClassName += '.rs'
+		elif mainClassName+'.cs' in bpy.data.texts: mainClassName += '.cs'
 	textBlock = bpy.data.texts[mainClassName]
 	methodNamePrefix = 'Start'
 	if textBlock.is_init_script:
@@ -516,25 +520,28 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	# addToOutputFileText += '\n\n' + outputFileText
 
 def MakeComponent (objectName : str, componentType : str):
-	if objectName != '':
-		obj = bpy.data.objects[objectName]
-		sys.path.append(os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools'))
-		import bevy_components.registry.registry as registry
-		typeInfo = {
-			'additionalProperties': False,
-			'isComponent': True,
-			'isResource': False,
-			'properties': {},
-			'required': [],
-			'short_name': mainClassName,
-			'title': 'HolyBlender::' + mainClassName,
-			'type': 'object',
-			'typeInfo': 'Struct'
-		}
-		registry.ComponentsRegistry.type_infos[componentType] = typeInfo
-		import bevy_components.components.metadata as metadata
-		metadata.add_component_to_object(obj, typeInfo)
-		print('YAY ' + objectName + ' ' + componentType)
+	if objectName == '':
+		print('WARN: bad objectName - MakeComponent')
+		return
+	klass = mainClassName
+	if '.' in klass: klass = klass.split('.')[0]
+	obj = bpy.data.objects[objectName]
+	import bevy_components.registry.registry as registry
+	typeInfo = {
+		'additionalProperties': False,
+		'isComponent': True,
+		'isResource': False,
+		'properties': {},
+		'required': [],
+		'short_name': klass,
+		'title': 'HolyBlender::' + klass,
+		'type': 'object',
+		'typeInfo': 'Struct'
+	}
+	registry.ComponentsRegistry.type_infos[componentType] = typeInfo
+	import bevy_components.components.metadata as metadata
+	metadata.add_component_to_object(obj, typeInfo)
+	print('YAY ' + objectName + ' ' + componentType)
 
 def RemoveComponent (objectName : str, componentType : str):
 	if objectName != '':
@@ -905,7 +912,10 @@ def Do (attachedScriptsDict = {}):
 			if indexOfEndOfObjectName != -1:
 				objectName = line[: indexOfEndOfObjectName]
 				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
+				print(scripts)
 				for script in scripts:
+					if not script.strip(): continue
+					if '.' in script: script = script.split('.')[0]
 					MakeComponent (objectName, 'HolyBlender::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
