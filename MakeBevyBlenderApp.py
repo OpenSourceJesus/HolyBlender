@@ -954,7 +954,11 @@ def Do (attachedScriptsDict = {}):
 	command = [ 'cargo', 'add', 'bevy_rapier3d' ]
 	subprocess.check_call(command, cwd=BEVY_PROJECT_PATH)
 
-	command = [ 'cargo', 'run' ]
+	if 'fedora' in os.uname().nodename:
+		command = [ os.path.expanduser('~/.cargo/bin/cargo'), 'run' ]
+	else:
+		command = [ 'cargo', 'run' ]
+
 	if WEBGL_INDICATOR in sys.argv:
 		command.append('--target')
 		command.append('wasm32-unknown-unknown')
