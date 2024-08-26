@@ -919,6 +919,7 @@ def Do (attachedScriptsDict = {}):
 					MakeComponent (objectName, 'HolyBlender::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
+		if not sceneName: sceneName = '__holyblender__'
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
 		outputFileTextReplaceClauses[2] = sceneName
 		sys.argv.append(WEBGL_INDICATOR)
@@ -932,8 +933,8 @@ def Do (attachedScriptsDict = {}):
 	outputFileText += addToOutputFileText
 	open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
 	htmlText = open(TEMPLATES_PATH + '/index.html', 'rb').read().decode('utf-8')
-	if bpy.context.world.html_code != None:
-		htmlText = htmlText.replace('ꗈ', bpy.context.world.html_code.as_string())
+	if bpy.data.worlds[0].html_code != None:
+		htmlText = htmlText.replace('ꗈ', bpy.data.worlds[0].html_code.as_string())
 	else:
 		htmlText = htmlText.replace('ꗈ', '')
 	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
