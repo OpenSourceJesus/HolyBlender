@@ -203,7 +203,7 @@ def ConvertCSFileToCPP (filePath):
 
 	ConvertPythonFileToCpp (outputFilePath)
 
-def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, meshAssetPath : str, parent : unreal.Actor = None):
+def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, size : unreal.Vector, meshAssetPath : str, useCollision : bool = False, mass : float = 0, linearDrag : float = 0, angularDrag : float = 0, isKinematic : bool = False, parent : unreal.Actor = None):
 	projectFilePath = UNREAL_PROJECT_PATH + '/Content' + meshAssetPath[meshAssetPath.rfind('/') :]
 	os.system('cp \'' + meshAssetPath + '\' \'' + projectFilePath + '\'')
 	staticMesh = LoadObject(meshAssetPath)
@@ -211,6 +211,7 @@ def MakeStaticMeshActor (location : unreal.Vector, rotation : unreal.Rotator, si
 	staticMeshActor.static_mesh_component.set_static_mesh(staticMesh)
 	staticMeshActor.set_actor_scale3d(size)
 	staticMeshActor.set_mobility(unreal.ComponentMobility.MOVABLE)
+	staticMeshActor.set_actor_enable_collision(useCollision)
 	if parent != None:
 		attachRule = unreal.AttachmentRule.KEEP_WORLD
 		staticMeshActor.attach_to_actor(parent, '', attachRule, attachRule, attachRule)
@@ -368,7 +369,7 @@ def MakeLevelOrPrefab (sceneOrPrefabFileText : str):
 				if 'Camera' in currentTypes:
 					actors.append(MakeCameraActor(localPosition, localRotation, localSize, horizontalFov, fov, isOrthographic, orthographicSize, nearClipPlane, farClipPlane))
 				if 'MeshRenderer' in currentTypes:
-					actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, meshAssetPath))
+					actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, meshAssetPath, False, 0, 0, 0, False))
 				if 'Light' in currentTypes:
 					actors.append(MakeLightActor(localPosition, localRotation, localSize, lightType, lightIntensity))
 				if 'SpriteRenderer' in currentTypes:
@@ -579,7 +580,7 @@ else:
 		localPosition = unreal.Vector()
 		localRotation = unreal.Quat()
 		localSize = unreal.Vector()
-		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts' or line == 'Scenes':
+		if line == 'Cameras' or line == 'Lights' or line == 'Meshes' or line == 'Scripts' or line == 'Scenes' or line == 'Children':
 			currentStage = line
 			if currentStage == 'Scenes':
 				isMakingScenes = True
@@ -646,7 +647,17 @@ else:
 				actors.append(MakeLightActor(localPosition, localRotation, localSize, lightType, intensity, color, parent))
 				actorsDict[name] = actors
 			elif currentStage == 'Meshes':
-				actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name + '.fbx', parent))
+				useCollision = len(objectInfo) == 5 or len(objectInfo) == 9
+				mass = 0
+				linearDrag = 0
+				angularDrag = 0.05
+				isKinematic = False
+				if len(objectInfo) > 5:
+					mass = float(objectInfo[4])
+					linearDrag = float(objectInfo[5])
+					angularDrag = float(objectInfo[6])
+					isKinematic = bool(objectInfo[7])
+				actors.append(MakeStaticMeshActor(localPosition, localRotation, localSize, '/tmp/' + name.replace(' ', '_') + '.fbx', useCollision, mass, linearDrag, angularDrag, isKinematic, parent))
 				actorsDict[name] = actors
 			elif currentStage == 'Scripts':
 				scripts = objectInfo[4 :]

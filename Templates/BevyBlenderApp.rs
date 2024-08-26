@@ -1,10 +1,11 @@
-use bevy::prelude::*;
-use bevy_asset_loader::prelude::*;
-use bevy_gltf_components::ComponentsFromGltfPlugin;
-use bevy::render::camera::RenderTarget;
-use bevy::window::WindowRef;
-use bevy::window::PrimaryWindow;
 use std::ops::Mul;
+use bevy::prelude::*;
+use bevy::window::WindowRef;
+use bevy_rapier3d::prelude::*;
+use bevy::window::PrimaryWindow;
+use bevy_asset_loader::prelude::*;
+use bevy::render::camera::RenderTarget;
+use bevy_gltf_components::ComponentsFromGltfPlugin;
 
 fn main() {
 	let app = App::new()

@@ -1104,6 +1104,7 @@ class UnityExportButton (bpy.types.Operator):
 						gameObjectsAndComponentsText += meshCollider + '\n'
 						componentIds.append(lastId)
 						lastId += 1
+						break
 				if obj.rigid_body != None:
 					rigidbody = RIGIDBODY_TEMPLATE
 					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '0', str(lastId))
@@ -1300,7 +1301,7 @@ def BuildTool (toolName : str):
 	subprocess.check_call(command)
 
 def ExportMesh (obj):
-	meshAssetPath = '/tmp/' + obj.name + '.fbx'
+	meshAssetPath = '/tmp/' + obj.name.replace(' ', '_') + '.fbx'
 	bpy.ops.object.select_all(action='DESELECT')
 	bpy.context.view_layer.objects.active = obj
 	obj.select_set(True)
@@ -1311,18 +1312,21 @@ def GetObjectsData (objectGroup):
 	for camera in bpy.data.cameras:
 		if camera.name in objectGroup.keys():
 			data += '\n' + GetCameraData(camera)
-			print('YA' + 'Y' + camera.name)
 	data += '\nLights'
 	for light in bpy.data.lights:
 		if light.name in objectGroup.keys():
 			data += '\n' + GetLightData(light)
-			print('YA' + 'Y' + light.name)
 	data += '\nMeshes'
 	for obj in objectGroup:
 		if obj.type == 'MESH':
 			ExportMesh (obj)
 			data += '\n' + GetBasicObjectData(obj)
-			print('YA' + 'Y' + obj.name)
+			if obj.rigid_body != None:
+				data += '☣️' + str(obj.rigid_body.mass) + '☣️' + str(obj.rigid_body.linear_damping) + '☣️' + str(obj.rigid_body.angular_damping) + '☣️' + str(obj.rigid_body.enabled)
+			for modifier in obj.modifiers:
+				if modifier.type == 'COLLISION':
+					data += '☣️True'
+					break
 	return data
 
 def GetBasicObjectData (obj):
@@ -1333,12 +1337,10 @@ def GetBasicObjectData (obj):
 			break
 	previousObjectRotationMode = obj.rotation_mode
 	obj.rotation_mode = 'QUATERNION'
-	output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale) + '☣️'
+	output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
 	if len(obj.children) > 0:
 		for child in obj.children:
-			data += child.name + '🚾'
 			childrenDict[child.name] = child
-		data = data[: len(data) - 1]
 	obj.rotation_mode = previousObjectRotationMode
 	return output
 

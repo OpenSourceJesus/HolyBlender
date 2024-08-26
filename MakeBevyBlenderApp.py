@@ -925,6 +925,9 @@ def Do (attachedScriptsDict = {}):
 	os.environ['WGPU_BACKEND'] = 'gl'
 	os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
 
+	command = [ 'cargo', 'add', 'bevy_rapier3d' ]
+	subprocess.check_call(command, cwd=BEVY_PROJECT_PATH)
+
 	command = [ 'cargo', 'run' ]
 	if WEBGL_INDICATOR in sys.argv:
 		command.append('--target')
