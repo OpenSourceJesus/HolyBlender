@@ -818,32 +818,46 @@ class HTMLExportButton (bpy.types.Operator):
 	def execute (self, context):
 		htmlExportPath = os.path.expanduser(context.scene.world.htmlExportPath)
 		previousVisibleObjects = []
-		for obj2 in bpy.data.objects:
-			if not obj2.hide_get():
-				previousVisibleObjects.append(obj2)
-				obj2.hide_set(True)
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH' and not obj.hide_get():
+				previousVisibleObjects.append(obj)
+				obj.hide_render = True
+		camera = bpy.data.cameras[0]
+		cameraObj = bpy.data.objects[camera.name]
+		bpy.ops.object.select_all(action='DESELECT')
+		bpy.context.view_layer.objects.active = cameraObj
+		cameraObj.select_set(True)
+		preivousAreaType = bpy.context.area.type
+		bpy.context.area.type = 'VIEW_3D'
+		bpy.ops.view3d.object_as_camera()
+		bpy.context.area.type = preivousAreaType
+		bpy.context.scene.render.film_transparent = True
+		bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+		previousCameraLocation = cameraObj.location
+		previousCameraRotationMode = cameraObj.rotation_mode
+		cameraObj.rotation_mode = 'XYZ'
+		previousCameraRotation = cameraObj.rotation_euler
+		previousCameraType = camera.type
+		camera.type = 'ORTHO'
+		previousCameraOrthoScale = camera.ortho_scale
 		for obj in bpy.data.objects:
 			if obj.type == 'MESH':
-				obj.hide_set(False)
+				obj.hide_render = False
 				bpy.context.scene.render.filepath = htmlExportPath + '/' + obj.name
-				camera = bpy.context.scene.camera
-				previousCameraLocation = camera.location
-				previousCameraRotationMode = camera.rotation_mode
-				previousCameraRotation = camera.rotation_euler
-				previousCameraMode = camera.data.type
-				camera.data.type = 'ORTHO'
-				camera.rotation_mode = 'XYZ'
+				cameraObj.rotation_euler = mathutils.Vector((math.radians(90), 0, 0))
 				bounds = GetObjectBounds(obj)
-				camera.location = bounds[0] - bounds[1] + mathutils.Vector((0, -1, 0))
-				camera.data.ortho_scale = max(bounds[1].x, bounds[1].z)
-				camera.location = previousCameraLocation
-				camera.rotation_mode = previousCameraRotationMode
-				camera.rotation_euler = previousCameraRotation
-				camera.data.type = previousCameraMode
+				cameraObj.location = bounds[0] - mathutils.Vector((0, bounds[1].y, 0))
+				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
 				bpy.ops.render.render(animation=True, write_still=True)
-				obj.hide_set(True)
+				obj.hide_render = True
 		for obj in previousVisibleObjects:
-			obj.hide_set(False)
+			obj.hide_render = False
+		cameraObj.location = previousCameraLocation
+		cameraObj.rotation_mode = previousCameraRotationMode
+		cameraObj.rotation_euler = previousCameraRotation
+		camera.type = previousCameraType
+		camera.ortho_scale = previousCameraOrthoScale
+		bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)
 
 class UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -1357,22 +1371,17 @@ def ExportMesh (obj):
 def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
 	_min = mathutils.Vector((float('inf'), float('inf'), float('inf')))
 	_max = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
-	matrix = None
-	if obj.rotation_mode == 'QUATERNION':
-		matrix = mathutils.Matrix.LocRotScale(obj.location, obj.rotation_quaternion, obj.scale)
-	else:
-		matrix = mathutils.Matrix.LocRotScale(obj.location, obj.rotation_euler, obj.scale)
 	if obj.type == 'MESH':
 		for vertex in obj.data.vertices:
-			_min.x = min((matrix @ vertex.co).x, _min.x)
-			_min.y = min((matrix @ vertex.co).y, _min.y)
-			_min.z = min((matrix @ vertex.co).z, _min.z)
-			_max.x = max((matrix @ vertex.co).x, _max.x)
-			_max.y = max((matrix @ vertex.co).y, _max.y)
-			_max.z = max((matrix @ vertex.co).z, _max.z)
+			_min.x = min((obj.matrix_world @ vertex.co).x, _min.x)
+			_min.y = min((obj.matrix_world @ vertex.co).y, _min.y)
+			_min.z = min((obj.matrix_world @ vertex.co).z, _min.z)
+			_max.x = max((obj.matrix_world @ vertex.co).x, _max.x)
+			_max.y = max((obj.matrix_world @ vertex.co).y, _max.y)
+			_max.z = max((obj.matrix_world @ vertex.co).z, _max.z)
 	else:
-		print('GetObjectXZRect is not implemented for other object types besides meshes')
-	return (_min + _max / 2, _max - _min)
+		print('GetObjectBounds is not implemented for object types besides meshes')
+	return ((_min + _max) / 2, _max - _min)
 
 def GetObjectsData (objectGroup):
 	data = 'Cameras'
