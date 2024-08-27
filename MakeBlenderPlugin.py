@@ -1,5 +1,11 @@
 import bpy, subprocess, os, sys, hashlib, mathutils, math# , webbrowser, blf
 
+user_args = None
+for arg in sys.argv:
+	if arg=='--': user_args = []
+	elif type(user_args) is list: user_args.append(arg)
+if user_args:print('user_args:', user_args)
+
 __thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append( __thisdir )
 sys.path.append( os.path.join(__thisdir, 'Blender_bevy_components_workflow/tools') )
@@ -1916,3 +1922,8 @@ def InitTexts ():
 if __name__ == '__main__':
 	register ()
 	InitTexts ()
+	if user_args:
+		for arg in user_args:
+			if arg.endswith('.py'):
+				print('exec:', arg)
+				exec(open(arg).read())

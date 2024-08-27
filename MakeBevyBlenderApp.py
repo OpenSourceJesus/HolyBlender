@@ -2,8 +2,13 @@ import os, subprocess, bpy, sys, urllib.request, urllib.error, urllib.parse, ate
 from math import radians
 from mathutils import *
 
-## install notes:
-## fedora: sudo dnf install blender cargo
+'''
+INSTALL NOTES:
+	Fedora: 
+		sudo dnf install blender rustup
+		rustup-init
+		~/.cargo/bin/rustup target add wasm32-unknown-unknown
+'''
 
 __thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append('/usr/lib/python3/dist-packages')
@@ -504,6 +509,10 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	# if indexOfUpdateMethod != -1:
 	# 	outputFileText = outputFileText.replace('fn Update', 'fn Update' + mainClassName)
 	addToOutputFileText += CUSTOM_TYPE_TEMPLATE.replace('ꗈ', mainClassName)
+	if mainClassName not in bpy.data.texts:
+		if mainClassName+'.py' in bpy.data.texts: mainClassName += '.py'
+		elif mainClassName+'.rs' in bpy.data.texts: mainClassName += '.rs'
+		elif mainClassName+'.cs' in bpy.data.texts: mainClassName += '.cs'
 	textBlock = bpy.data.texts[mainClassName]
 	methodNamePrefix = 'Start'
 	if textBlock.is_init_script:
@@ -516,25 +525,28 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 	# addToOutputFileText += '\n\n' + outputFileText
 
 def MakeComponent (objectName : str, componentType : str):
-	if objectName != '':
-		obj = bpy.data.objects[objectName]
-		sys.path.append(os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools'))
-		import bevy_components.registry.registry as registry
-		typeInfo = {
-			'additionalProperties': False,
-			'isComponent': True,
-			'isResource': False,
-			'properties': {},
-			'required': [],
-			'short_name': mainClassName,
-			'title': 'HolyBlender::' + mainClassName,
-			'type': 'object',
-			'typeInfo': 'Struct'
-		}
-		registry.ComponentsRegistry.type_infos[componentType] = typeInfo
-		import bevy_components.components.metadata as metadata
-		metadata.add_component_to_object(obj, typeInfo)
-		print('YAY ' + objectName + ' ' + componentType)
+	if objectName == '':
+		print('WARN: bad objectName - MakeComponent')
+		return
+	klass = mainClassName
+	if '.' in klass: klass = klass.split('.')[0]
+	obj = bpy.data.objects[objectName]
+	import bevy_components.registry.registry as registry
+	typeInfo = {
+		'additionalProperties': False,
+		'isComponent': True,
+		'isResource': False,
+		'properties': {},
+		'required': [],
+		'short_name': klass,
+		'title': 'HolyBlender::' + klass,
+		'type': 'object',
+		'typeInfo': 'Struct'
+	}
+	registry.ComponentsRegistry.type_infos[componentType] = typeInfo
+	import bevy_components.components.metadata as metadata
+	metadata.add_component_to_object(obj, typeInfo)
+	print('YAY ' + objectName + ' ' + componentType)
 
 def RemoveComponent (objectName : str, componentType : str):
 	if objectName != '':
@@ -905,10 +917,14 @@ def Do (attachedScriptsDict = {}):
 			if indexOfEndOfObjectName != -1:
 				objectName = line[: indexOfEndOfObjectName]
 				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
+				print(scripts)
 				for script in scripts:
+					if not script.strip(): continue
+					if '.' in script: script = script.split('.')[0]
 					MakeComponent (objectName, 'HolyBlender::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]
+		if not sceneName: sceneName = '__holyblender__'
 		bpy.ops.export_scene.gltf(filepath=ASSETS_PATH + '/' + sceneName, export_extras=True, export_cameras=True, export_lights=True)
 		outputFileTextReplaceClauses[2] = sceneName
 		sys.argv.append(WEBGL_INDICATOR)
@@ -922,14 +938,15 @@ def Do (attachedScriptsDict = {}):
 	outputFileText += addToOutputFileText
 	open(OUTPUT_FILE_PATH, 'wb').write(outputFileText.encode('utf-8'))
 	htmlText = open(TEMPLATES_PATH + '/index.html', 'rb').read().decode('utf-8')
-	if bpy.context.world.html_code != None:
-		htmlText = htmlText.replace('ꗈ', bpy.context.world.html_code.as_string())
+	if bpy.data.worlds[0].html_code != None:
+		htmlText = htmlText.replace('ꗈ', bpy.data.worlds[0].html_code.as_string())
 	else:
 		htmlText = htmlText.replace('ꗈ', '')
 	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
 
 	# os.system('cp ' + TEMPLATES_PATH + '/wasm.js' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.js')
-	os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + BEVY_PROJECT_PATH + '/Server.py')
+	subprocess.check_call(['cp', '-v', os.path.join(__thisdir, 'Server.py'), os.path.join(BEVY_PROJECT_PATH,'Server.py')])
+	subprocess.check_call(['chmod', '+x', os.path.join(BEVY_PROJECT_PATH,'Server.py')])
 
 	os.environ['WGPU_BACKEND'] = 'gl'
 	os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'
@@ -937,7 +954,11 @@ def Do (attachedScriptsDict = {}):
 	command = [ 'cargo', 'add', 'bevy_rapier3d' ]
 	subprocess.check_call(command, cwd=BEVY_PROJECT_PATH)
 
-	command = [ 'cargo', 'run' ]
+	if 'fedora' in os.uname().nodename:
+		command = [ os.path.expanduser('~/.cargo/bin/cargo'), 'run' ]
+	else:
+		command = [ 'cargo', 'run' ]
+
 	if WEBGL_INDICATOR in sys.argv:
 		command.append('--target')
 		command.append('wasm32-unknown-unknown')
@@ -950,20 +971,24 @@ def Do (attachedScriptsDict = {}):
 
 	process = subprocess.Popen(command, cwd=BEVY_PROJECT_PATH)
 	atexit.register(lambda:process.kill())
+	import time
+	time.sleep(10)
+	MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
 	waiting = True
 	while waiting:
 		try:
-			MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
-			subprocess.Popen(['python3', 'WriteWebpagesToBevyProject.py', BEVY_PROJECT_PATH])
+			print('ping...')
+			subprocess.check_call(['curl', 'http://127.0.0.1:1334/api/wasm.js', '-o', BEVY_PROJECT_PATH+'/api/wasm.js'])
+			subprocess.check_call(['curl', 'http://127.0.0.1:1334/api/wasm.wasm','-o', BEVY_PROJECT_PATH+'/api/wasm.wasm'])
 			waiting = False
 		except subprocess.CalledProcessError:
-			time.sleep()
+			time.sleep(3)
+			print('waiting for http://127.0.0.1:1334')
 	try:
 		process.kill()
 	except:
 		pass
 
-	# os.system('cp ' + BEVY_PROJECT_PATH + '/target/wasm32-unknown-unknown/debug/' + projectName + '.wasm' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.wasm')
 	subprocess.check_call(['python3', 'Server.py'], cwd=BEVY_PROJECT_PATH)
 
 if fromUnity:
