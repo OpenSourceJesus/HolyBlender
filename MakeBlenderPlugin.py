@@ -1,9 +1,11 @@
-import bpy, subprocess, os, sys, hashlib# , webbrowser, blf
+import bpy, subprocess, os, sys, hashlib, mathutils, math# , webbrowser, blf
+
 user_args = None
 for arg in sys.argv:
 	if arg=='--': user_args = []
 	elif type(user_args) is list: user_args.append(arg)
 if user_args:print('user_args:', user_args)
+
 __thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append( __thisdir )
 sys.path.append( os.path.join(__thisdir, 'Blender_bevy_components_workflow/tools') )
@@ -688,10 +690,12 @@ class WorldPanel (bpy.types.Panel):
 		self.layout.prop(context.world, 'unity_project_export_path')
 		self.layout.prop(context.world, 'unrealExportPath')
 		self.layout.prop(context.world, 'bevy_project_path')
+		self.layout.prop(context.world, 'htmlExportPath')
 		self.layout.prop(context.world, 'html_code')
 		self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(HTMLExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
 
 class UnityScriptsPanel (bpy.types.Panel):
@@ -802,6 +806,44 @@ class PlayButton (bpy.types.Operator):
 	def execute (self, context):
 		for textBlock in bpy.data.texts:
 			textBlock.run_cs = True
+
+class HTMLExportButton (bpy.types.Operator):
+	bl_idname = 'html.export'
+	bl_label = 'Export To HTML'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		htmlExportPath = os.path.expanduser(context.scene.world.htmlExportPath)
+		previousVisibleObjects = []
+		for obj2 in bpy.data.objects:
+			if not obj2.hide_get():
+				previousVisibleObjects.append(obj2)
+				obj2.hide_set(True)
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH':
+				obj.hide_set(False)
+				bpy.context.scene.render.filepath = htmlExportPath + '/' + obj.name
+				camera = bpy.context.scene.camera
+				previousCameraLocation = camera.location
+				previousCameraRotationMode = camera.rotation_mode
+				previousCameraRotation = camera.rotation_euler
+				previousCameraMode = camera.data.type
+				camera.data.type = 'ORTHO'
+				camera.rotation_mode = 'XYZ'
+				bounds = GetObjectBounds(obj)
+				camera.location = bounds[0] - bounds[1] + mathutils.Vector((0, -1, 0))
+				camera.data.ortho_scale = max(bounds[1].x, bounds[1].z)
+				camera.location = previousCameraLocation
+				camera.rotation_mode = previousCameraRotationMode
+				camera.rotation_euler = previousCameraRotation
+				camera.data.type = previousCameraMode
+				bpy.ops.render.render(animation=True, write_still=True)
+				obj.hide_set(True)
+		for obj in previousVisibleObjects:
+			obj.hide_set(False)
 
 class UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
@@ -1285,6 +1327,7 @@ classes = [
 	UnrealExportButton,
 	BevyExportButton,
 	UnityExportButton,
+	HTMLExportButton,
 	PlayButton,
 	UnrealTranslateButton,
 	BevyTranslateButton,
@@ -1310,6 +1353,26 @@ def ExportMesh (obj):
 	bpy.context.view_layer.objects.active = obj
 	obj.select_set(True)
 	bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+
+def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
+	_min = mathutils.Vector((float('inf'), float('inf'), float('inf')))
+	_max = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
+	matrix = None
+	if obj.rotation_mode == 'QUATERNION':
+		matrix = mathutils.Matrix.LocRotScale(obj.location, obj.rotation_quaternion, obj.scale)
+	else:
+		matrix = mathutils.Matrix.LocRotScale(obj.location, obj.rotation_euler, obj.scale)
+	if obj.type == 'MESH':
+		for vertex in obj.data.vertices:
+			_min.x = min((matrix @ vertex.co).x, _min.x)
+			_min.y = min((matrix @ vertex.co).y, _min.y)
+			_min.z = min((matrix @ vertex.co).z, _min.z)
+			_max.x = max((matrix @ vertex.co).x, _max.x)
+			_max.y = max((matrix @ vertex.co).y, _max.y)
+			_max.z = max((matrix @ vertex.co).z, _max.z)
+	else:
+		print('GetObjectXZRect is not implemented for other object types besides meshes')
+	return (_min + _max / 2, _max - _min)
 
 def GetObjectsData (objectGroup):
 	data = 'Cameras'
@@ -1785,6 +1848,11 @@ def register ():
 	)
 	bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 		name = 'Bevy project path',
+		description = '',
+		default = ''
+	)
+	bpy.types.World.htmlExportPath = bpy.props.StringProperty(
+		name = 'HTML project path',
 		description = '',
 		default = ''
 	)
