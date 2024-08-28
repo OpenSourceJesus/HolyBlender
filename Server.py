@@ -6,7 +6,7 @@ MAX_PORT = 8100
 while port <= MAX_PORT:
     try:
         with socketserver.TCPServer(('', port), http.server.SimpleHTTPRequestHandler) as server:
-            print('Serving at port', port, '\nOpen localhost:8000/index.html in your web browser to see the output')
+            print('Serving at port' + port + '\nOpen localhost:' + port + '/index.html in your web browser to see the output')
             server.serve_forever()
         break
     except:
