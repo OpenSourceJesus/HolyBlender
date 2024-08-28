@@ -859,7 +859,7 @@ class HTMLExportButton (bpy.types.Operator):
 				bounds = GetObjectBounds(obj)
 				cameraObj.location = bounds[0] - mathutils.Vector((0, bounds[1].y, 0))
 				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
-				bpy.ops.render.render(animation=True, write_still=True)
+				bpy.ops.render.render(animation=False, write_still=True)
 				obj.hide_render = True
 				imagePath = bpy.context.scene.render.filepath + '0001.png'
 				command = [ 'convert', '-delay', '10', '-loop', '0', imagePath, imagePath.replace('.png', '.gif') ]
@@ -1063,7 +1063,7 @@ class UnityExportButton (bpy.types.Operator):
 				obj.select_set(True)
 				previousObjectScale = obj.scale
 				obj.scale *= 100
-				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=False, use_custom_props=True, mesh_smooth_type='FACE')
+				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
 				obj.scale = previousObjectScale
 				for materialSlot in obj.material_slots:
 					fileExportPath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
