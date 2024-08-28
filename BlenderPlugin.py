@@ -9,6 +9,17 @@ bpy.data.objects["Cube"].bevy_script0 = txt
 bpy.ops.bevy.export()
 '''
 
+TEST_HTML = '''
+from random import random
+for i in range(4):
+	bpy.ops.mesh.primitive_cube_add()
+	ob = bpy.context.active_object
+	ob.location.x = i * 10
+	ob.location.z = i * 10
+	ob.rotation_euler = [random(), random(), random()]
+bpy.ops.html.export()
+'''
+
 blender = 'blender'
 if sys.platform == 'win32': # Windows
     blender = 'C:/Program Files/Blender Foundation/Blender 4.2/blender.exe'
@@ -34,6 +45,10 @@ for i,arg in enumerate(sys.argv):
 		tmp = '/tmp/__test_bevy__.py'
 		open(tmp,'w').write(TEST_BEVY)
 		user_script = tmp
+	elif arg == '--test-html':
+		user_script = '/tmp/__test_html__.py'
+		open(user_script,'w').write(TEST_HTML)
+
 	elif arg.startswith('--'):
 		user_opts.append(arg)
 
