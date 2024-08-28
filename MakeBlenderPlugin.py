@@ -1,4 +1,4 @@
-import bpy, subprocess, os, sys, hashlib, mathutils, math, base64# , webbrowser, blf
+import bpy, subprocess, os, sys, hashlib, mathutils, math, base64#, webbrowser, blf
 
 user_args = None
 for arg in sys.argv:
@@ -567,7 +567,7 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 ꗈ
 </body>
 </html>'''
-HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" src="data:image/gif;base64,ꗈ1">'
+HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" src="data:image/gif;base64,ꗈ1" style="position:fixed; top:ꗈ2px; right:ꗈ3px;">'
 BLENDER_SERVER = '''
 import bpy
 from http.server import HTTPServer
@@ -867,7 +867,9 @@ class HTMLExportButton (bpy.types.Operator):
 				image = image.replace('ꗈ0', obj.name)
 				imageData = open(imagePath, 'rb').read()
 				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
-				image = image.replace('ꗈ1', str(base64EncodedStr))
+				image = image.replace('ꗈ1', base64EncodedStr)
+				image = image.replace('ꗈ2', '0')
+				image = image.replace('ꗈ3', '0')
 				imagesText += image
 		for obj in previousVisibleObjects:
 			obj.hide_render = False
@@ -878,7 +880,14 @@ class HTMLExportButton (bpy.types.Operator):
 		camera.ortho_scale = previousCameraOrthoScale
 		htmlText = htmlText.replace('ꗈ', imagesText)
 		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
+		
 		os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + htmlExportPath + '/Server.py')
+		
+		command = [ 'python3', htmlExportPath + '/Server.py' ]
+		
+		subprocess.check_call(command)
+		
+		# webbrowser.open('localhost:8000/index.html')
 		bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)
 
 class UnrealExportButton (bpy.types.Operator):
@@ -1865,7 +1874,7 @@ def register ():
 	bpy.types.World.unity_project_export_path = bpy.props.StringProperty(
 		name = 'Unity project export path',
 		description = '',
-		default = '/tmp/TestUnityProject'
+		default = '~/TestUnityProject'
 	)
 	# bpy.types.World.unity_export_version = bpy.props.StringProperty(
 	# 	name = 'Unity export version',
@@ -1875,17 +1884,17 @@ def register ():
 	bpy.types.World.unrealExportPath = bpy.props.StringProperty(
 		name = 'Unreal project path',
 		description = '',
-		default = ''
+		default = '~/TestUnrealProject'
 	)
 	bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 		name = 'Bevy project path',
 		description = '',
-		default = ''
+		default = '~/TestBevyProject'
 	)
 	bpy.types.World.htmlExportPath = bpy.props.StringProperty(
 		name = 'HTML project path',
 		description = '',
-		default = ''
+		default = '~/TestHtmlProject'
 	)
 	bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
 	bpy.types.Text.run_cs = bpy.props.BoolProperty(

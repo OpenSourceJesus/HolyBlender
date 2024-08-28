@@ -15,6 +15,7 @@ os.system('''sudo apt install pip
 	pip install Wand --break-system-packages
 	cp -r ~/.local/lib/python3.12/site-packages/wand ''' + UNITY_2_MANY_PATH + '''/wand
 	sudo apt -y install python3-toposort
+	sudo apt install snapd
 	sudo snap install blender --classic
 	sudo snap install rustup --classic
 	rustup default stable
