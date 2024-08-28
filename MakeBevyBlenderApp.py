@@ -18,10 +18,7 @@ sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 try:
 	from PIL import Image
 except:
-	try:
-		from wand.image import Image
-	except:
-		Image = None
+	from wand.image import Image
 
 from GetUnityProjectInfo import *
 from SystemExtensions import *

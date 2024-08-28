@@ -567,7 +567,8 @@ HTML_TEMPLATE = '''<!DOCTYPE html>
 ꗈ
 </body>
 </html>'''
-HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" src="data:image/gif;base64,ꗈ1" style="position:fixed; top:ꗈ2px; right:ꗈ3px;">'
+# HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" style="position:fixed; left:ꗈ1px; top:ꗈ2px; width:ꗈ3px; height:ꗈ4px; z-index:ꗈ5" src="data:image/gif;base64,ꗈ6">'
+HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" style="position:fixed; left:ꗈ1px; top:ꗈ2px; z-index:ꗈ5" src="data:image/gif;base64,ꗈ6">'
 BLENDER_SERVER = '''
 import bpy
 from http.server import HTTPServer
@@ -829,6 +830,7 @@ class HTMLExportButton (bpy.types.Operator):
 			if obj.type == 'MESH' and not obj.hide_get():
 				previousVisibleObjects.append(obj)
 				obj.hide_render = True
+		bpy.context.scene.render.resolution_percentage = 10
 		camera = bpy.data.cameras[0]
 		cameraObj = bpy.data.objects[camera.name]
 		bpy.ops.object.select_all(action='DESELECT')
@@ -863,14 +865,19 @@ class HTMLExportButton (bpy.types.Operator):
 				command = [ 'convert', '-delay', '10', '-loop', '0', imagePath, imagePath.replace('.png', '.gif') ]
 				subprocess.check_call(command)
 				imagePath = imagePath.replace('.png', '.gif')
-				image = HTML_IMAGE_TEMPLATE
-				image = image.replace('ꗈ0', obj.name)
+				cameraSize = mathutils.Vector((camera.sensor_width, camera.sensor_height))
 				imageData = open(imagePath, 'rb').read()
 				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
-				image = image.replace('ꗈ1', base64EncodedStr)
-				image = image.replace('ꗈ2', '0')
-				image = image.replace('ꗈ3', '0')
-				imagesText += image
+				multiplyUnits = 256
+				imageText = HTML_IMAGE_TEMPLATE
+				imageText = imageText.replace('ꗈ0', obj.name)
+				imageText = imageText.replace('ꗈ1', str(bounds[0].x * multiplyUnits))
+				imageText = imageText.replace('ꗈ2', str(-bounds[0].z * multiplyUnits))
+				# imageText = imageText.replace('ꗈ3', str(bounds[1].x * multiplyUnits))
+				# imageText = imageText.replace('ꗈ4', str(bounds[1].z * multiplyUnits))
+				imageText = imageText.replace('ꗈ5', str(abs(int(bounds[0].y))))
+				imageText = imageText.replace('ꗈ6', base64EncodedStr)
+				imagesText += imageText
 		for obj in previousVisibleObjects:
 			obj.hide_render = False
 		cameraObj.location = previousCameraLocation
