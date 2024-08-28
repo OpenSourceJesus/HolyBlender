@@ -15,7 +15,7 @@ for i in range(4):
 	bpy.ops.mesh.primitive_cube_add()
 	ob = bpy.context.active_object
 	ob.location.x = i * 10
-	ob.location.z = i * 10
+	ob.location.z = -i * 10
 	ob.rotation_euler = [random(), random(), random()]
 bpy.ops.html.export()
 '''
