@@ -1,4 +1,4 @@
-import bpy, subprocess, os, sys, hashlib, mathutils, math, base64#, webbrowser, blf
+import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 user_args = None
 for arg in sys.argv:
@@ -888,13 +888,11 @@ class HTMLExportButton (bpy.types.Operator):
 		htmlText = htmlText.replace('ꗈ', imagesText)
 		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
 		
-		os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + htmlExportPath + '/Server.py')
-		
-		command = [ 'python3', htmlExportPath + '/Server.py' ]
-		
-		subprocess.check_call(command)
-		
-		# webbrowser.open('localhost:8000/index.html')
+		#os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + htmlExportPath + '/Server.py')
+		#command = [ 'python3', htmlExportPath + '/Server.py' ]
+		#subprocess.check_call(command)
+		webbrowser.open(htmlExportPath + '/index.html')
+        return {'FINISHED'}
 
 class UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
