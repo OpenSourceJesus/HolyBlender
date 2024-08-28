@@ -892,7 +892,7 @@ class HTMLExportButton (bpy.types.Operator):
 		#command = [ 'python3', htmlExportPath + '/Server.py' ]
 		#subprocess.check_call(command)
 		webbrowser.open(htmlExportPath + '/index.html')
-        return {'FINISHED'}
+		return {'FINISHED'}
 
 class UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'

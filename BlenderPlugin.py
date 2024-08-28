@@ -22,9 +22,9 @@ bpy.ops.html.export()
 
 blender = 'blender'
 if sys.platform == 'win32': # Windows
-    blender = 'C:/Program Files/Blender Foundation/Blender 4.2/blender.exe'
+	blender = 'C:/Program Files/Blender Foundation/Blender 4.2/blender.exe'
 elif sys.platform == 'darwin': # Apple
-    blender = '/Applications/Blender.app/Contents/MacOS/Blender'
+	blender = '/Applications/Blender.app/Contents/MacOS/Blender'
 command = []
 user_script = None
 user_opts   = []
