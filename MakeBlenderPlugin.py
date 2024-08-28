@@ -1,4 +1,4 @@
-import bpy, subprocess, os, sys, hashlib, mathutils, math# , webbrowser, blf
+import bpy, subprocess, os, sys, hashlib, mathutils, math, base64# , webbrowser, blf
 
 user_args = None
 for arg in sys.argv:
@@ -561,6 +561,13 @@ function Test ()
 <button onclick="Test ()">Hello World!</button>
 <a href="/bpy/data/objects/Cube">Cube</a>
 '''
+HTML_TEMPLATE = '''<!DOCTYPE html>
+<html>
+<body>
+ꗈ
+</body>
+</html>'''
+HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" src="data:image/gif;base64,ꗈ1">'
 BLENDER_SERVER = '''
 import bpy
 from http.server import HTTPServer
@@ -840,6 +847,8 @@ class HTMLExportButton (bpy.types.Operator):
 		previousCameraType = camera.type
 		camera.type = 'ORTHO'
 		previousCameraOrthoScale = camera.ortho_scale
+		htmlText = HTML_TEMPLATE
+		imagesText = ''
 		for obj in bpy.data.objects:
 			if obj.type == 'MESH':
 				obj.hide_render = False
@@ -850,6 +859,16 @@ class HTMLExportButton (bpy.types.Operator):
 				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
 				bpy.ops.render.render(animation=True, write_still=True)
 				obj.hide_render = True
+				imagePath = bpy.context.scene.render.filepath + '0001.png'
+				command = [ 'convert', '-delay', '10', '-loop', '0', imagePath, imagePath.replace('.png', '.gif') ]
+				subprocess.check_call(command)
+				imagePath = imagePath.replace('.png', '.gif')
+				image = HTML_IMAGE_TEMPLATE
+				image = image.replace('ꗈ0', obj.name)
+				imageData = open(imagePath, 'rb').read()
+				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
+				image = image.replace('ꗈ1', str(base64EncodedStr))
+				imagesText += image
 		for obj in previousVisibleObjects:
 			obj.hide_render = False
 		cameraObj.location = previousCameraLocation
@@ -857,6 +876,9 @@ class HTMLExportButton (bpy.types.Operator):
 		cameraObj.rotation_euler = previousCameraRotation
 		camera.type = previousCameraType
 		camera.ortho_scale = previousCameraOrthoScale
+		htmlText = htmlText.replace('ꗈ', imagesText)
+		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
+		os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + htmlExportPath + '/Server.py')
 		bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)
 
 class UnrealExportButton (bpy.types.Operator):
