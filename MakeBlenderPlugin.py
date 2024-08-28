@@ -861,7 +861,7 @@ class HTMLExportButton (bpy.types.Operator):
 				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
 				bpy.ops.render.render(animation=False, write_still=True)
 				obj.hide_render = True
-				imagePath = bpy.context.scene.render.filepath + '0001.png'
+				imagePath = bpy.context.scene.render.filepath + '.png'
 				command = [ 'convert', '-delay', '10', '-loop', '0', imagePath, imagePath.replace('.png', '.gif') ]
 				subprocess.check_call(command)
 				imagePath = imagePath.replace('.png', '.gif')
@@ -895,7 +895,6 @@ class HTMLExportButton (bpy.types.Operator):
 		subprocess.check_call(command)
 		
 		# webbrowser.open('localhost:8000/index.html')
-		bpy.ops.wm.open_mainfile(filepath=bpy.data.filepath)
 
 class UnrealExportButton (bpy.types.Operator):
 	bl_idname = 'unreal.export'
