@@ -1063,7 +1063,7 @@ class UnityExportButton (bpy.types.Operator):
 				obj.select_set(True)
 				previousObjectScale = obj.scale
 				obj.scale *= 100
-				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=False, use_custom_props=True, mesh_smooth_type='FACE')
 				obj.scale = previousObjectScale
 				for materialSlot in obj.material_slots:
 					fileExportPath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
