@@ -11,12 +11,28 @@ bpy.ops.bevy.export()
 
 TEST_HTML = '''
 from random import random
+
+JS = """
+window.alert('ok');
+"""
+
+onclick = bpy.data.texts.new(name='onclick.js')
+onclick.from_string(JS)
+
+CSS = """
+box-shadow: 5px 5px 10px black;
+"""
+css = bpy.data.texts.new(name='css')
+css.from_string(CSS)
+
 for i in range(4):
 	bpy.ops.mesh.primitive_cube_add()
 	ob = bpy.context.active_object
-	ob.location.x = i * 10
-	ob.location.z = -i * 10
+	ob.location.x = i * 3
+	ob.location.z = -i * 3
 	ob.rotation_euler = [random(), random(), random()]
+	ob.html_on_click = onclick
+	ob.html_css = css
 bpy.ops.html.export()
 '''
 

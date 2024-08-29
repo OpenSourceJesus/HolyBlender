@@ -849,8 +849,14 @@ class HTMLExportButton (bpy.types.Operator):
 		previousCameraType = camera.type
 		camera.type = 'ORTHO'
 		previousCameraOrthoScale = camera.ortho_scale
-		htmlText = HTML_TEMPLATE
-		imagesText = ''
+
+		html = [
+			'<!DOCTYPE html>',
+			'<html><head><script>',
+		]
+
+		js_blocks = {}
+		imgs = []
 		for obj in bpy.data.objects:
 			if obj.type == 'MESH':
 				obj.hide_render = False
@@ -869,15 +875,29 @@ class HTMLExportButton (bpy.types.Operator):
 				imageData = open(imagePath, 'rb').read()
 				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
 				multiplyUnits = 256
-				imageText = HTML_IMAGE_TEMPLATE
-				imageText = imageText.replace('ꗈ0', obj.name)
-				imageText = imageText.replace('ꗈ1', str(bounds[0].x * multiplyUnits))
-				imageText = imageText.replace('ꗈ2', str(-bounds[0].z * multiplyUnits))
-				# imageText = imageText.replace('ꗈ3', str(bounds[1].x * multiplyUnits))
-				# imageText = imageText.replace('ꗈ4', str(bounds[1].z * multiplyUnits))
-				imageText = imageText.replace('ꗈ5', str(abs(int(bounds[0].y))))
-				imageText = imageText.replace('ꗈ6', base64EncodedStr)
-				imagesText += imageText
+				zindex = int(bounds[0].y)
+				zindex += 10
+				if zindex < 0: zindex = 0
+				onclick =  ''
+				if obj.html_on_click:
+					fname = '__on_click_' + obj.html_on_click.name.replace('.','_')
+					if obj.html_on_click.name not in js_blocks:
+						js = 'function %s(){%s}' % (fname, obj.html_on_click.as_string())
+						js_blocks[obj.html_on_click.name] = js
+					onclick = 'javascript:%s()' % fname
+				user_css = ''
+				if obj.html_css:
+					user_css = obj.html_css.as_string().replace('\n', ' ').strip()
+				imageText = '<img id="%s" onclick="%s" style="position:fixed; left:%spx; top:%spx; z-index:%s;%s" src="data:image/gif;base64,%s">\n' %(
+					obj.name,
+					onclick,
+					bounds[0].x * multiplyUnits,
+					-bounds[0].z * multiplyUnits,
+					zindex,
+					user_css,
+					base64EncodedStr
+				)
+				imgs.append(imageText)
 		for obj in previousVisibleObjects:
 			obj.hide_render = False
 		cameraObj.location = previousCameraLocation
@@ -885,7 +905,16 @@ class HTMLExportButton (bpy.types.Operator):
 		cameraObj.rotation_euler = previousCameraRotation
 		camera.type = previousCameraType
 		camera.ortho_scale = previousCameraOrthoScale
-		htmlText = htmlText.replace('ꗈ', imagesText)
+
+		for tname in js_blocks:
+			html.append('//'+tname)
+			html.append(js_blocks[tname])
+
+		html.append('</script>')
+		html.append('<body>')
+		html += imgs
+		html.append('</body></html>')
+		htmlText = '\n'.join(html)
 		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
 		
 		#os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + htmlExportPath + '/Server.py')
@@ -1900,7 +1929,11 @@ def register ():
 		description = '',
 		default = '~/TestHtmlProject'
 	)
+
 	bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
+	bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
+	bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
+
 	bpy.types.Text.run_cs = bpy.props.BoolProperty(
 		name = 'Run C# Script',
 		description = ''
