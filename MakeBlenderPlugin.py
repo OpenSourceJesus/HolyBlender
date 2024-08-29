@@ -56,8 +56,8 @@ Transform:
     m_LocalPosition: {x: ꗈ6, y: ꗈ7, z: ꗈ8}
     m_LocalScale: {x: ꗈ9, y: ꗈ10, z: ꗈ11}
     m_ConstrainProportionsScale: 0
-    m_Children: []
-    m_Father: {fileID: 0}
+    m_Children: ꗈ12
+    m_Father: {fileID: ꗈ13}
     m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}'''
 LIGHT_TEMPLATE = '''--- !u!108 &ꗈ0
 Light:
@@ -607,7 +607,8 @@ bpy.ops.httpd.run()
 '''
 MATERIAL_TEMPLATE = '    - {fileID: ꗈ0, guid: ꗈ1, type: 2}'
 COMPONENT_TEMPLATE = '    - component: {fileID: ꗈ}'
-SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
+CHILD_TRANSFORM_TEMPLATE = '    - {fileID: ꗈ}'
+SCENE_ROOT_TEMPLATE = CHILD_TRANSFORM_TEMPLATE
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
 UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
@@ -1069,7 +1070,7 @@ class UnityExportButton (bpy.types.Operator):
 			os.system('cp ' + os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs') + ' ' + os.path.join(projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
 			os.system('cp ' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
 
-			command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath, '-createManualActivationFile' '-batchmode' ]
+			command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
 			print(command)
 			
 			subprocess.check_call(command)
@@ -1086,192 +1087,7 @@ class UnityExportButton (bpy.types.Operator):
 		gameObjectsAndComponentsText = ''
 		transformIds = []
 		for obj in bpy.data.objects:
-			componentIds = []
-			gameObject = GAME_OBJECT_TEMPLATE
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', obj.name)
-			gameObjectsAndComponentsText += gameObject + '\n'
-			gameObjectId = lastId
-			lastId += 1
-			transform = TRANSFORM_TEMPLATE
-			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
-			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
-			transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
-			transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			previousObjectRotationMode = obj.rotation_mode
-			obj.rotation_mode = 'XYZ'
-			eulerAngles = obj.rotation_euler
-			previousYEulerAngles = eulerAngles.y
-			eulerAngles.y = eulerAngles.z
-			eulerAngles.z = previousYEulerAngles + PI
-			rotation = eulerAngles.to_quaternion()
-			transform = transform.replace(REPLACE_INDICATOR + '2', str(rotation.x))
-			transform = transform.replace(REPLACE_INDICATOR + '3', str(rotation.y))
-			transform = transform.replace(REPLACE_INDICATOR + '4', str(rotation.z))
-			transform = transform.replace(REPLACE_INDICATOR + '5', str(rotation.w))
-			obj.rotation_mode = previousObjectRotationMode
-			transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
-			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.z))
-			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.y))
-			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
-			gameObjectsAndComponentsText += transform + '\n'
-			transformIds.append(lastId)
-			lastId += 1
-			guidIndicator = 'guid: '
-			if obj.type == 'LIGHT':
-				light = LIGHT_TEMPLATE
-				light = light.replace(REPLACE_INDICATOR + '0', str(lastId))
-				light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				lightObject = bpy.data.lights[obj.name]
-				lightType = 2
-				if lightObject.type == 'SUN':
-					lightType = 1
-				elif lightObject.type == 'SPOT':
-					lightType = 0
-				elif lightObject.type == 'AREA':
-					lightType = 3
-				light = light.replace(REPLACE_INDICATOR + '2', str(lightType))
-				light = light.replace(REPLACE_INDICATOR + '3', str(lightObject.color[0]))
-				light = light.replace(REPLACE_INDICATOR + '4', str(lightObject.color[1]))
-				light = light.replace(REPLACE_INDICATOR + '5', str(lightObject.color[2]))
-				light = light.replace(REPLACE_INDICATOR + '6', str(lightObject.energy * WATTS_TO_CANDELAS))
-				light = light.replace(REPLACE_INDICATOR + '7', str(10))
-				spotSize = 0
-				innerSpotAngle = 0
-				if lightType == 0:
-					spotSize = lightObject.spot_size
-					innerSpotAngle = spotSize * (1.0 - lightObject.spot_blend)
-				light = light.replace(REPLACE_INDICATOR + '8', str(spotSize))
-				light = light.replace(REPLACE_INDICATOR + '9', str(innerSpotAngle))
-				gameObjectsAndComponentsText += light + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-			elif obj.type == 'MESH':
-				meshFilter = MESH_FILTER_TEMPLATE
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
-				meshGuid = GetGuid(filePath)
-				open(filePath, 'wb').write(MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
-				if unityVersionPath != '':
-					dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-					fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
-					indexOfFile = dataText.find(fileIdIndicator)
-					indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-					indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-					fileId = dataText[indexOfFileId : indexOfEndOfFileId]
-				else:
-					fileId = '10202'
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
-				meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
-				gameObjectsAndComponentsText += meshFilter + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-				for modifier in obj.modifiers:
-					if modifier.type == 'COLLISION':
-						meshCollider = MESH_COLLIDER_TEMPLATE
-						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(lastId))
-						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '2', '0')
-						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '3', '0')
-						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '4', fileId)
-						meshCollider = meshCollider.replace(REPLACE_INDICATOR + '5', meshGuid)
-						gameObjectsAndComponentsText += meshCollider + '\n'
-						componentIds.append(lastId)
-						lastId += 1
-						break
-				if obj.rigid_body != None:
-					rigidbody = RIGIDBODY_TEMPLATE
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '0', str(lastId))
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '2', str(obj.rigid_body.mass))
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '3', str(obj.rigid_body.linear_damping))
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '4', str(obj.rigid_body.angular_damping))
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '5', '1')
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '6', str(int(obj.rigid_body.enabled)))
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '7', '0')
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '8', '0')
-					rigidbody = rigidbody.replace(REPLACE_INDICATOR + '9', '0')
-					gameObjectsAndComponentsText += rigidbody + '\n'
-					componentIds.append(lastId)
-					lastId += 1
-				meshRenderer = MESH_RENDERER_TEMPLATE
-				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
-				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				materials = ''
-				for materialSlot in obj.material_slots:
-					filePath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
-					materialGuid = GetGuid(filePath)
-					open(filePath, 'wb').write(MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
-					if unityVersionPath != '':
-						dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-						fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
-						indexOfFile = dataText.find(fileIdIndicator)
-						indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-						indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-						fileId = dataText[indexOfFileId : indexOfEndOfFileId]
-					else:
-						fileId = '10303'
-					material = MATERIAL_TEMPLATE
-					material = material.replace(REPLACE_INDICATOR + '0', fileId)
-					material = material.replace(REPLACE_INDICATOR + '1', materialGuid)
-					materials += material + '\n'
-				materials = materials[: -1]
-				meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '2', materials)
-				gameObjectsAndComponentsText += meshRenderer + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-			elif obj.type == 'CAMERA':
-				camera = CAMERA_TEMPLATE
-				camera = camera.replace(REPLACE_INDICATOR + '0', str(lastId))
-				camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				cameraObject = bpy.data.cameras[obj.name]
-				fovAxisMode = 0
-				if cameraObject.sensor_fit == 'HORIZONTAL':
-					fovAxisMode = 1
-				camera = camera.replace(REPLACE_INDICATOR + '2', str(fovAxisMode))
-				camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObject.clip_start))
-				camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObject.clip_end))
-				camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObject.angle * (180.0 / PI)))
-				isOrthographic = 0
-				if cameraObject.type == 'ORTHO':
-					isOrthographic = 1
-				camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
-				camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale))
-				gameObjectsAndComponentsText += camera + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-			attachedScripts = attachedUnityScriptsDict.get(obj, [])
-			for scriptName in attachedScripts:
-				script = SCRIPT_TEMPLATE
-				script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
-				script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + scriptName
-				MakeFolderForFile (filePath)
-				for textBlock in bpy.data.texts:
-					if textBlock.name == scriptName:
-						if not scriptName.endswith('.cs'):
-							filePath += '.cs'
-						scriptText = textBlock.as_string()
-						open(filePath, 'wb').write(scriptText.encode('utf-8'))
-						break
-				filePath += '.meta'
-				scriptGuid = GetGuid(filePath)
-				scriptMeta = SCRIPT_META_TEMPLATE
-				scriptMeta += scriptGuid
-				open(filePath, 'wb').write(scriptMeta.encode('utf-8'))
-				script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
-				gameObjectsAndComponentsText += script + '\n'
-				componentIds.append(lastId)
-				lastId += 1
-				break
-			indexOfComponentsList = gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
-			for componentId in componentIds:
-				component = COMPONENT_TEMPLATE
-				component = component.replace(REPLACE_INDICATOR, str(componentId))
-				gameObjectsAndComponentsText = gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + gameObjectsAndComponentsText[indexOfComponentsList :]
-				gameObjectsAndComponentsText = gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
+			MakeUnityObject (obj)
 		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', gameObjectsAndComponentsText)
 		sceneRootsText = ''
 		for transformId in transformIds:
@@ -1284,6 +1100,207 @@ class UnityExportButton (bpy.types.Operator):
 			command = [ unityVersionPath, '-createProject', projectExportPath ]
 			
 			subprocess.check_call(command)
+
+def MakeUnityObject (obj, parentTransformId = 0) -> int:
+	global lastId
+	global transformIds
+	global gameObjectsAndComponentsText
+	componentIds = []
+	gameObject = GAME_OBJECT_TEMPLATE
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '3', obj.name)
+	gameObjectsAndComponentsText += gameObject + '\n'
+	gameObjectId = lastId
+	lastId += 1
+	transform = TRANSFORM_TEMPLATE
+	transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
+	transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
+	myTransformId = lastId
+	if len(obj.children) == 0:
+		transform = transform.replace(REPLACE_INDICATOR + '12', '[]')
+	else:
+		children = ''
+		for childObj in obj.children:
+			transformId = MakeUnityObject(child, lastId)
+			children += '\n' + CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, transformId)
+		transform = transform.replace(REPLACE_INDICATOR + '12', children)
+	transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
+	transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
+	transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+	previousObjectRotationMode = obj.rotation_mode
+	obj.rotation_mode = 'XYZ'
+	eulerAngles = obj.rotation_euler
+	previousYEulerAngles = eulerAngles.y
+	eulerAngles.y = eulerAngles.z
+	eulerAngles.z = previousYEulerAngles + PI
+	rotation = eulerAngles.to_quaternion()
+	transform = transform.replace(REPLACE_INDICATOR + '2', str(rotation.x))
+	transform = transform.replace(REPLACE_INDICATOR + '3', str(rotation.y))
+	transform = transform.replace(REPLACE_INDICATOR + '4', str(rotation.z))
+	transform = transform.replace(REPLACE_INDICATOR + '5', str(rotation.w))
+	obj.rotation_mode = previousObjectRotationMode
+	transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
+	transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.z))
+	transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.y))
+	transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
+	gameObjectsAndComponentsText += transform + '\n'
+	transformIds.append(myTransformId)
+	lastId += 1
+	guidIndicator = 'guid: '
+	if obj.type == 'LIGHT':
+		light = LIGHT_TEMPLATE
+		light = light.replace(REPLACE_INDICATOR + '0', str(lastId))
+		light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		lightObject = bpy.data.lights[obj.name]
+		lightType = 2
+		if lightObject.type == 'SUN':
+			lightType = 1
+		elif lightObject.type == 'SPOT':
+			lightType = 0
+		elif lightObject.type == 'AREA':
+			lightType = 3
+		light = light.replace(REPLACE_INDICATOR + '2', str(lightType))
+		light = light.replace(REPLACE_INDICATOR + '3', str(lightObject.color[0]))
+		light = light.replace(REPLACE_INDICATOR + '4', str(lightObject.color[1]))
+		light = light.replace(REPLACE_INDICATOR + '5', str(lightObject.color[2]))
+		light = light.replace(REPLACE_INDICATOR + '6', str(lightObject.energy * WATTS_TO_CANDELAS))
+		light = light.replace(REPLACE_INDICATOR + '7', str(10))
+		spotSize = 0
+		innerSpotAngle = 0
+		if lightType == 0:
+			spotSize = lightObject.spot_size
+			innerSpotAngle = spotSize * (1.0 - lightObject.spot_blend)
+		light = light.replace(REPLACE_INDICATOR + '8', str(spotSize))
+		light = light.replace(REPLACE_INDICATOR + '9', str(innerSpotAngle))
+		gameObjectsAndComponentsText += light + '\n'
+		componentIds.append(lastId)
+		lastId += 1
+	elif obj.type == 'MESH':
+		meshFilter = MESH_FILTER_TEMPLATE
+		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
+		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
+		meshGuid = GetGuid(filePath)
+		open(filePath, 'wb').write(MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
+		if unityVersionPath != '':
+			dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+			fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+			indexOfFile = dataText.find(fileIdIndicator)
+			indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+			indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
+			fileId = dataText[indexOfFileId : indexOfEndOfFileId]
+		else:
+			fileId = '10202'
+		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
+		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
+		gameObjectsAndComponentsText += meshFilter + '\n'
+		componentIds.append(lastId)
+		lastId += 1
+		for modifier in obj.modifiers:
+			if modifier.type == 'COLLISION':
+				meshCollider = MESH_COLLIDER_TEMPLATE
+				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(lastId))
+				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '2', '0')
+				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '3', '0')
+				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '4', fileId)
+				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '5', meshGuid)
+				gameObjectsAndComponentsText += meshCollider + '\n'
+				componentIds.append(lastId)
+				lastId += 1
+				break
+		if obj.rigid_body != None:
+			rigidbody = RIGIDBODY_TEMPLATE
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '0', str(lastId))
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '2', str(obj.rigid_body.mass))
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '3', str(obj.rigid_body.linear_damping))
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '4', str(obj.rigid_body.angular_damping))
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '5', '1')
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '6', str(int(obj.rigid_body.enabled)))
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '7', '0')
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '8', '0')
+			rigidbody = rigidbody.replace(REPLACE_INDICATOR + '9', '0')
+			gameObjectsAndComponentsText += rigidbody + '\n'
+			componentIds.append(lastId)
+			lastId += 1
+		meshRenderer = MESH_RENDERER_TEMPLATE
+		meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
+		meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		materials = ''
+		for materialSlot in obj.material_slots:
+			filePath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
+			materialGuid = GetGuid(filePath)
+			open(filePath, 'wb').write(MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
+			if unityVersionPath != '':
+				dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+				fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+				indexOfFile = dataText.find(fileIdIndicator)
+				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
+				fileId = dataText[indexOfFileId : indexOfEndOfFileId]
+			else:
+				fileId = '10303'
+			material = MATERIAL_TEMPLATE
+			material = material.replace(REPLACE_INDICATOR + '0', fileId)
+			material = material.replace(REPLACE_INDICATOR + '1', materialGuid)
+			materials += material + '\n'
+		materials = materials[: -1]
+		meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '2', materials)
+		gameObjectsAndComponentsText += meshRenderer + '\n'
+		componentIds.append(lastId)
+		lastId += 1
+	elif obj.type == 'CAMERA':
+		camera = CAMERA_TEMPLATE
+		camera = camera.replace(REPLACE_INDICATOR + '0', str(lastId))
+		camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		cameraObject = bpy.data.cameras[obj.name]
+		fovAxisMode = 0
+		if cameraObject.sensor_fit == 'HORIZONTAL':
+			fovAxisMode = 1
+		camera = camera.replace(REPLACE_INDICATOR + '2', str(fovAxisMode))
+		camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObject.clip_start))
+		camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObject.clip_end))
+		camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObject.angle * (180.0 / PI)))
+		isOrthographic = 0
+		if cameraObject.type == 'ORTHO':
+			isOrthographic = 1
+		camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
+		camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale))
+		gameObjectsAndComponentsText += camera + '\n'
+		componentIds.append(lastId)
+		lastId += 1
+	attachedScripts = attachedUnityScriptsDict.get(obj, [])
+	for scriptName in attachedScripts:
+		script = SCRIPT_TEMPLATE
+		script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
+		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + scriptName
+		MakeFolderForFile (filePath)
+		for textBlock in bpy.data.texts:
+			if textBlock.name == scriptName:
+				if not scriptName.endswith('.cs'):
+					filePath += '.cs'
+				scriptText = textBlock.as_string()
+				open(filePath, 'wb').write(scriptText.encode('utf-8'))
+				break
+		filePath += '.meta'
+		scriptGuid = GetGuid(filePath)
+		scriptMeta = SCRIPT_META_TEMPLATE
+		scriptMeta += scriptGuid
+		open(filePath, 'wb').write(scriptMeta.encode('utf-8'))
+		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+		gameObjectsAndComponentsText += script + '\n'
+		componentIds.append(lastId)
+		lastId += 1
+	indexOfComponentsList = gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
+	for componentId in componentIds:
+		component = COMPONENT_TEMPLATE
+		component = component.replace(REPLACE_INDICATOR, str(componentId))
+		gameObjectsAndComponentsText = gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + gameObjectsAndComponentsText[indexOfComponentsList :]
+		gameObjectsAndComponentsText = gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
+	return transformId
 
 class UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
