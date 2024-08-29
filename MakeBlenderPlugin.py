@@ -865,7 +865,7 @@ class HTMLExportButton (bpy.types.Operator):
 				bounds = GetObjectBounds(obj)
 				cameraObj.location = bounds[0] - mathutils.Vector((0, bounds[1].y, 0))
 				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
-				if os.path.isfile( htmlExportPath + '/' + obj.name ):
+				if os.path.isfile( htmlExportPath + '/' + obj.name ) and '--skip-render' in sys.argv:
 					pass
 				else:
 					bpy.ops.render.render(animation=False, write_still=True)
@@ -877,7 +877,8 @@ class HTMLExportButton (bpy.types.Operator):
 				cameraSize = mathutils.Vector((camera.sensor_width, camera.sensor_height))
 				imageData = open(imagePath, 'rb').read()
 				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
-				multiplyUnits = 256
+				#multiplyUnits = 256
+				multiplyUnits = 50
 				zindex = int(bounds[0].y)
 				zindex += 10
 				if zindex < 0: zindex = 0
@@ -885,13 +886,13 @@ class HTMLExportButton (bpy.types.Operator):
 				if obj.html_on_click:
 					fname = '__on_click_' + obj.html_on_click.name.replace('.','_')
 					if obj.html_on_click.name not in js_blocks:
-						js = 'function %s(){%s}' % (fname, obj.html_on_click.as_string())
+						js = 'function %s(self){%s}' % (fname, obj.html_on_click.as_string())
 						js_blocks[obj.html_on_click.name] = js
-					onclick = 'javascript:%s()' % fname
+					onclick = 'javascript:%s(this)' % fname
 				user_css = ''
 				if obj.html_css:
 					user_css = obj.html_css.as_string().replace('\n', ' ').strip()
-				imageText = '<img id="%s" onclick="%s" style="position:fixed; left:%spx; top:%spx; z-index:%s;%s" src="data:image/gif;base64,%s">\n' %(
+				imageText = '<div id="%s" onclick="%s" style="position:absolute; left:%spx; top:%spx; z-index:%s;%s"><img src="data:image/gif;base64,%s"></div>\n' %(
 					obj.name,
 					onclick,
 					bounds[0].x * multiplyUnits,
