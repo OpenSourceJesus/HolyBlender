@@ -880,9 +880,9 @@ class HTMLExportButton (bpy.types.Operator):
 				if zindex < 0: zindex = 0
 				onclick =  ''
 				if obj.html_on_click:
-					fname = obj.html_on_click.name.replace('.','_')
+					fname = '__on_click_' + obj.html_on_click.name.replace('.','_')
 					if obj.html_on_click.name not in js_blocks:
-						js = 'function __on_click_%s(){%s}' % (fname, obj.html_on_click.as_string())
+						js = 'function %s(){%s}' % (fname, obj.html_on_click.as_string())
 						js_blocks[obj.html_on_click.name] = js
 					onclick = 'javascript:%s()' % fname
 				user_css = ''
