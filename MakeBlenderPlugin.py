@@ -412,55 +412,6 @@ Camera:
     m_OcclusionCulling: 1
     m_StereoConvergence: 10
     m_StereoSeparation: 0.022'''
-GET_UNITY_PROJECT_INFO_SCRIPT = '''using System;
-using System.IO;
-using UnityEngine;
-using UnityEditor;
-using Object = UnityEngine.Object;
-
-public class GetUnityProjectInfo : MonoBehaviour
-{
-	public static void Do ()
-	{
-		string[] args = Environment.GetCommandLineArgs();
-		string outputText = "";
-		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".fbx");
-		foreach (string filePath in filePaths)
-		{
-			int indexOfAssets = filePath.IndexOf("Assets");
-			string relativeFilePath = filePath.Substring(indexOfAssets);
-			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
-			foreach (Object obj in objects)
-			{
-				if (obj.GetType() == typeof(Mesh))
-				{
-					string guid;
-					long fileId;
-					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						outputText += '-' + filePath + ' ' + fileId + ' ' + guid + ',';
-				}
-			}
-		}
-		filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".mat");
-		foreach (string filePath in filePaths)
-		{
-			int indexOfAssets = filePath.IndexOf("Assets");
-			string relativeFilePath = filePath.Substring(indexOfAssets);
-			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
-			foreach (Object obj in objects)
-			{
-				if (obj.GetType() == typeof(Material))
-				{
-					string guid;
-					long fileId;
-					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						outputText += '-' + filePath + ' ' + fileId + ' ' + guid + ',';
-				}
-			}
-		}
-		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
-	}
-}'''
 EXAMPLES_DICT = {
 	'Hello World (Unity)' : '''using UnityEngine;
 
@@ -561,12 +512,6 @@ function Test ()
 <button onclick="Test ()">Hello World!</button>
 <a href="/bpy/data/objects/Cube">Cube</a>
 '''
-HTML_TEMPLATE = '''<!DOCTYPE html>
-<html>
-<body>
-ꗈ
-</body>
-</html>'''
 # HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" style="position:fixed; left:ꗈ1px; top:ꗈ2px; width:ꗈ3px; height:ꗈ4px; z-index:ꗈ5" src="data:image/gif;base64,ꗈ6">'
 HTML_IMAGE_TEMPLATE = '<img id="ꗈ0" style="position:fixed; left:ꗈ1px; top:ꗈ2px; z-index:ꗈ5" src="data:image/gif;base64,ꗈ6">'
 BLENDER_SERVER = '''
@@ -665,8 +610,9 @@ COMPONENT_TEMPLATE = '    - component: {fileID: ꗈ}'
 SCENE_ROOT_TEMPLATE = '  - {fileID: ꗈ}'
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
-TEMPLATES_PATH = os.path.join(__thisdir,'Templates')
-TEMPLATE_REGISTRY_PATH = TEMPLATES_PATH + '/registry.json'
+UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
+TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
+TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = '/tmp/registry.json'
 MAX_SCRIPTS_PER_OBJECT = 16
 unrealCodePath = ''
@@ -1118,12 +1064,12 @@ class UnityExportButton (bpy.types.Operator):
 					unityVersionPath = _unityVersionPath
 					break
 		if unityVersionPath != '':
-			MakeFolderForFile (projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs')
-			open(projectExportPath + '/Assets/Editor/GetUnityProjectInfo.cs', 'wb').write(GET_UNITY_PROJECT_INFO_SCRIPT.encode('utf-8'))
+			MakeFolderForFile (os.path.join(projectExportPath, 'Assets', 'Editor', ''))
 
+			os.system('cp ' + os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs') + ' ' + os.path.join(projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
 			os.system('cp ' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
 
-			command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
+			command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath, '-createManualActivationFile' '-batchmode' ]
 			print(command)
 			
 			subprocess.check_call(command)
