@@ -37,8 +37,8 @@ GameObject:
     m_Component:
     - component: {fileID: ꗈ1}
 ꗈ2
-    m_Layer: 0
-    m_Name: ꗈ3
+    m_Layer: ꗈ3
+    m_Name: ꗈ4
     m_TagString: Untagged
     m_Icon: {fileID: 0}
     m_NavMeshLayer: 0
@@ -1088,6 +1088,25 @@ class UnityExportButton (bpy.types.Operator):
 		transformIds = []
 		for obj in bpy.data.objects:
 			MakeUnityObject (obj)
+		scriptsFolder = os.path.join(projectExportPath, 'Assets', 'Scripts')
+		MakeFolderForFile (os.path.join(projectExportPath, 'Assets', 'Scripts', ''))
+		sendAndRecieveClickEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveClickEvents.cs')
+
+		os.system('cp ' + os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveClickEvents.cs') + ' ' + sendAndRecieveClickEventsScriptPath)
+
+		gameObjectIdAndTransformId = MakeEmptyUnityObject('Send And Recieve Click Events')
+		script = SCRIPT_TEMPLATE
+		script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
+		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
+		sendAndRecieveClickEventsScriptMetaPath = sendAndRecieveClickEventsScriptPath + '.meta'
+		scriptGuid = GetGuid(sendAndRecieveClickEventsScriptMetaPath)
+		scriptMeta = SCRIPT_META_TEMPLATE
+		scriptMeta += scriptGuid
+		open(sendAndRecieveClickEventsScriptMetaPath, 'wb').write(scriptMeta.encode('utf-8'))
+		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+		gameObjectsAndComponentsText += script + '\n'
+		componentIds.append(lastId)
+		lastId += 1
 		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', gameObjectsAndComponentsText)
 		sceneRootsText = ''
 		for transformId in transformIds:
@@ -1101,6 +1120,38 @@ class UnityExportButton (bpy.types.Operator):
 			
 			subprocess.check_call(command)
 
+def MakeEmptyUnityObject (name : str, layer = 0, parentTransformId = 0) -> (int, int):
+	global lastId
+	global transformIds
+	global gameObjectsAndComponentsText
+	gameObject = GAME_OBJECT_TEMPLATE
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '3', str(layer))
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '4', name)
+	gameObjectsAndComponentsText += gameObject + '\n'
+	gameObjectId = lastId
+	lastId += 1
+	transform = TRANSFORM_TEMPLATE
+	transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
+	transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
+	transform = transform.replace(REPLACE_INDICATOR + '12', '[]')
+	transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
+	transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
+	transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+	transform = transform.replace(REPLACE_INDICATOR + '2', '0')
+	transform = transform.replace(REPLACE_INDICATOR + '3', '0')
+	transform = transform.replace(REPLACE_INDICATOR + '4', '0')
+	transform = transform.replace(REPLACE_INDICATOR + '5', '0')
+	transform = transform.replace(REPLACE_INDICATOR + '6', '0')
+	transform = transform.replace(REPLACE_INDICATOR + '7', '0')
+	transform = transform.replace(REPLACE_INDICATOR + '8', '0')
+	transform = transform.replace(REPLACE_INDICATOR + '9', '1')
+	gameObjectsAndComponentsText += transform + '\n'
+	transformIds.append(lastId)
+	lastId += 1
+	return (gameObjectId, transformId)
+
 def MakeUnityObject (obj, parentTransformId = 0) -> int:
 	global lastId
 	global transformIds
@@ -1109,7 +1160,8 @@ def MakeUnityObject (obj, parentTransformId = 0) -> int:
 	gameObject = GAME_OBJECT_TEMPLATE
 	gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
 	gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
-	gameObject = gameObject.replace(REPLACE_INDICATOR + '3', obj.name)
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
+	gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
 	gameObjectsAndComponentsText += gameObject + '\n'
 	gameObjectId = lastId
 	lastId += 1
@@ -1117,14 +1169,28 @@ def MakeUnityObject (obj, parentTransformId = 0) -> int:
 	transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
 	transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
 	myTransformId = lastId
-	if len(obj.children) == 0:
-		transform = transform.replace(REPLACE_INDICATOR + '12', '[]')
-	else:
-		children = ''
-		for childObj in obj.children:
-			transformId = MakeUnityObject(child, lastId)
-			children += '\n' + CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, transformId)
-		transform = transform.replace(REPLACE_INDICATOR + '12', children)
+	children = ''
+	for childObj in obj.children:
+		transformId = MakeUnityObject(child, lastId)
+		children += '\n' + CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, transformId)
+	meshFileId = '10202'
+	meshGuid = ''
+	if obj.type == 'MESH':
+		filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
+		meshGuid = GetGuid(filePath)
+		open(filePath, 'wb').write(MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
+		if unityVersionPath != '':
+			dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+			fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+			indexOfFile = dataText.find(fileIdIndicator)
+			indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+			indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
+			meshFileId = dataText[indexOfFileId : indexOfEndOfFileId]
+		gameObjectIdAndTransformId = MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
+		children += '\n' + CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, gameObjectIdAndTransformId[1])
+	elif len(obj.children) == 0:
+		children = '[]'
+	transform = transform.replace(REPLACE_INDICATOR + '12', children)
 	transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
 	transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
 	transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
@@ -1180,35 +1246,14 @@ def MakeUnityObject (obj, parentTransformId = 0) -> int:
 		meshFilter = MESH_FILTER_TEMPLATE
 		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
 		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-		filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
-		meshGuid = GetGuid(filePath)
-		open(filePath, 'wb').write(MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
-		if unityVersionPath != '':
-			dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-			fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
-			indexOfFile = dataText.find(fileIdIndicator)
-			indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-			indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-			fileId = dataText[indexOfFileId : indexOfEndOfFileId]
-		else:
-			fileId = '10202'
-		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', fileId)
+		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', meshFileId)
 		meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
 		gameObjectsAndComponentsText += meshFilter + '\n'
 		componentIds.append(lastId)
 		lastId += 1
 		for modifier in obj.modifiers:
 			if modifier.type == 'COLLISION':
-				meshCollider = MESH_COLLIDER_TEMPLATE
-				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(lastId))
-				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '2', '0')
-				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '3', '0')
-				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '4', fileId)
-				meshCollider = meshCollider.replace(REPLACE_INDICATOR + '5', meshGuid)
-				gameObjectsAndComponentsText += meshCollider + '\n'
-				componentIds.append(lastId)
-				lastId += 1
+				AddMeshCollider (gameObjectId, False, False, meshFileId, meshGuid)
 				break
 		if obj.rigid_body != None:
 			rigidbody = RIGIDBODY_TEMPLATE
@@ -1301,6 +1346,23 @@ def MakeUnityObject (obj, parentTransformId = 0) -> int:
 		gameObjectsAndComponentsText = gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + gameObjectsAndComponentsText[indexOfComponentsList :]
 		gameObjectsAndComponentsText = gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
 	return transformId
+
+def AddMeshCollider (gameObjectId : int, isTirgger : bool, isConvex : bool, fileId : str, meshGuid : str):
+	meshCollider = MESH_COLLIDER_TEMPLATE
+	meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(lastId))
+	meshCollider = meshCollider.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+	meshCollider = meshCollider.replace(REPLACE_INDICATOR + '2', str(int(isTirgger)))
+	meshCollider = meshCollider.replace(REPLACE_INDICATOR + '3', str(int(isConvex)))
+	meshCollider = meshCollider.replace(REPLACE_INDICATOR + '4', fileId)
+	meshCollider = meshCollider.replace(REPLACE_INDICATOR + '5', meshGuid)
+	gameObjectsAndComponentsText += meshCollider + '\n'
+	componentIds.append(lastId)
+	lastId += 1
+
+def MakeClickableChild (name : str, fileId : str, meshGuid : str, parentTransformId = 0) -> (int, int):
+	gameObjectIdAndTransformId = MakeEmptyUnityObject(name, 31, parentTransformId)
+	AddMeshCollider (gameObjectIdAndTransformId[0], True, False, fileId, meshGuid)
+	return gameObjectIdAndTransformId
 
 class UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
