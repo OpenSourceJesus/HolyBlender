@@ -865,7 +865,10 @@ class HTMLExportButton (bpy.types.Operator):
 				bounds = GetObjectBounds(obj)
 				cameraObj.location = bounds[0] - mathutils.Vector((0, bounds[1].y, 0))
 				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
-				bpy.ops.render.render(animation=False, write_still=True)
+				if os.path.isfile( htmlExportPath + '/' + obj.name ):
+					pass
+				else:
+					bpy.ops.render.render(animation=False, write_still=True)
 				obj.hide_render = True
 				imagePath = bpy.context.scene.render.filepath + '.png'
 				command = [ 'convert', '-delay', '10', '-loop', '0', imagePath, imagePath.replace('.png', '.gif') ]
@@ -916,11 +919,14 @@ class HTMLExportButton (bpy.types.Operator):
 		html.append('</body></html>')
 		htmlText = '\n'.join(html)
 		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
-		
-		#os.system('cp ' + os.path.expanduser('~/HolyBlender/Server.py') + ' ' + htmlExportPath + '/Server.py')
-		#command = [ 'python3', htmlExportPath + '/Server.py' ]
-		#subprocess.check_call(command)
-		webbrowser.open(htmlExportPath + '/index.html')
+		if '__index__.html' not in bpy.data.texts: bpy.data.texts.new(name='__index__.html')
+		bpy.data.texts['__index__.html'].from_string(htmlText)
+		if bpy.data.worlds[0].holyserver:
+			scope = globals()
+			exec(bpy.data.worlds[0].holyserver.as_string(), scope, scope)
+			webbrowser.open('http://localhost:8000/')
+		else:
+			webbrowser.open(htmlExportPath + '/index.html')
 		return {'FINISHED'}
 
 class UnrealExportButton (bpy.types.Operator):
@@ -1930,6 +1936,7 @@ def register ():
 		default = '~/TestHtmlProject'
 	)
 
+	bpy.types.World.holyserver = bpy.props.PointerProperty(name='Python Server', type=bpy.types.Text)
 	bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
 	bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
 	bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
