@@ -644,12 +644,14 @@ class WorldPanel (bpy.types.Panel):
 		self.layout.prop(context.world, 'unity_project_import_path')
 		self.layout.prop(context.world, 'unity_project_export_path')
 		self.layout.prop(context.world, 'unrealExportPath')
+		self.layout.prop(context.world, 'godotExportPath')
 		self.layout.prop(context.world, 'bevy_project_path')
 		self.layout.prop(context.world, 'htmlExportPath')
 		self.layout.prop(context.world, 'html_code')
-		self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
-		self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(GodotExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(HTMLExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
 
@@ -670,23 +672,6 @@ class UnityScriptsPanel (bpy.types.Panel):
 			if not foundUnassignedScript:
 				foundUnassignedScript = not hasProperty
 
-class BevyScriptsPanel (bpy.types.Panel):
-	bl_idname = 'OBJECT_PT_bevy_Scripts_Panel'
-	bl_label = 'HolyBlender Bevy Scripts'
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = 'object'
-
-	def draw(self, context):
-		self.layout.label(text='Attach bevy scripts')
-		foundUnassignedScript = False
-		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasProperty = getattr(context.active_object, 'bevy_script' + str(i)) != None
-			if hasProperty or not foundUnassignedScript:
-				self.layout.prop(context.active_object, 'bevy_script' + str(i))
-			if not foundUnassignedScript:
-				foundUnassignedScript = not hasProperty
-
 class UnrealScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_Unreal_Scripts_Panel'
 	bl_label = 'HolyBlender Unreal Scripts'
@@ -701,6 +686,40 @@ class UnrealScriptsPanel (bpy.types.Panel):
 			hasProperty = getattr(context.active_object, 'unreal_script' + str(i)) != None
 			if hasProperty or not foundUnassignedScript:
 				self.layout.prop(context.active_object, 'unreal_script' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasProperty
+
+class GodotScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Godot_Scripts_Panel'
+	bl_label = 'HolyBlender Godot Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw(self, context):
+		self.layout.label(text='Attach Godot scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasProperty = getattr(context.active_object, 'godotScript' + str(i)) != None
+			if hasProperty or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'godotScript' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasProperty
+
+class BevyScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_bevy_Scripts_Panel'
+	bl_label = 'HolyBlender Bevy Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw(self, context):
+		self.layout.label(text='Attach bevy scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasProperty = getattr(context.active_object, 'bevy_script' + str(i)) != None
+			if hasProperty or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'bevy_script' + str(i))
 			if not foundUnassignedScript:
 				foundUnassignedScript = not hasProperty
 
@@ -987,6 +1006,24 @@ class UnrealExportButton (bpy.types.Operator):
 
 			os.system(command)
 
+class GodotExportButton (bpy.types.Operator):
+	bl_idname = 'godot.export'
+	bl_label = 'Export To Godot'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		godotExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
+		if not os.path.isdir(godotExportPath):
+			MakeFolderForFile (os.path.join(godotExportPath, ''))
+		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		if importPath != '':
+			print('Exporting from Unity to Godot doesn\'t work yet')
+		else:
+			print('Exporting from blender to Godot doesn\'t work yet')
+
 class BevyExportButton (bpy.types.Operator):
 	bl_idname = 'bevy.export'
 	bl_label = 'Export To Bevy'
@@ -996,12 +1033,12 @@ class BevyExportButton (bpy.types.Operator):
 		return True
 	
 	def execute (self, context):
-		# BuildTool ('UnityToBevy')
 		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
 		if not os.path.isdir(bevyExportPath):
 			MakeFolderForFile (bevyExportPath + '/')
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath != '':
+			BuildTool ('UnityToBevy')
 			command = [ 'python3', os.path.expanduser('~/HolyBlender/UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
 			print(command)
 
@@ -1436,6 +1473,7 @@ classes = [
 	UnrealExportButton,
 	BevyExportButton,
 	UnityExportButton,
+	GodotExportButton,
 	HTMLExportButton,
 	PlayButton,
 	UnrealTranslateButton,
@@ -1445,8 +1483,9 @@ classes = [
 	AttachedObjectsMenu,
 	Loop,
 	UnityScriptsPanel,
-	BevyScriptsPanel,
 	UnrealScriptsPanel,
+	GodotScriptsPanel,
+	BevyScriptsPanel,
 	WorldPanel
 ]
 
@@ -1784,14 +1823,6 @@ def OnUpdateUnityScripts (self, context):
 			attachedScripts.append(script.name)
 	attachedUnityScriptsDict[self] = attachedScripts
 
-def OnUpdateBevyScripts (self, context):
-	attachedScripts = []
-	for i in range(MAX_SCRIPTS_PER_OBJECT):
-		script = getattr(self, 'bevy_script' + str(i))
-		if script != None:
-			attachedScripts.append(script.name)
-	attachedBevyScriptsDict[self] = attachedScripts
-
 def OnUpdateUnrealScripts (self, context):
 	attachedScripts = []
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
@@ -1799,6 +1830,22 @@ def OnUpdateUnrealScripts (self, context):
 		if script != None:
 			attachedScripts.append(script.name)
 	attachedUnrealScriptsDict[self] = attachedScripts
+
+def OnUpdateGodotScripts (self, context):
+	attachedScripts = []
+	for i in range(MAX_SCRIPTS_PER_OBJECT):
+		script = getattr(self, 'godotScript' + str(i))
+		if script != None:
+			attachedScripts.append(script.name)
+	attachedUnrealScriptsDict[self] = attachedScripts
+
+def OnUpdateBevyScripts (self, context):
+	attachedScripts = []
+	for i in range(MAX_SCRIPTS_PER_OBJECT):
+		script = getattr(self, 'bevy_script' + str(i))
+		if script != None:
+			attachedScripts.append(script.name)
+	attachedBevyScriptsDict[self] = attachedScripts
 
 def UpdateInspectorFields (textBlock):
 	global attachedUnityScriptsDict
@@ -1950,6 +1997,11 @@ def register ():
 		description = '',
 		default = '~/TestUnrealProject'
 	)
+	bpy.types.World.godotExportPath = bpy.props.StringProperty(
+		name = 'Godot project path',
+		description = '',
+		default = '~/TestGodotProject'
+	)
 	bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 		name = 'Bevy project path',
 		description = '',
@@ -1982,8 +2034,9 @@ def register ():
 	bpy.types.TEXT_HT_footer.append(DrawIsInitScriptToggle)
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
 		setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text, update=OnUpdateUnityScripts))
-		setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text, update=OnUpdateBevyScripts))
 		setattr(bpy.types.Object, 'unreal_script' + str(i), bpy.props.PointerProperty(name='Attach Unreal script', type=bpy.types.Text, update=OnUpdateUnrealScripts))
+		setattr(bpy.types.Object, 'godotScript' + str(i), bpy.props.PointerProperty(name='Attach Godot script', type=bpy.types.Text, update=OnUpdateGodotScripts))
+		setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text, update=OnUpdateBevyScripts))
 	for obj in bpy.data.objects:
 		attachedScripts = []
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
