@@ -535,16 +535,16 @@ class UnrealExportButton (bpy.types.Operator):
 			for collection in bpy.data.collections:
 				for obj in collection.objects:
 					if obj.instance_collection == None:
-						data += GetObjectsData(collection.objects) + '\n'
+						data += self.GetObjectsData(collection.objects) + '\n'
 			data += '\nScenes\n'
 			for scene in bpy.data.scenes:
-				data += GetObjectsData(scene.objects) + '\n'
+				data += self.GetObjectsData(scene.objects) + '\n'
 			data += 'Children\n'
-			data += GetObjectsData(childrenDict) + '\n'
+			data += self.GetObjectsData(childrenDict) + '\n'
 			data += '\nScripts'
 			for obj in attachedUnrealScriptsDict:
 				if len(attachedUnrealScriptsDict[obj]) > 0:
-					data += '\n' + GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedUnrealScriptsDict[obj]) + '\n'
+					data += '\n' + self.GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedUnrealScriptsDict[obj]) + '\n'
 					for property in obj.keys():
 						data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
 					data = data[: len(data) - 2]
@@ -615,6 +615,62 @@ class UnrealExportButton (bpy.types.Operator):
 
 			os.system(command)
 
+	def GetObjectsData (self, objectGroup):
+		data = 'Cameras'
+		for camera in bpy.data.cameras:
+			if camera.name in objectGroup.keys():
+				data += '\n' + GetCameraData(camera)
+		data += '\nLights'
+		for light in bpy.data.lights:
+			if light.name in objectGroup.keys():
+				data += '\n' + GetLightData(light)
+		data += '\nMeshes'
+		for obj in objectGroup:
+			if obj.type == 'MESH':
+				ExportMesh (obj)
+				data += '\n' + self.GetBasicObjectData(obj)
+				if obj.rigid_body != None:
+					data += '☣️' + str(obj.rigid_body.mass) + '☣️' + str(obj.rigid_body.linear_damping) + '☣️' + str(obj.rigid_body.angular_damping) + '☣️' + str(obj.rigid_body.enabled)
+				for modifier in obj.modifiers:
+					if modifier.type == 'COLLISION':
+						data += '☣️True'
+						break
+		return data
+
+	def GetBasicObjectData (self, obj):
+		global childrenDict
+		for _obj in bpy.data.objects:
+			if _obj.name == obj.name:
+				obj = _obj
+				break
+		previousObjectRotationMode = obj.rotation_mode
+		obj.rotation_mode = 'QUATERNION'
+		output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
+		if len(obj.children) > 0:
+			for child in obj.children:
+				childrenDict[child.name] = child
+		obj.rotation_mode = previousObjectRotationMode
+		return output
+
+	def GetCameraData (self, camera):
+		horizontalFov = False
+		if camera.sensor_fit == 'HORIZONTAL':
+			horizontalFov = True
+		isOrthographic = False
+		if camera.type == 'ORTHO':
+			isOrthographic = True
+		return self.GetBasicObjectData(camera) + '☣️' + str(horizontalFov) + '☣️' + str(camera.angle * (180.0 / PI)) + '☣️' + str(isOrthographic) + '☣️' + str(camera.ortho_scale) + '☣️' + str(camera.clip_start) + '☣️' + str(camera.clip_end)
+
+	def GetLightData (self, light):
+		lightType = 0
+		if light.type == 'POINT':
+			lightType = 1
+		elif light.type == 'SPOT':
+			lightType = 2
+		elif lightObject.type == 'AREA':
+			lightType = 3
+		return self.GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * WATTS_TO_CANDELAS * 100) + '☣️' + str(light.color)
+
 class GodotExportButton (bpy.types.Operator):
 	bl_idname = 'godot.export'
 	bl_label = 'Export To Godot'
@@ -622,6 +678,7 @@ class GodotExportButton (bpy.types.Operator):
 	RESOURCE_TEMPLATE = '[ext_resource type="PackedScene" uid="uid://ꗈ0" path="res://ꗈ1" id="ꗈ2"]'
 	MESH_INSTANCE_TEMPLATE = '[node name="ꗈ0" parent="ꗈ1" instance=ExtResource("ꗈ2")]'
 	TRANSFORM_TEMPLATE = 'transform = Transform3D(ꗈ0, ꗈ1, ꗈ2, ꗈ3, ꗈ4, ꗈ5, ꗈ6, ꗈ7, ꗈ8, ꗈ9, ꗈ10, ꗈ11)'
+	NODE_TEMPLATE = '[node name="ꗈ0" type="ꗈ1" parent="ꗈ2"]'
 	godotExportPath = ''
 	resources = ''
 	nodes = ''
@@ -660,11 +717,6 @@ class GodotExportButton (bpy.types.Operator):
 			fileExportPath += obj.name + '.fbx'
 			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
 			id = self.GetId(7)
-			parent = '.'
-			for obj2 in bpy.data.objects:
-				if obj in obj2.children:
-					parent = obj2.name
-					break
 			resource = self.RESOURCE_TEMPLATE
 			resource = resource.replace(REPLACE_INDICATOR + '0', self.GetId(13))
 			resource = resource.replace(REPLACE_INDICATOR + '1', fileExportPath.replace(self.godotExportPath, ''))
@@ -672,7 +724,7 @@ class GodotExportButton (bpy.types.Operator):
 			self.resources += resource
 			meshInstance = self.MESH_INSTANCE_TEMPLATE
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '0', obj.name)
-			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '1', '.')
+			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '1', self.GetParentText(obj))
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '2', id)
 			transform = self.TRANSFORM_TEMPLATE
 			previousObjectRotationMode = obj.rotation_mode
@@ -695,7 +747,39 @@ class GodotExportButton (bpy.types.Operator):
 			transform = transform.replace(REPLACE_INDICATOR + '8', str(forward.z))
 			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.location.x))
 			meshInstance += '\n' + transform
-			self.nodes += meshInstance
+			self.nodes += meshInstance + '\n'
+		elif obj.type == 'LIGHT':
+			light = self.NODE_TEMPLATE
+			light = light.replace(REPLACE_INDICATOR + '0', obj.name)
+			lightObj = None
+			for _light in bpy.data.lights:
+				if _light.name == obj.name:
+					lightObj = _light
+					break
+			if lightObj.type == 'SUN':
+				light = light.replace(REPLACE_INDICATOR + '1', 'DirectionalLight3D')
+			elif lightObj.type == 'POINT':
+				light = light.replace(REPLACE_INDICATOR + '1', 'OmniLight3D')
+			elif lightObj.type == 'SPOT':
+				light = light.replace(REPLACE_INDICATOR + '1', 'SpotLight3D')
+			else:# elif lightObject.type == 'AREA':
+				print('Area lights are not supported in Godot')
+				return
+			light = light.replace(REPLACE_INDICATOR + '2', self.GetParentText(obj))
+			if lightObj.type == 'POINT':
+				light += '\nomni_range = ' + str(lightObj.cutoff_distance)
+			elif lightObj.type == 'SPOT':
+				light += '\nspot_range = ' + str(lightObj.cutoff_distance)
+				light += '\nspot_angle = ' + str(lightObj.spot_size)
+			light += '\nlight_energy = ' + str(lightObj.energy)
+			light += '\nlight_color = ' + 'Color(' + str(lightObj.color[0]) + ', ' + str(lightObj.color[1]) + ', ' + str(lightObj.color[2]) + ', 1)'
+			self.nodes += light + '\n'
+		
+	def GetParentText (self, obj):
+		for obj2 in bpy.data.objects:
+			if obj in obj2.children:
+				return obj2.name
+		return '.'
 
 	def GetId (self, length : int):
 		output = '1'
@@ -1592,62 +1676,6 @@ def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
 	else:
 		print('GetObjectBounds is not implemented for object types besides meshes')
 	return ((_min + _max) / 2, _max - _min)
-
-def GetObjectsData (objectGroup):
-	data = 'Cameras'
-	for camera in bpy.data.cameras:
-		if camera.name in objectGroup.keys():
-			data += '\n' + GetCameraData(camera)
-	data += '\nLights'
-	for light in bpy.data.lights:
-		if light.name in objectGroup.keys():
-			data += '\n' + GetLightData(light)
-	data += '\nMeshes'
-	for obj in objectGroup:
-		if obj.type == 'MESH':
-			ExportMesh (obj)
-			data += '\n' + GetBasicObjectData(obj)
-			if obj.rigid_body != None:
-				data += '☣️' + str(obj.rigid_body.mass) + '☣️' + str(obj.rigid_body.linear_damping) + '☣️' + str(obj.rigid_body.angular_damping) + '☣️' + str(obj.rigid_body.enabled)
-			for modifier in obj.modifiers:
-				if modifier.type == 'COLLISION':
-					data += '☣️True'
-					break
-	return data
-
-def GetBasicObjectData (obj):
-	global childrenDict
-	for _obj in bpy.data.objects:
-		if _obj.name == obj.name:
-			obj = _obj
-			break
-	previousObjectRotationMode = obj.rotation_mode
-	obj.rotation_mode = 'QUATERNION'
-	output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
-	if len(obj.children) > 0:
-		for child in obj.children:
-			childrenDict[child.name] = child
-	obj.rotation_mode = previousObjectRotationMode
-	return output
-
-def GetCameraData (camera):
-	horizontalFov = False
-	if camera.sensor_fit == 'HORIZONTAL':
-		horizontalFov = True
-	isOrthographic = False
-	if camera.type == 'ORTHO':
-		isOrthographic = True
-	return GetBasicObjectData(camera) + '☣️' + str(horizontalFov) + '☣️' + str(camera.angle * (180.0 / PI)) + '☣️' + str(isOrthographic) + '☣️' + str(camera.ortho_scale) + '☣️' + str(camera.clip_start) + '☣️' + str(camera.clip_end)
-
-def GetLightData (light):
-	lightType = 0
-	if light.type == 'POINT':
-		lightType = 1
-	elif light.type == 'SPOT':
-		lightType = 2
-	elif lightObject.type == 'AREA':
-		lightType = 3
-	return GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * WATTS_TO_CANDELAS * 100) + '☣️' + str(light.color)
 
 def GetGuid (filePath : str):
 	return hashlib.md5(filePath.encode('utf-8')).hexdigest()
