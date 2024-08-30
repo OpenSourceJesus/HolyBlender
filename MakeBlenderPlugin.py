@@ -621,41 +621,69 @@ class GodotExportButton (bpy.types.Operator):
 	SCENE_TEMPLATE = '[gd_scene load_steps=3 format=3 uid="uid://lop2cefb4wqg"]'
 	RESOURCE_TEMPLATE = '[ext_resource type="PackedScene" uid="uid://ꗈ0" path="res://ꗈ1" id="ꗈ2"]'
 	MESH_INSTANCE_TEMPLATE = '[node name="ꗈ0" parent="ꗈ1" instance=ExtResource("ꗈ2")]'
+	TRANSFORM_TEMPLATE = 'transform = Transform3D(ꗈ0, ꗈ1, ꗈ2, ꗈ3, ꗈ4, ꗈ5, ꗈ6, ꗈ7, ꗈ8, ꗈ9, ꗈ10, ꗈ11)'
+	godotExportPath = ''
 	resources = ''
 	nodes = ''
+	idIndex = 0
 
 	@classmethod
 	def poll (cls, context):
 		return True
 	
 	def execute (self, context):
-		godotExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
-		if not os.path.isdir(godotExportPath):
-			MakeFolderForFile (os.path.join(godotExportPath, ''))
+		self.godotExportPath = os.path.expanduser(context.scene.world.godotExportPath)
+		if not os.path.isdir(self.godotExportPath):
+			MakeFolderForFile (os.path.join(self.godotExportPath, ''))
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath != '':
 			print('Exporting from Unity to Godot doesn\'t work yet')
 		else:
 			
-			os.system('mkdir ' + godotExportPath + '\ncd ' + godotExportPath + '\ntouch project.godot')
+			os.system('mkdir ' + self.godotExportPath + '\ncd ' + self.godotExportPath + '\ntouch project.godot')
 			
-			MakeFolderForFile (os.path.join(godotExportPath, 'Scenes', ''))
-			resources = ''
-			nodes = ''
+			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
+			self.resources = ''
+			self.nodes = ''
 			for obj in bpy.data.objects:
 				self.MakeObject (obj)
 			sceneText = self.SCENE_TEMPLATE
-			sceneText += '\n' + resources + '\n' + nodes
-			open(os.path.join(godotExportPath, 'Scenes', bpy.context.scene.name + '.tscn'), 'wb').write(sceneText.encode('utf-8'))
+			sceneText += '\n' + self.resources + '\n[node name="Game" type="Node3D"]\n' + self.nodes
+			open(os.path.join(self.godotExportPath, 'Scenes', bpy.context.scene.name + '.tscn'), 'wb').write(sceneText.encode('utf-8'))
 			
-			os.system('flatpak run org.godotengine.Godot ' + os.path.join(godotExportPath, 'project.godot'))
+			os.system('flatpak run org.godotengine.Godot ' + os.path.join(self.godotExportPath, 'project.godot'))
 
 	def MakeObject (self, obj):
 		if obj.type == 'MESH':
+			fileExportPath = os.path.join(self.godotExportPath, 'Art', 'Models', '')
+			MakeFolderForFile (fileExportPath)
+			fileExportPath += obj.name + '.fbx'
+			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+			id = self.GetId(7)
+			parent = '.'
+			for obj2 in bpy.data.objects:
+				if obj in obj2.children:
+					parent = obj2.name
+					break
 			resource = self.RESOURCE_TEMPLATE
+			resource = resource.replace(REPLACE_INDICATOR + '0', self.GetId(13))
+			resource = resource.replace(REPLACE_INDICATOR + '1', fileExportPath.replace(self.godotExportPath, ''))
+			resource = resource.replace(REPLACE_INDICATOR + '2', id)
 			self.resources += resource
 			meshInstance = self.MESH_INSTANCE_TEMPLATE
+			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '0', obj.name)
+			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '1', '.')
+			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '2', id)
+			# meshInstance += '\n' + TRANSFORM_TEMPLATE
 			self.nodes += meshInstance
+
+	def GetId (self, length : int):
+		output = '1'
+		for i in range(1, length):
+			output += '0'
+		output = str(int(output) + self.idIndex)
+		self.idIndex += 1
+		return output
 
 class BevyExportButton (bpy.types.Operator):
 	bl_idname = 'bevy.export'
@@ -1146,7 +1174,13 @@ class UnityExportButton (bpy.types.Operator):
 		gameObjectsAndComponentsText = ''
 		transformIds = []
 		for obj in bpy.data.objects:
-			self.MakeObject (obj)
+			shouldMakeObject = True
+			for obj2 in bpy.data.objects:
+				if obj in obj2.children:
+					shouldMakeObject = False
+					break
+			if shouldMakeObject:
+				self.MakeObject (obj)
 		scriptsFolder = os.path.join(projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(projectExportPath, 'Assets', 'Scripts', ''))
 		sendAndRecieveClickEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveClickEvents.cs')
