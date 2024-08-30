@@ -674,7 +674,27 @@ class GodotExportButton (bpy.types.Operator):
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '0', obj.name)
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '1', '.')
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '2', id)
-			# meshInstance += '\n' + TRANSFORM_TEMPLATE
+			transform = self.TRANSFORM_TEMPLATE
+			previousObjectRotationMode = obj.rotation_mode
+			obj.rotation_mode = 'XYZ'
+			matrix = mathutils.Matrix.LocRotScale(mathutils.Vector((0, 0, 0)), obj.rotation_euler, obj.scale)
+			right = mathutils.Vector((1, 0, 0)) @ matrix
+			up = mathutils.Vector((0, 1, 0)) @ matrix
+			forward = mathutils.Vector((0, 0, 1)) @ matrix
+			obj.rotation_mode = previousObjectRotationMode
+			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.location.y))
+			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.location.z))
+			transform = transform.replace(REPLACE_INDICATOR + '0', str(right.x))
+			transform = transform.replace(REPLACE_INDICATOR + '1', str(right.y))
+			transform = transform.replace(REPLACE_INDICATOR + '2', str(right.z))
+			transform = transform.replace(REPLACE_INDICATOR + '3', str(up.x))
+			transform = transform.replace(REPLACE_INDICATOR + '4', str(up.y))
+			transform = transform.replace(REPLACE_INDICATOR + '5', str(up.z))
+			transform = transform.replace(REPLACE_INDICATOR + '6', str(forward.x))
+			transform = transform.replace(REPLACE_INDICATOR + '7', str(forward.y))
+			transform = transform.replace(REPLACE_INDICATOR + '8', str(forward.z))
+			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.location.x))
+			meshInstance += '\n' + transform
 			self.nodes += meshInstance
 
 	def GetId (self, length : int):
