@@ -221,6 +221,7 @@ bpy.ops.httpd.run()
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
 UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
+GODOT_SCRIPTS_PATH = os.path.join(__thisdir, 'Goodt Scripts')
 TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = '/tmp/registry.json'
@@ -703,6 +704,10 @@ class GodotExportButton (bpy.types.Operator):
 			
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
+			
+			os.system('cp ' + os.path.join(GODOT_SCRIPTS_PATH, 'Clickable.gd') + ' ' + os.path.join(self.godotExportPath, 'Scripts', 'Clickable.gd'))
+			os.system('cp ' + os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveClickEvents.gd') + ' ' + os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveClickEvents.gd'))
+
 			self.resources = ''
 			self.nodes = ''
 			for obj in bpy.data.objects:
@@ -733,6 +738,7 @@ class GodotExportButton (bpy.types.Operator):
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '2', id)
 			meshInstance += '\n' + self.GetTransformText(obj)
 			self.nodes += meshInstance + '\n'
+			self.MakeClickableChild (obj.name)
 		elif obj.type == 'LIGHT':
 			light = self.NODE_TEMPLATE
 			light = light.replace(REPLACE_INDICATOR + '0', obj.name)
@@ -763,13 +769,13 @@ class GodotExportButton (bpy.types.Operator):
 		elif obj.type == 'CAMERA':
 			camera = self.NODE_TEMPLATE
 			camera = camera.replace(REPLACE_INDICATOR + '0', obj.name)
+			camera = camera.replace(REPLACE_INDICATOR + '1', 'Camera3D')
+			camera = camera.replace(REPLACE_INDICATOR + '2', self.GetParentText(obj))
 			cameraObj = None
 			for _camera in bpy.data.cameras:
 				if _camera.name == obj.name:
 					cameraObj = _camera
 					break
-			camera = camera.replace(REPLACE_INDICATOR + '1', 'Camera3D')
-			camera = camera.replace(REPLACE_INDICATOR + '2', self.GetParentText(obj))
 			if cameraObj.type == 'ORTHO':
 				camera += '\nprojection = 1'
 				camera += '\nsize = ' + str(cameraObj.ortho_scale)
@@ -839,6 +845,16 @@ class GodotExportButton (bpy.types.Operator):
 		output = str(int(output) + self.idIndex)
 		self.idIndex += 1
 		return output
+
+	def MakeClickableChild (self, objName : str):
+		rigidBody = self.NODE_TEMPLATE
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '0', objName + ' (Clickable)')
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '1', 'RigidBody3D')
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', objName)
+		rigidBody += '\nfreeze = true'
+		rigidBody += '\ncollision_layer = 2147483648'
+		rigidBody += '\ncollision_mask = 0'
+		self.nodes += rigidBody
 
 class BevyExportButton (bpy.types.Operator):
 	bl_idname = 'bevy.export'
