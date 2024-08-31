@@ -628,7 +628,7 @@ class UnrealExportButton (bpy.types.Operator):
 		data += '\nMeshes'
 		for obj in objectGroup:
 			if obj.type == 'MESH':
-				ExportMesh (obj)
+				ExportMesh (obj, '/tmp')
 				data += '\n' + self.GetBasicObjectData(obj)
 				if obj.rigid_body != None:
 					data += '☣️' + str(obj.rigid_body.mass) + '☣️' + str(obj.rigid_body.linear_damping) + '☣️' + str(obj.rigid_body.angular_damping) + '☣️' + str(obj.rigid_body.enabled)
@@ -716,15 +716,15 @@ class GodotExportButton (bpy.types.Operator):
 	def MakeObject (self, obj):
 		global attachedGodotScriptsDict
 		if obj.type == 'MESH':
-			fileExportPath = os.path.join(self.godotExportPath, 'Art', 'Models', '')
+			fileExportFolder = os.path.join(self.godotExportPath, 'Art', 'Models')
+			fileExportPath = os.path.join(fileExportFolder, '')
 			MakeFolderForFile (fileExportPath)
-			fileExportPath += obj.name + '.fbx'
-			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+			fileExportPath = ExportMesh(obj, fileExportFolder)
 			id = self.GetId(7)
 			resource = self.RESOURCE_TEMPLATE
 			resource = resource.replace(REPLACE_INDICATOR + '0', 'PackedScene')
 			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
-			resource = resource.replace(REPLACE_INDICATOR + '2', fileExportPath.replace(self.godotExportPath, ''))
+			resource = resource.replace(REPLACE_INDICATOR + '2', fileExportPath.replace(os.path.join(self.godotExportPath, ''), ''))
 			resource = resource.replace(REPLACE_INDICATOR + '3', id)
 			self.resources += resource
 			meshInstance = self.MESH_INSTANCE_TEMPLATE
@@ -800,15 +800,19 @@ class GodotExportButton (bpy.types.Operator):
 	
 	def GetTransformText (self, obj):
 		transform = self.TRANSFORM_TEMPLATE
+		previousObjectLocation = obj.location
+		if obj.type == 'MESH':
+			obj.location = mathutils.Vector((0, 0, 0))
 		previousObjectRotationMode = obj.rotation_mode
 		obj.rotation_mode = 'XYZ'
-		matrix = mathutils.Matrix.LocRotScale(mathutils.Vector((0, 0, 0)), obj.rotation_euler, obj.scale)
+		size = mathutils.Vector((obj.scale.x, obj.scale.z, obj.scale.y))
+		matrix = mathutils.Matrix.LocRotScale(mathutils.Vector((0, 0, 0)), obj.rotation_euler, size)
 		right = mathutils.Vector((1, 0, 0)) @ matrix
-		up = mathutils.Vector((0, 1, 0)) @ matrix
-		forward = mathutils.Vector((0, 0, 1)) @ matrix
+		up = mathutils.Vector((0, 0, 1)) @ matrix
+		forward = mathutils.Vector((0, 1, 0)) @ matrix
 		obj.rotation_mode = previousObjectRotationMode
-		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.location.y))
-		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.location.z))
+		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.location.z))
+		transform = transform.replace(REPLACE_INDICATOR + '11', str(-obj.location.y))
 		transform = transform.replace(REPLACE_INDICATOR + '0', str(right.x))
 		transform = transform.replace(REPLACE_INDICATOR + '1', str(right.y))
 		transform = transform.replace(REPLACE_INDICATOR + '2', str(right.z))
@@ -819,6 +823,7 @@ class GodotExportButton (bpy.types.Operator):
 		transform = transform.replace(REPLACE_INDICATOR + '7', str(forward.y))
 		transform = transform.replace(REPLACE_INDICATOR + '8', str(forward.z))
 		transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.location.x))
+		obj.location = previousObjectLocation
 		return transform
 	
 	def GetParentText (self, obj):
@@ -1272,14 +1277,12 @@ class UnityExportButton (bpy.types.Operator):
 		for obj in bpy.context.scene.objects:
 			if obj.type == 'MESH' and obj.data.name in meshesDict:
 				meshesDict[obj.data.name].append(obj.name)
-				fileExportPath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+				fileExportFolder = os.path.join(projectExportPath, 'Assets', 'Art', 'Models')
+				fileExportPath = os.path.join(fileExportFolder, '')
 				MakeFolderForFile (fileExportPath)
-				bpy.ops.object.select_all(action='DESELECT')
-				bpy.context.view_layer.objects.active = obj
-				obj.select_set(True)
 				previousObjectScale = obj.scale
 				obj.scale *= 100
-				bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+				fileExportPath = ExportMesh(fileExportFolder)
 				obj.scale = previousObjectScale
 				for materialSlot in obj.material_slots:
 					fileExportPath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
@@ -1701,12 +1704,14 @@ def BuildTool (toolName : str):
 
 	subprocess.check_call(command)
 
-def ExportMesh (obj):
-	meshAssetPath = '/tmp/' + obj.name.replace(' ', '_') + '.fbx'
+def ExportMesh (obj, folder : str) -> str:
+	filePath = os.path.join(folder, obj.name + '.fbx')
+	filePath = filePath.replace(' ', '_')
 	bpy.ops.object.select_all(action='DESELECT')
 	bpy.context.view_layer.objects.active = obj
 	obj.select_set(True)
-	bpy.ops.export_scene.fbx(filepath=meshAssetPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+	bpy.ops.export_scene.fbx(filepath=filePath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+	return filePath
 
 def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
 	_min = mathutils.Vector((float('inf'), float('inf'), float('inf')))
