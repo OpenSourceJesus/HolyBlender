@@ -233,8 +233,9 @@ operatorContext = None
 currentTextBlock = None
 mainClassNames = []
 attachedUnityScriptsDict = {}
-attachedBevyScriptsDict = {}
 attachedUnrealScriptsDict = {}
+attachedGodotScriptsDict = {}
+attachedBevyScriptsDict = {}
 previousRunningScripts = []
 textBlocksTextsDict = {}
 previousTextBlocksTextsDict = {}
@@ -675,7 +676,7 @@ class GodotExportButton (bpy.types.Operator):
 	bl_idname = 'godot.export'
 	bl_label = 'Export To Godot'
 	SCENE_TEMPLATE = '[gd_scene load_steps=3 format=3 uid="uid://lop2cefb4wqg"]'
-	RESOURCE_TEMPLATE = '[ext_resource type="PackedScene" uid="uid://ꗈ0" path="res://ꗈ1" id="ꗈ2"]'
+	RESOURCE_TEMPLATE = '[ext_resource type="ꗈ0" uid="uid://ꗈ1" path="res://ꗈ2" id="ꗈ3"]'
 	MESH_INSTANCE_TEMPLATE = '[node name="ꗈ0" parent="ꗈ1" instance=ExtResource("ꗈ2")]'
 	TRANSFORM_TEMPLATE = 'transform = Transform3D(ꗈ0, ꗈ1, ꗈ2, ꗈ3, ꗈ4, ꗈ5, ꗈ6, ꗈ7, ꗈ8, ꗈ9, ꗈ10, ꗈ11)'
 	NODE_TEMPLATE = '[node name="ꗈ0" type="ꗈ1" parent="ꗈ2"]'
@@ -693,6 +694,7 @@ class GodotExportButton (bpy.types.Operator):
 		if not os.path.isdir(self.godotExportPath):
 			MakeFolderForFile (os.path.join(self.godotExportPath, ''))
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		self.idIndex = 0
 		if importPath != '':
 			print('Exporting from Unity to Godot doesn\'t work yet')
 		else:
@@ -700,6 +702,7 @@ class GodotExportButton (bpy.types.Operator):
 			os.system('mkdir ' + self.godotExportPath + '\ncd ' + self.godotExportPath + '\ntouch project.godot')
 			
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
+			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
 			self.resources = ''
 			self.nodes = ''
 			for obj in bpy.data.objects:
@@ -711,6 +714,7 @@ class GodotExportButton (bpy.types.Operator):
 			os.system('flatpak run org.godotengine.Godot ' + os.path.join(self.godotExportPath, 'project.godot'))
 
 	def MakeObject (self, obj):
+		global attachedGodotScriptsDict
 		if obj.type == 'MESH':
 			fileExportPath = os.path.join(self.godotExportPath, 'Art', 'Models', '')
 			MakeFolderForFile (fileExportPath)
@@ -718,35 +722,16 @@ class GodotExportButton (bpy.types.Operator):
 			bpy.ops.export_scene.fbx(filepath=fileExportPath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
 			id = self.GetId(7)
 			resource = self.RESOURCE_TEMPLATE
-			resource = resource.replace(REPLACE_INDICATOR + '0', self.GetId(13))
-			resource = resource.replace(REPLACE_INDICATOR + '1', fileExportPath.replace(self.godotExportPath, ''))
-			resource = resource.replace(REPLACE_INDICATOR + '2', id)
+			resource = resource.replace(REPLACE_INDICATOR + '0', 'PackedScene')
+			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+			resource = resource.replace(REPLACE_INDICATOR + '2', fileExportPath.replace(self.godotExportPath, ''))
+			resource = resource.replace(REPLACE_INDICATOR + '3', id)
 			self.resources += resource
 			meshInstance = self.MESH_INSTANCE_TEMPLATE
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '0', obj.name)
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '1', self.GetParentText(obj))
 			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '2', id)
-			transform = self.TRANSFORM_TEMPLATE
-			previousObjectRotationMode = obj.rotation_mode
-			obj.rotation_mode = 'XYZ'
-			matrix = mathutils.Matrix.LocRotScale(mathutils.Vector((0, 0, 0)), obj.rotation_euler, obj.scale)
-			right = mathutils.Vector((1, 0, 0)) @ matrix
-			up = mathutils.Vector((0, 1, 0)) @ matrix
-			forward = mathutils.Vector((0, 0, 1)) @ matrix
-			obj.rotation_mode = previousObjectRotationMode
-			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.location.y))
-			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.location.z))
-			transform = transform.replace(REPLACE_INDICATOR + '0', str(right.x))
-			transform = transform.replace(REPLACE_INDICATOR + '1', str(right.y))
-			transform = transform.replace(REPLACE_INDICATOR + '2', str(right.z))
-			transform = transform.replace(REPLACE_INDICATOR + '3', str(up.x))
-			transform = transform.replace(REPLACE_INDICATOR + '4', str(up.y))
-			transform = transform.replace(REPLACE_INDICATOR + '5', str(up.z))
-			transform = transform.replace(REPLACE_INDICATOR + '6', str(forward.x))
-			transform = transform.replace(REPLACE_INDICATOR + '7', str(forward.y))
-			transform = transform.replace(REPLACE_INDICATOR + '8', str(forward.z))
-			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.location.x))
-			meshInstance += '\n' + transform
+			meshInstance += '\n' + self.GetTransformText(obj)
 			self.nodes += meshInstance + '\n'
 		elif obj.type == 'LIGHT':
 			light = self.NODE_TEMPLATE
@@ -771,10 +756,71 @@ class GodotExportButton (bpy.types.Operator):
 			elif lightObj.type == 'SPOT':
 				light += '\nspot_range = ' + str(lightObj.cutoff_distance)
 				light += '\nspot_angle = ' + str(lightObj.spot_size)
-			light += '\nlight_energy = ' + str(lightObj.energy)
+			light += '\nlight_energy = ' + str(lightObj.energy * WATTS_TO_CANDELAS)
 			light += '\nlight_color = ' + 'Color(' + str(lightObj.color[0]) + ', ' + str(lightObj.color[1]) + ', ' + str(lightObj.color[2]) + ', 1)'
+			light += '\n' + self.GetTransformText(obj)
 			self.nodes += light + '\n'
-		
+		elif obj.type == 'CAMERA':
+			camera = self.NODE_TEMPLATE
+			camera = camera.replace(REPLACE_INDICATOR + '0', obj.name)
+			cameraObj = None
+			for _camera in bpy.data.cameras:
+				if _camera.name == obj.name:
+					cameraObj = _camera
+					break
+			camera = camera.replace(REPLACE_INDICATOR + '1', 'Camera3D')
+			camera = camera.replace(REPLACE_INDICATOR + '2', self.GetParentText(obj))
+			if cameraObj.type == 'ORTHO':
+				camera += '\nprojection = 1'
+				camera += '\nsize = ' + str(cameraObj.ortho_scale)
+			else:
+				camera += '\nprojection = 0'
+				camera += '\nfov = ' + str(math.degrees(cameraObj.angle))
+			camera += '\nnear = ' + str(cameraObj.clip_start)
+			camera += '\nfar = ' + str(cameraObj.clip_end)
+			camera += '\n' + self.GetTransformText(obj)
+			self.nodes += camera + '\n'
+		attachedScripts = attachedGodotScriptsDict.get(obj, [])
+		for attachedScript in attachedScripts:
+			script = attachedScript
+			if not attachedScript.endswith('.gd'):
+				script += '.gd'
+			for textBlock in bpy.data.texts:
+				if textBlock.name == attachedScript:
+					open(os.path.join(self.godotExportPath, 'Scripts', script), 'wb').write(textBlock.as_string().encode('utf-8'))
+					break
+			id = self.GetId(7)
+			resource = self.RESOURCE_TEMPLATE
+			resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', script))
+			resource = resource.replace(REPLACE_INDICATOR + '3', id)
+			self.resources += resource
+			self.nodes += 'script = ExtResource("' + id + '")'
+	
+	def GetTransformText (self, obj):
+		transform = self.TRANSFORM_TEMPLATE
+		previousObjectRotationMode = obj.rotation_mode
+		obj.rotation_mode = 'XYZ'
+		matrix = mathutils.Matrix.LocRotScale(mathutils.Vector((0, 0, 0)), obj.rotation_euler, obj.scale)
+		right = mathutils.Vector((1, 0, 0)) @ matrix
+		up = mathutils.Vector((0, 1, 0)) @ matrix
+		forward = mathutils.Vector((0, 0, 1)) @ matrix
+		obj.rotation_mode = previousObjectRotationMode
+		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.location.y))
+		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.location.z))
+		transform = transform.replace(REPLACE_INDICATOR + '0', str(right.x))
+		transform = transform.replace(REPLACE_INDICATOR + '1', str(right.y))
+		transform = transform.replace(REPLACE_INDICATOR + '2', str(right.z))
+		transform = transform.replace(REPLACE_INDICATOR + '3', str(up.x))
+		transform = transform.replace(REPLACE_INDICATOR + '4', str(up.y))
+		transform = transform.replace(REPLACE_INDICATOR + '5', str(up.z))
+		transform = transform.replace(REPLACE_INDICATOR + '6', str(forward.x))
+		transform = transform.replace(REPLACE_INDICATOR + '7', str(forward.y))
+		transform = transform.replace(REPLACE_INDICATOR + '8', str(forward.z))
+		transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.location.x))
+		return transform
+	
 	def GetParentText (self, obj):
 		for obj2 in bpy.data.objects:
 			if obj in obj2.children:
@@ -1920,6 +1966,7 @@ def DrawIsInitScriptToggle (self, context):
 	self.layout.prop(context.edit_text, 'is_init_script')
 
 def OnUpdateUnityScripts (self, context):
+	global attachedUnityScriptsDict
 	attachedScripts = []
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
 		script = getattr(self, 'unity_script' + str(i))
@@ -1928,6 +1975,7 @@ def OnUpdateUnityScripts (self, context):
 	attachedUnityScriptsDict[self] = attachedScripts
 
 def OnUpdateUnrealScripts (self, context):
+	global attachedUnrealScriptsDict
 	attachedScripts = []
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
 		script = getattr(self, 'unreal_script' + str(i))
@@ -1936,14 +1984,16 @@ def OnUpdateUnrealScripts (self, context):
 	attachedUnrealScriptsDict[self] = attachedScripts
 
 def OnUpdateGodotScripts (self, context):
+	global attachedGodotScriptsDict
 	attachedScripts = []
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
 		script = getattr(self, 'godotScript' + str(i))
 		if script != None:
 			attachedScripts.append(script.name)
-	attachedUnrealScriptsDict[self] = attachedScripts
+	attachedGodotScriptsDict[self] = attachedScripts
 
 def OnUpdateBevyScripts (self, context):
+	global attachedBevyScriptsDict
 	attachedScripts = []
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
 		script = getattr(self, 'bevy_script' + str(i))
@@ -2069,7 +2119,6 @@ def OnRedrawView ():
 	# blf.draw(id, 'Hello World!')
 
 def register ():
-	global attachedUnityScriptsDict
 	MakeFolderForFile ('/tmp/')
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	registryText = registryText.replace('ꗈ', '')
@@ -2150,16 +2199,22 @@ def register ():
 		attachedUnityScriptsDict[obj] = attachedScripts
 		attachedScripts = []
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			script = getattr(obj, 'bevy_script' + str(i))
-			if script != None:
-				attachedScripts.append(script.name)
-		attachedBevyScriptsDict[obj] = attachedScripts
-		attachedScripts = []
-		for i in range(MAX_SCRIPTS_PER_OBJECT):
 			script = getattr(obj, 'unreal_script' + str(i))
 			if script != None:
 				attachedScripts.append(script.name)
 		attachedUnrealScriptsDict[obj] = attachedScripts
+		attachedScripts = []
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			script = getattr(obj, 'godotScript' + str(i))
+			if script != None:
+				attachedScripts.append(script.name)
+		attachedGodotScriptsDict[obj] = attachedScripts
+		attachedScripts = []
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			script = getattr(obj, 'bevy_script' + str(i))
+			if script != None:
+				attachedScripts.append(script.name)
+		attachedBevyScriptsDict[obj] = attachedScripts
 	handle = bpy.types.SpaceView3D.draw_handler_add(
 		OnRedrawView,
 		tuple([]),
