@@ -110,14 +110,17 @@ server.from_string(SERVER)
 bpy.data.worlds[0].holyserver = server
 
 JS = """
-window.alert('ok');
-var self = this;
+window.alert(self);
 var xhttp = new XMLHttpRequest();
 xhttp.onreadystatechange = function() {
+	console.log(this.readyState);
+	console.log(this.status);
+	console.log(self);
 	if (this.readyState == 4 && this.status == 200) {
-		self.innerHTML = xhttp.responseText;
+		self.innerHTML = xhttp.responseText.replaceAll('<', '[').replaceAll('>', ']');
 	}
 };
+xhttp.overrideMimeType( "text/plain; charset=utf-8" );
 xhttp.open("GET", self.getAttribute('id'), true);
 xhttp.send();
 """
