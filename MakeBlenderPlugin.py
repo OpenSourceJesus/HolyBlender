@@ -224,11 +224,11 @@ UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
 GODOT_SCRIPTS_PATH = os.path.join(__thisdir, 'Goodt Scripts')
 TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
-REGISTRY_PATH = '/tmp/registry.json'
+REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
 MAX_SCRIPTS_PER_OBJECT = 16
 unrealCodePath = ''
-unrealCodePathSuffix = '/Source/'
-excludeItems = [ '/Library' ]
+unrealCodePathSuffix = os.path.join('', 'Source', '')
+excludeItems = [ os.path.join('', 'Library') ]
 lastId = 5
 operatorContext = None
 currentTextBlock = None
@@ -678,7 +678,8 @@ class GodotExportButton (bpy.types.Operator):
 	bl_label = 'Export To Godot'
 	SCENE_TEMPLATE = '[gd_scene load_steps=3 format=3 uid="uid://lop2cefb4wqg"]'
 	RESOURCE_TEMPLATE = '[ext_resource type="ꗈ0" uid="uid://ꗈ1" path="res://ꗈ2" id="ꗈ3"]'
-	MESH_INSTANCE_TEMPLATE = '[node name="ꗈ0" parent="ꗈ1" instance=ExtResource("ꗈ2")]'
+	SUB_RESOURCE_TEMPLATE = '[sub_resource type="ꗈ0" id="ꗈ1"]'
+	MODEL_TEMPLATE = '[node name="ꗈ0" parent="ꗈ1" instance=ExtResource("ꗈ2")]'
 	TRANSFORM_TEMPLATE = 'transform = Transform3D(ꗈ0, ꗈ1, ꗈ2, ꗈ3, ꗈ4, ꗈ5, ꗈ6, ꗈ7, ꗈ8, ꗈ9, ꗈ10, ꗈ11)'
 	NODE_TEMPLATE = '[node name="ꗈ0" type="ꗈ1" parent="ꗈ2"]'
 	godotExportPath = ''
@@ -732,12 +733,12 @@ class GodotExportButton (bpy.types.Operator):
 			resource = resource.replace(REPLACE_INDICATOR + '2', fileExportPath.replace(os.path.join(self.godotExportPath, ''), ''))
 			resource = resource.replace(REPLACE_INDICATOR + '3', id)
 			self.resources += resource
-			meshInstance = self.MESH_INSTANCE_TEMPLATE
-			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '0', obj.name)
-			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '1', self.GetParentText(obj))
-			meshInstance = meshInstance.replace(REPLACE_INDICATOR + '2', id)
-			meshInstance += '\n' + self.GetTransformText(obj)
-			self.nodes += meshInstance + '\n'
+			model = self.MODEL_TEMPLATE
+			model = model.replace(REPLACE_INDICATOR + '0', obj.name)
+			model = model.replace(REPLACE_INDICATOR + '1', self.GetParentText(obj))
+			model = model.replace(REPLACE_INDICATOR + '2', id)
+			model += '\n' + self.GetTransformText(obj)
+			self.nodes += model + '\n'
 			self.MakeClickableChild (obj.name)
 		elif obj.type == 'LIGHT':
 			light = self.NODE_TEMPLATE
@@ -2147,8 +2148,6 @@ def register ():
 	registry = bpy.context.window_manager.components_registry
 	registry.schemaPath = REGISTRY_PATH
 	bpy.ops.object.reload_registry()
-
-	# bpy.types.View3DShading.color_type = 'OBJECT'
 	for cls in classes:
 		bpy.utils.register_class(cls)
 	bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
@@ -2186,12 +2185,10 @@ def register ():
 		description = '',
 		default = '~/TestHtmlProject'
 	)
-
 	bpy.types.World.holyserver = bpy.props.PointerProperty(name='Python Server', type=bpy.types.Text)
 	bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
 	bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
 	bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
-
 	bpy.types.Text.run_cs = bpy.props.BoolProperty(
 		name = 'Run C# Script',
 		description = ''
@@ -2253,10 +2250,11 @@ def unregister ():
 		bpy.utils.unregister_class(cls)
 
 def InitTexts ():
-	if bpy.data.worlds[0].html_code is None:
+	if '__Html__.html' not in bpy.data.texts:
 		textBlock = bpy.data.texts.new(name='__Html__.html')
 		textBlock.from_string(INIT_HTML)
-		bpy.data.worlds[0].html_code = textBlock
+		if bpy.data.worlds[0].html_code == None:
+			bpy.data.worlds[0].html_code = textBlock
 	if '__Server__.py' not in bpy.data.texts:
 		textBlock = bpy.data.texts.new(name='__Server__.py')
 		textBlock.from_string(BLENDER_SERVER)

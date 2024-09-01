@@ -17,7 +17,7 @@ public class SendAndRecieveClickEvents : MonoBehaviour
 
 	IEnumerator OnClickEvent (string objectName)
 	{
-		UnityWebRequest webRequest = UnityWebRequest.Post("http://localhost:8000/" + objectName, "", "");
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/" + objectName);
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
 			print("Web request result: " + webRequest.downloadHandler.text);
