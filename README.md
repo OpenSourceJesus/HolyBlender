@@ -62,7 +62,7 @@ The tools UnityToStride, UnityToGodot, and UnityToPygame have been started and w
 I will accept all contributions.
 
 # Authors and acknowledgment
-So far only I, Gilead Cosman, have worked on this project.
+So far Brent Hartshorn and I (Gilead Cosman), have worked on this project.
 
 # License
 MIT License
