@@ -1,7 +1,7 @@
 extends Node3D
 class_name SendAndRecieveClickEvents
 
-const RAY_CAST_LENGTH = 500
+const RAY_CAST_LENGTH = 99999
 var rayCast : RayCast3D
 
 func _ready ():

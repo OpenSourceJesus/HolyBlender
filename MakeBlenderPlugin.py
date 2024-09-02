@@ -221,7 +221,7 @@ bpy.ops.httpd.run()
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
 UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
-GODOT_SCRIPTS_PATH = os.path.join(__thisdir, 'Goodt Scripts')
+GODOT_SCRIPTS_PATH = os.path.join(__thisdir, 'Godot Scripts')
 TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
@@ -687,6 +687,7 @@ class GodotExportButton (bpy.types.Operator):
 	resources = ''
 	nodes = ''
 	idIndex = 0
+	exportedObjs = []
 
 	@classmethod
 	def poll (cls, context):
@@ -707,13 +708,28 @@ class GodotExportButton (bpy.types.Operator):
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
 			
-			os.system('cp ' + os.path.join(GODOT_SCRIPTS_PATH, 'Clickable.gd') + ' ' + os.path.join(self.godotExportPath, 'Scripts', 'Clickable.gd'))
-			os.system('cp ' + os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveClickEvents.gd') + ' ' + os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveClickEvents.gd'))
+			os.system('cp \'' + os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd') + '\' \'' + os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd') + '\'')
+			os.system('cp \'' + os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveClickEvents.gd') + '\' \'' + os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveClickEvents.gd') + '\'')
 
 			self.resources = ''
 			self.nodes = ''
+			self.exportedObjs = []
 			for obj in bpy.data.objects:
-				self.MakeObject (obj)
+				if obj not in self.exportedObjs:
+					self.MakeObject (obj)
+			id = self.GetId(7)
+			resource = self.RESOURCE_TEMPLATE
+			resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'SendAndRecieveClickEvents.gd'))
+			resource = resource.replace(REPLACE_INDICATOR + '3', id)
+			self.resources += resource
+			node3d = self.NODE_TEMPLATE
+			node3d = node3d.replace(REPLACE_INDICATOR + '0', 'Send And Recieve Click Events')
+			node3d = node3d.replace(REPLACE_INDICATOR + '1', 'Node3D')
+			node3d = node3d.replace(REPLACE_INDICATOR + '2', '.')
+			node3d += '\nscript = ExtResource("' + id + '")'
+			self.nodes += node3d
 			sceneText = self.SCENE_TEMPLATE
 			sceneText += '\n' + self.resources + '\n[node name="Game" type="Node3D"]\n' + self.nodes
 			open(os.path.join(self.godotExportPath, 'Scenes', bpy.context.scene.name + '.tscn'), 'wb').write(sceneText.encode('utf-8'))
@@ -722,6 +738,9 @@ class GodotExportButton (bpy.types.Operator):
 
 	def MakeObject (self, obj):
 		global attachedGodotScriptsDict
+		for obj2 in bpy.data.objects:
+			if obj in obj2.children and obj2 not in self.exportedObjs:
+				self.MakeObject (obj2)
 		if obj.type == 'MESH':
 			fileExportFolder = os.path.join(self.godotExportPath, 'Art', 'Models')
 			fileExportPath = os.path.join(fileExportFolder, '')
@@ -733,10 +752,37 @@ class GodotExportButton (bpy.types.Operator):
 			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
 			resource = resource.replace(REPLACE_INDICATOR + '2', fileExportPath.replace(os.path.join(self.godotExportPath, ''), ''))
 			resource = resource.replace(REPLACE_INDICATOR + '3', id)
-			self.resources += resource
+			self.resources += resource + '\n'
+			parentName = self.GetParentText(obj)
+			if obj.rigid_body != None:
+				rigidBody = self.NODE_TEMPLATE
+				rigidBodyName = obj.name + ' (RigidBody3D)'
+				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '0', rigidBodyName)
+				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '1', 'RigidBody3D')
+				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', parentName)
+				rigidBody += '\nmass = ' + str(obj.rigid_body.mass)
+				rigidBody += '\nlinear_damp_mode = 1'
+				rigidBody += '\nlinear_damp = ' + str(obj.rigid_body.linear_damping)
+				rigidBody += '\nangular_damp_mode = 1'
+				rigidBody += '\nangular_damp = ' + str(obj.rigid_body.angular_damping)
+				rigidBody += '\nfreeze = ' + str(int(not obj.rigid_body.enabled))
+				parentName = rigidBodyName
+				for modifier in obj.modifiers:
+					if modifier.type == 'COLLISION':
+						scriptId = self.GetId(7)
+						resource = self.RESOURCE_TEMPLATE
+						resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+						resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+						resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'AddMeshCollision.gd'))
+						resource = resource.replace(REPLACE_INDICATOR + '3', scriptId)
+						self.resources += resource + '\n'
+						rigidBody += '\nscript = ExtResource("' + scriptId + '")'
+						rigidBody += '\nmeshInstance = NodePath("../' + obj.name + '/' + obj.name + '")'
+						break
+				self.nodes += rigidBody + '\n'
 			model = self.MODEL_TEMPLATE
 			model = model.replace(REPLACE_INDICATOR + '0', obj.name)
-			model = model.replace(REPLACE_INDICATOR + '1', self.GetParentText(obj))
+			model = model.replace(REPLACE_INDICATOR + '1', parentName)
 			model = model.replace(REPLACE_INDICATOR + '2', id)
 			model += '\n' + self.GetTransformText(obj)
 			self.nodes += model + '\n'
@@ -803,8 +849,9 @@ class GodotExportButton (bpy.types.Operator):
 			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
 			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', script))
 			resource = resource.replace(REPLACE_INDICATOR + '3', id)
-			self.resources += resource
-			self.nodes += 'script = ExtResource("' + id + '")'
+			self.resources += resource + '\n'
+			self.nodes += '\nscript = ExtResource("' + id + '")'
+		self.exportedObjs.append(obj)
 	
 	def GetTransformText (self, obj):
 		transform = self.TRANSFORM_TEMPLATE
@@ -856,7 +903,16 @@ class GodotExportButton (bpy.types.Operator):
 		rigidBody += '\nfreeze = true'
 		rigidBody += '\ncollision_layer = 2147483648'
 		rigidBody += '\ncollision_mask = 0'
-		self.nodes += rigidBody
+		id = self.GetId(7)
+		rigidBody += '\nscript = ExtResource("' + id + '")'
+		rigidBody += '\nmeshInstance = NodePath("../' + objName + '/' + objName + '")'
+		self.nodes += rigidBody + '\n'
+		resource = self.RESOURCE_TEMPLATE
+		resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+		resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+		resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'AddMeshCollision.gd'))
+		resource = resource.replace(REPLACE_INDICATOR + '3', id)
+		self.resources += resource + '\n'
 
 class BevyExportButton (bpy.types.Operator):
 	bl_idname = 'bevy.export'
@@ -1450,7 +1506,7 @@ class UnityExportButton (bpy.types.Operator):
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
 				meshFileId = dataText[indexOfFileId : indexOfEndOfFileId]
-			gameObjectIdAndTransformId = MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
+			gameObjectIdAndTransformId = self.MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
 			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, gameObjectIdAndTransformId[1])
 		elif len(obj.children) == 0:
 			children = '[]'
