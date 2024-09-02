@@ -469,7 +469,7 @@ class HTMLExportButton (bpy.types.Operator):
 				user_css = ''
 				if obj.html_css:
 					user_css = obj.html_css.as_string().replace('\n', ' ').strip()
-				imageText = '<div id="%s" onclick="%s" style="position:absolute; left:%spx; top:%spx; z-index:%s;%s"><img src="data:image/gif;base64,%s"></div>\n' %(
+				imageText = '<img id="%s" onclick="%s" style="position:fixed; left:%spx; top:%spx; z-index:%s;%s" src="data:image/gif;base64,%s">\n' %(
 					obj.name,
 					onclick,
 					bounds[0].x * multiplyUnits,
