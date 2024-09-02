@@ -1,10 +1,11 @@
 extends Node
 class_name AddMeshCollision
 
+@export var meshInstance : MeshInstance3D
+
 func _ready ():
 	var collisionShape = CollisionShape3D.new()
 	add_child(collisionShape)
-	var meshInstance = get_parent().get_child(0) as MeshInstance3D
 	#var concavePolygonShape = ConcavePolygonShape3D.new()
 	#var faces = meshInstance.mesh.get_faces()
 	#for i in range(len(faces)):

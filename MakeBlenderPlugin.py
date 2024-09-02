@@ -753,20 +753,22 @@ class GodotExportButton (bpy.types.Operator):
 			resource = resource.replace(REPLACE_INDICATOR + '2', fileExportPath.replace(os.path.join(self.godotExportPath, ''), ''))
 			resource = resource.replace(REPLACE_INDICATOR + '3', id)
 			self.resources += resource + '\n'
-			parentName = self.GetParentText(obj)
+			parentName = self.GetParentPath(obj)
 			if obj.rigid_body != None:
 				rigidBody = self.NODE_TEMPLATE
 				rigidBodyName = obj.name + ' (RigidBody3D)'
+				rigidBodyParentPath = parentName.replace(rigidBodyName + '/', '')
+				if rigidBodyParentPath == '':
+					rigidBodyParentPath = '.'
 				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '0', rigidBodyName)
 				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '1', 'RigidBody3D')
-				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', parentName)
+				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', rigidBodyParentPath)
 				rigidBody += '\nmass = ' + str(obj.rigid_body.mass)
 				rigidBody += '\nlinear_damp_mode = 1'
 				rigidBody += '\nlinear_damp = ' + str(obj.rigid_body.linear_damping)
 				rigidBody += '\nangular_damp_mode = 1'
 				rigidBody += '\nangular_damp = ' + str(obj.rigid_body.angular_damping)
 				rigidBody += '\nfreeze = ' + str(int(not obj.rigid_body.enabled))
-				parentName = rigidBodyName
 				for modifier in obj.modifiers:
 					if modifier.type == 'COLLISION':
 						scriptId = self.GetId(7)
@@ -777,7 +779,8 @@ class GodotExportButton (bpy.types.Operator):
 						resource = resource.replace(REPLACE_INDICATOR + '3', scriptId)
 						self.resources += resource + '\n'
 						rigidBody += '\nscript = ExtResource("' + scriptId + '")'
-						rigidBody += '\nmeshInstance = NodePath("../' + obj.name + '/' + obj.name + '")'
+						meshInstancePath = parentName + obj.name + '/' + obj.name
+						rigidBody += '\nmeshInstance = NodePath("../' + meshInstancePath + '")'
 						break
 				self.nodes += rigidBody + '\n'
 			model = self.MODEL_TEMPLATE
@@ -786,7 +789,7 @@ class GodotExportButton (bpy.types.Operator):
 			model = model.replace(REPLACE_INDICATOR + '2', id)
 			model += '\n' + self.GetTransformText(obj)
 			self.nodes += model + '\n'
-			self.MakeClickableChild (obj.name)
+			self.MakeClickableChild (obj)
 		elif obj.type == 'LIGHT':
 			light = self.NODE_TEMPLATE
 			light = light.replace(REPLACE_INDICATOR + '0', obj.name)
@@ -804,7 +807,7 @@ class GodotExportButton (bpy.types.Operator):
 			else:# elif lightObject.type == 'AREA':
 				print('Area lights are not supported in Godot')
 				return
-			light = light.replace(REPLACE_INDICATOR + '2', self.GetParentText(obj))
+			light = light.replace(REPLACE_INDICATOR + '2', self.GetParentPath(obj))
 			if lightObj.type == 'POINT':
 				light += '\nomni_range = ' + str(lightObj.cutoff_distance)
 			elif lightObj.type == 'SPOT':
@@ -818,7 +821,7 @@ class GodotExportButton (bpy.types.Operator):
 			camera = self.NODE_TEMPLATE
 			camera = camera.replace(REPLACE_INDICATOR + '0', obj.name)
 			camera = camera.replace(REPLACE_INDICATOR + '1', 'Camera3D')
-			camera = camera.replace(REPLACE_INDICATOR + '2', self.GetParentText(obj))
+			camera = camera.replace(REPLACE_INDICATOR + '2', self.GetParentPath(obj))
 			cameraObj = None
 			for _camera in bpy.data.cameras:
 				if _camera.name == obj.name:
@@ -881,11 +884,20 @@ class GodotExportButton (bpy.types.Operator):
 		obj.location = previousObjectLocation
 		return transform
 	
-	def GetParentText (self, obj):
+	def GetParentPath (self, obj):
+		output = ''
+		parent = obj
+		if obj.rigid_body != None:
+			output = obj.name + ' (RigidBody3D)/'
 		for obj2 in bpy.data.objects:
-			if obj in obj2.children:
-				return obj2.name
-		return '.'
+			if parent in obj2.children:
+				parent = obj2
+				if obj2.rigid_body != None:
+					output += obj2.name + ' (RigidBody3D)/'
+				output += obj2.name + '/'
+		if output == '':
+			output = '.'
+		return output
 
 	def GetId (self, length : int):
 		output = '1'
@@ -895,17 +907,19 @@ class GodotExportButton (bpy.types.Operator):
 		self.idIndex += 1
 		return output
 
-	def MakeClickableChild (self, objName : str):
+	def MakeClickableChild (self, obj):
+		parentPath = self.GetParentPath(obj)
 		rigidBody = self.NODE_TEMPLATE
-		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '0', objName + ' (Clickable)')
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '0', obj.name + ' (Clickable)')
 		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '1', 'RigidBody3D')
-		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', objName)
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', parentPath + obj.name)
 		rigidBody += '\nfreeze = true'
 		rigidBody += '\ncollision_layer = 2147483648'
 		rigidBody += '\ncollision_mask = 0'
 		id = self.GetId(7)
 		rigidBody += '\nscript = ExtResource("' + id + '")'
-		rigidBody += '\nmeshInstance = NodePath("../' + objName + '/' + objName + '")'
+		meshInstancePath = parentPath + obj.name + '/' + obj.name
+		rigidBody += '\nmeshInstance = NodePath("../' + meshInstancePath + '")'
 		self.nodes += rigidBody + '\n'
 		resource = self.RESOURCE_TEMPLATE
 		resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
