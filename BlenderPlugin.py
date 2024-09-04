@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import subprocess, sys, os
 os.system('rm /tmp/HolyBlender*')
+netghost = False
 
 TEST_BEVY = '''
 txt = bpy.data.texts.new(name='rotate.rs')
@@ -173,6 +174,8 @@ for i,arg in enumerate(sys.argv):
 	elif arg == '--test-html':
 		user_script = '/tmp/__test_html__.py'
 		open(user_script,'w').write(TEST_HTML)
+	elif arg == '--ghost':
+		netghost = True
 
 	elif arg.startswith('--'):
 		user_opts.append(arg)
@@ -189,6 +192,11 @@ print(command)
 
 if not os.path.isdir('./Blender_bevy_components_workflow'):
 	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
+	print(cmd)
+	subprocess.check_call(cmd.split())
+
+if netghost and not os.path.isdir('./Net-Ghost-SE'):
+	cmd = 'git clone https://github.com/brentharts/Net-Ghost-SE.git --depth=1'
 	print(cmd)
 	subprocess.check_call(cmd.split())
 
