@@ -17,8 +17,8 @@ from http.server import BaseHTTPRequestHandler
 
 LOCALHOST_PORT = 8000
 
-class BlenderServer(BaseHTTPRequestHandler):
-	def do_GET(self):
+class BlenderServer (BaseHTTPRequestHandler):
+	def do_GET (self):
 		self.send_response(200)
 		self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
 		self.send_header("Pragma", "no-cache")
@@ -77,7 +77,8 @@ class HttpServerOperator (bpy.types.Operator):
 	bl_idname = "httpd.run"
 	bl_label = "httpd"
 	bl_options = {'REGISTER'}
-	def modal(self, context, event):
+
+	def modal (self, context, event):
 		if event.type == "TIMER":
 			if HTTPD_ACTIVE:
 				httpd.handle_request() # this blocks for a short time
@@ -153,8 +154,8 @@ elif sys.platform == 'darwin': # Apple
 	blender = '/Applications/Blender.app/Contents/MacOS/Blender'
 command = []
 user_script = None
-user_opts   = []
-test_bevy   = False
+user_opts = []
+test_bevy = False
 for i,arg in enumerate(sys.argv):
 	if arg.endswith('.blend'):
 		command.append(os.path.expanduser(arg))
@@ -165,7 +166,7 @@ for i,arg in enumerate(sys.argv):
 	elif arg.endswith(('blender', 'Blender')):
 		blender = arg
 	elif arg == '--eval':
-		user_script = sys.argv[ i+1 ]
+		user_script = sys.argv[i + 1]
 	elif arg == '--test-bevy':
 		test_bevy = True
 		tmp = '/tmp/__test_bevy__.py'
@@ -176,7 +177,6 @@ for i,arg in enumerate(sys.argv):
 		open(user_script,'w').write(TEST_HTML)
 	elif arg == '--ghost':
 		netghost = True
-
 	elif arg.startswith('--'):
 		user_opts.append(arg)
 
@@ -193,11 +193,13 @@ print(command)
 if not os.path.isdir('./Blender_bevy_components_workflow'):
 	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
 	print(cmd)
+	
 	subprocess.check_call(cmd.split())
 
 if netghost and not os.path.isdir('./Net-Ghost-SE'):
 	cmd = 'git clone https://github.com/brentharts/Net-Ghost-SE.git --depth=1'
 	print(cmd)
+	
 	subprocess.check_call(cmd.split())
 
 subprocess.check_call(command)

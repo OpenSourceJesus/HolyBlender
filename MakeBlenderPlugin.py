@@ -867,6 +867,9 @@ class GodotExportButton (bpy.types.Operator):
 	
 	def GetTransformText (self, obj):
 		transform = self.TRANSFORM_TEMPLATE
+		location = obj.location
+		if obj.type == 'MESH':
+			location = mathutils.Vector((0, 0, 0))
 		previousObjectRotationMode = obj.rotation_mode
 		obj.rotation_mode = 'XYZ'
 		size = mathutils.Vector((obj.scale.x, obj.scale.z, obj.scale.y))
@@ -875,9 +878,6 @@ class GodotExportButton (bpy.types.Operator):
 		up = mathutils.Vector((0, 0, 1)) @ matrix
 		forward = mathutils.Vector((0, 1, 0)) @ matrix
 		obj.rotation_mode = previousObjectRotationMode
-		location = obj.location
-		if obj.type == 'MESH':
-			location = mathutils.Vector((0, 0, 0))
 		transform = transform.replace(REPLACE_INDICATOR + '10', str(location.z))
 		transform = transform.replace(REPLACE_INDICATOR + '11', str(-location.y))
 		transform = transform.replace(REPLACE_INDICATOR + '0', str(right.x))

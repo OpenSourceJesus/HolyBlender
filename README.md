@@ -4,9 +4,9 @@
 Please feel free to contribute!
 
 # Description
-This project is for people to use Blender to write code, attach scripts to objects, and then export to Unity, Unreal, or bevy.
+This project is for people to use Blender to write code, attach scripts to objects, and then export to Unity, Unreal, Godot, bevy, or Net Ghost Science Engine.
 
-Additionally, three tools can be used from the command line: UnityToUnreaal, UnityToBevy, and KritaToBlender.
+Additionally, three tools can be used from the command line: UnityToUnreal, UnityToBevy, and KritaToBlender.
 
 UnityToUnreal and UnityToBevy translate a Unity project to an Unreal or bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated.
 
