@@ -21,8 +21,16 @@ from SystemExtensions import *
 from StringExtensions import *
 from CollectionExtensions import *
 
+if os.path.isdir(os.path.join(__thisdir,'Net-Ghost-SE')):
+	sys.path.append(os.path.join(__thisdir,'Net-Ghost-SE'))
+	import ghostblender
+	print(ghostblender)
+else:
+	ghostblender = None
+
+
 bl_info = {
-	'name': 'Blender Plugin',
+	'name': 'HolyBlender',
 	'blender': (2, 80, 0),
 	'category': 'System',
 }
