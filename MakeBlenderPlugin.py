@@ -237,7 +237,6 @@ MAX_SCRIPTS_PER_OBJECT = 16
 unrealCodePath = ''
 unrealCodePathSuffix = os.path.join('', 'Source', '')
 excludeItems = [ os.path.join('', 'Library') ]
-lastId = 5
 operatorContext = None
 currentTextBlock = None
 mainClassNames = []
@@ -973,415 +972,421 @@ class UnityExportButton (bpy.types.Operator):
 	CHILD_TRANSFORM_TEMPLATE = '    - {fileID: ꗈ}'
 	SCENE_ROOT_TEMPLATE = CHILD_TRANSFORM_TEMPLATE
 	GAME_OBJECT_TEMPLATE = '''--- !u!1 &ꗈ0
-	GameObject:
-		m_ObjectHideFlags: 0
-		m_CorrespondingSourceObject: {fileID: 0}
-		m_PrefabInstance: {fileID: 0}
-		m_PrefabAsset: {fileID: 0}
-		serializedVersion: 6
-		m_Component:
-		- component: {fileID: ꗈ1}
-	ꗈ2
-		m_Layer: ꗈ3
-		m_Name: ꗈ4
-		m_TagString: Untagged
-		m_Icon: {fileID: 0}
-		m_NavMeshLayer: 0
-		m_StaticEditorFlags: 0
-		m_IsActive: 1'''
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: ꗈ1}
+ꗈ2
+  m_Layer: ꗈ3
+  m_Name: ꗈ4
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1'''
 	TRANSFORM_TEMPLATE = '''--- !u!4 &ꗈ0
-	Transform:
-		m_ObjectHideFlags: 0
-		m_CorrespondingSourceObject: {fileID: 0}
-		m_PrefabInstance: {fileID: 0}
-		m_PrefabAsset: {fileID: 0}
-		m_GameObject: {fileID: ꗈ1}
-		serializedVersion: 2
-		m_LocalRotation: {x: ꗈ2, y: ꗈ3, z: ꗈ4, w: ꗈ5}
-		m_LocalPosition: {x: ꗈ6, y: ꗈ7, z: ꗈ8}
-		m_LocalScale: {x: ꗈ9, y: ꗈ10, z: ꗈ11}
-		m_ConstrainProportionsScale: 0
-		m_Children: ꗈ12
-		m_Father: {fileID: ꗈ13}
-		m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}'''
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  serializedVersion: 2
+  m_LocalRotation: {x: ꗈ2, y: ꗈ3, z: ꗈ4, w: ꗈ5}
+  m_LocalPosition: {x: ꗈ6, y: ꗈ7, z: ꗈ8}
+  m_LocalScale: {x: ꗈ9, y: ꗈ10, z: ꗈ11}
+  m_ConstrainProportionsScale: 0
+  m_Children: ꗈ12
+  m_Father: {fileID: ꗈ13}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}'''
 	LIGHT_TEMPLATE = '''--- !u!108 &ꗈ0
-	Light:
-		m_ObjectHideFlags: 0
-		m_CorrespondingSourceObject: {fileID: 0}
-		m_PrefabInstance: {fileID: 0}
-		m_PrefabAsset: {fileID: 0}
-		m_GameObject: {fileID: ꗈ1}
-		m_Enabled: 1
-		serializedVersion: 11
-		m_Type: ꗈ2
-		m_Color: {r: ꗈ3, g: ꗈ4, b: ꗈ5, a: 1}
-		m_Intensity: ꗈ6
-		m_Range: ꗈ7
-		m_SpotAngle: ꗈ8
-		m_InnerSpotAngle: ꗈ9
-		m_CookieSize: 10
-		m_Shadows:
-		m_Type: 0
-		m_Resolution: -1
-		m_CustomResolution: -1
-		m_Strength: 1
-		m_Bias: 0.05
-		m_NormalBias: 0.4
-		m_NearPlane: 0.2
-		m_CullingMatrixOverride:
-			e00: 1
-			e01: 0
-			e02: 0
-			e03: 0
-			e10: 0
-			e11: 1
-			e12: 0
-			e13: 0
-			e20: 0
-			e21: 0
-			e22: 1
-			e23: 0
-			e30: 0
-			e31: 0
-			e32: 0
-			e33: 1
-		m_UseCullingMatrixOverride: 0
-		m_Cookie: {fileID: 0}
-		m_DrawHalo: 0
-		m_Flare: {fileID: 0}
-		m_RenderMode: 0
-		m_CullingMask:
-		serializedVersion: 2
-		m_Bits: 4294967295
-		m_RenderingLayerMask: 1
-		m_Lightmapping: 4
-		m_LightShadowCasterMode: 0
-		m_AreaSize: {x: 1, y: 1}
-		m_BounceIntensity: 1
-		m_ColorTemperature: 6570
-		m_UseColorTemperature: 0
-		m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
-		m_UseBoundingSphereOverride: 0
-		m_UseViewFrustumForShadowCasterCull: 1
-		m_ShadowRadius: 0
-		m_ShadowAngle: 0'''
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  serializedVersion: 11
+  m_Type: ꗈ2
+  m_Color: {r: ꗈ3, g: ꗈ4, b: ꗈ5, a: 1}
+  m_Intensity: ꗈ6
+  m_Range: ꗈ7
+  m_SpotAngle: ꗈ8
+  m_InnerSpotAngle: ꗈ9
+  m_CookieSize: 10
+  m_Shadows:
+  m_Type: 0
+  m_Resolution: -1
+  m_CustomResolution: -1
+  m_Strength: 1
+  m_Bias: 0.05
+  m_NormalBias: 0.4
+  m_NearPlane: 0.2
+  m_CullingMatrixOverride:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+  serializedVersion: 2
+  m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0'''
 	SCRIPT_TEMPLATE = '''--- !u!114 &ꗈ0
-	MonoBehaviour:
-		m_ObjectHideFlags: 0
-		m_CorrespondingSourceObject: {fileID: 0}
-		m_PrefabInstance: {fileID: 0}
-		m_PrefabAsset: {fileID: 0}
-		m_GameObject: {fileID: ꗈ1}
-		m_Enabled: 1
-		m_EditorHideFlags: 0
-		m_Script: {fileID: 11500000, guid: ꗈ2, type: 3}
-		m_Name: 
-		m_EditorClassIdentifier: 
-		m_Version: 3
-		m_UsePipelineSettings: 1
-		m_AdditionalLightsShadowResolutionTier: 2
-		m_LightLayerMask: 1
-		m_RenderingLayers: 1
-		m_CustomShadowLayers: 0
-		m_ShadowLayerMask: 1
-		m_ShadowRenderingLayers: 1
-		m_LightCookieSize: {x: 1, y: 1}
-		m_LightCookieOffset: {x: 0, y: 0}
-		m_SoftShadowQuality: 0'''
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ꗈ2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Version: 3
+  m_UsePipelineSettings: 1
+  m_AdditionalLightsShadowResolutionTier: 2
+  m_LightLayerMask: 1
+  m_RenderingLayers: 1
+  m_CustomShadowLayers: 0
+  m_ShadowLayerMask: 1
+  m_ShadowRenderingLayers: 1
+  m_LightCookieSize: {x: 1, y: 1}
+  m_LightCookieOffset: {x: 0, y: 0}
+  m_SoftShadowQuality: 0'''
 	SCRIPT_META_TEMPLATE = '''fileFormatVersion: 2
-	guid: '''
+guid: '''
 	MATERIAL_META_TEMPLATE = '''fileFormatVersion: 2
-	guid: ꗈ
-	NativeFormatImporter:
-		externalObjects: {}
-		mainObjectFileID: 2100000
-		userData: 
-		assetBundleName: 
-		assetBundleVariant: '''
+guid: ꗈ
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: '''
 	MESH_META_TEMPLATE = '''fileFormatVersion: 2
-	guid: ꗈ
-	ModelImporter:
-		serializedVersion: 22200
-		internalIDToNameTable: []
-		externalObjects: {}
-		materials:
-			materialImportMode: 2
-			materialName: 0
-			materialSearch: 1
-			materialLocation: 1
-		animations:
-			legacyGenerateAnimations: 4
-			bakeSimulation: 0
-			resampleCurves: 1
-			optimizeGameObjects: 0
-			removeConstantScaleCurves: 0
-			motionNodeName: 
-			animationImportErrors: 
-			animationImportWarnings: 
-			animationRetargetingWarnings: 
-			animationDoRetargetingWarnings: 0
-			importAnimatedCustomProperties: 0
-			importConstraints: 0
-			animationCompression: 1
-			animationRotationError: 0.5
-			animationPositionError: 0.5
-			animationScaleError: 0.5
-			animationWrapMode: 0
-			extraExposedTransformPaths: []
-			extraUserProperties: []
-			clipAnimations: []
-			isReadable: 0
-		meshes:
-			lODScreenPercentages: []
-			globalScale: 1
-			meshCompression: 0
-			addColliders: 0
-			useSRGBMaterialColor: 1
-			sortHierarchyByName: 1
-			importPhysicalCameras: 1
-			importVisibility: 1
-			importBlendShapes: 1
-			importCameras: 1
-			importLights: 1
-			nodeNameCollisionStrategy: 1
-			fileIdsGeneration: 2
-			swapUVChannels: 0
-			generateSecondaryUV: 0
-			useFileUnits: 1
-			keepQuads: 0
-			weldVertices: 1
-			bakeAxisConversion: 0
-			preserveHierarchy: 0
-			skinWeightsMode: 0
-			maxBonesPerVertex: 4
-			minBoneWeight: 0.001
-			optimizeBones: 1
-			meshOptimizationFlags: -1
-			indexFormat: 0
-			secondaryUVAngleDistortion: 8
-			secondaryUVAreaDistortion: 15.000001
-			secondaryUVHardAngle: 88
-			secondaryUVMarginMethod: 1
-			secondaryUVMinLightmapResolution: 40
-			secondaryUVMinObjectScale: 1
-			secondaryUVPackMargin: 4
-			useFileScale: 1
-			strictVertexDataChecks: 0
-		tangentSpace:
-			normalSmoothAngle: 60
-			normalImportMode: 0
-			tangentImportMode: 3
-			normalCalculationMode: 4
-			legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
-			blendShapeNormalImportMode: 1
-			normalSmoothingSource: 0
-		referencedClips: []
-		importAnimation: 1
-		humanDescription:
-			serializedVersion: 3
-			human: []
-			skeleton: []
-			armTwist: 0.5
-			foreArmTwist: 0.5
-			upperLegTwist: 0.5
-			legTwist: 0.5
-			armStretch: 0.05
-			legStretch: 0.05
-			feetSpacing: 0
-			globalScale: 1
-			rootMotionBoneName: 
-			hasTranslationDoF: 0
-			hasExtraRoot: 0
-			skeletonHasParents: 1
-		lastHumanDescriptionAvatarSource: {instanceID: 0}
-		autoGenerateAvatarMappingIfUnspecified: 1
-		animationType: 2
-		humanoidOversampling: 1
-		avatarSetup: 0
-		addHumanoidExtraRootOnlyWhenUsingAvatar: 1
-		importBlendShapeDeformPercent: 1
-		remapMaterialsIfMaterialImportModeIsNone: 0
-		additionalBone: 0
-		userData: 
-		assetBundleName: 
-		assetBundleVariant: '''
+guid: ꗈ
+ModelImporter:
+  serializedVersion: 22200
+  internalIDToNameTable: []
+  externalObjects: {}
+  materials:
+    materialImportMode: 2
+    materialName: 0
+    materialSearch: 1
+    materialLocation: 1
+  animations:
+    legacyGenerateAnimations: 4
+    bakeSimulation: 0
+    resampleCurves: 1
+    optimizeGameObjects: 0
+    removeConstantScaleCurves: 0
+    motionNodeName: 
+    animationImportErrors: 
+    animationImportWarnings: 
+    animationRetargetingWarnings: 
+    animationDoRetargetingWarnings: 0
+    importAnimatedCustomProperties: 0
+    importConstraints: 0
+    animationCompression: 1
+    animationRotationError: 0.5
+    animationPositionError: 0.5
+    animationScaleError: 0.5
+    animationWrapMode: 0
+    extraExposedTransformPaths: []
+    extraUserProperties: []
+    clipAnimations: []
+    isReadable: 0
+  meshes:
+    lODScreenPercentages: []
+    globalScale: 1
+    meshCompression: 0
+    addColliders: 0
+    useSRGBMaterialColor: 1
+    sortHierarchyByName: 1
+    importPhysicalCameras: 1
+    importVisibility: 1
+    importBlendShapes: 1
+    importCameras: 1
+    importLights: 1
+    nodeNameCollisionStrategy: 1
+    fileIdsGeneration: 2
+    swapUVChannels: 0
+    generateSecondaryUV: 0
+    useFileUnits: 1
+    keepQuads: 0
+    weldVertices: 1
+    bakeAxisConversion: 0
+    preserveHierarchy: 0
+    skinWeightsMode: 0
+    maxBonesPerVertex: 4
+    minBoneWeight: 0.001
+    optimizeBones: 1
+    meshOptimizationFlags: -1
+    indexFormat: 0
+    secondaryUVAngleDistortion: 8
+    secondaryUVAreaDistortion: 15.000001
+    secondaryUVHardAngle: 88
+    secondaryUVMarginMethod: 1
+    secondaryUVMinLightmapResolution: 40
+    secondaryUVMinObjectScale: 1
+    secondaryUVPackMargin: 4
+    useFileScale: 1
+    strictVertexDataChecks: 0
+  tangentSpace:
+    normalSmoothAngle: 60
+    normalImportMode: 0
+    tangentImportMode: 3
+    normalCalculationMode: 4
+    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
+    blendShapeNormalImportMode: 1
+    normalSmoothingSource: 0
+  referencedClips: []
+  importAnimation: 1
+  humanDescription:
+    serializedVersion: 3
+    human: []
+    skeleton: []
+    armTwist: 0.5
+    foreArmTwist: 0.5
+    upperLegTwist: 0.5
+    legTwist: 0.5
+    armStretch: 0.05
+    legStretch: 0.05
+    feetSpacing: 0
+    globalScale: 1
+    rootMotionBoneName: 
+    hasTranslationDoF: 0
+    hasExtraRoot: 0
+    skeletonHasParents: 1
+  lastHumanDescriptionAvatarSource: {instanceID: 0}
+  autoGenerateAvatarMappingIfUnspecified: 1
+  animationType: 2
+  humanoidOversampling: 1
+  avatarSetup: 0
+  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
+  importBlendShapeDeformPercent: 1
+  remapMaterialsIfMaterialImportModeIsNone: 0
+  additionalBone: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: '''
 	MESH_FILTER_TEMPLATE = '''--- !u!33 &ꗈ0
-	MeshFilter:
-		m_ObjectHideFlags: 0
-		m_CorrespondingSourceObject: {fileID: 0}
-		m_PrefabInstance: {fileID: 0}
-		m_PrefabAsset: {fileID: 0}
-		m_GameObject: {fileID: ꗈ1}
-		m_Mesh: {fileID: ꗈ2, guid: ꗈ3, type: 3}'''
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Mesh: {fileID: ꗈ2, guid: ꗈ3, type: 3}'''
 	MESH_RENDERER_TEMPLATE = '''--- !u!23 &ꗈ0
-	MeshRenderer:
-		m_ObjectHideFlags: 0
-		m_CorrespondingSourceObject: {fileID: 0}
-		m_PrefabInstance: {fileID: 0}
-		m_PrefabAsset: {fileID: 0}
-		m_GameObject: {fileID: ꗈ1}
-		m_Enabled: 1
-		m_CastShadows: 1
-		m_ReceiveShadows: 1
-		m_DynamicOccludee: 1
-		m_StaticShadowCaster: 0
-		m_MotionVectors: 1
-		m_LightProbeUsage: 1
-		m_ReflectionProbeUsage: 1
-		m_RayTracingMode: 2
-		m_RayTraceProcedural: 0
-		m_RayTracingAccelStructBuildFlagsOverride: 0
-		m_RayTracingAccelStructBuildFlags: 1
-		m_RenderingLayerMask: 1
-		m_RendererPriority: 0
-		m_Materials:
-	ꗈ2
-		m_StaticBatchInfo:
-		firstSubMesh: 0
-		subMeshCount: 0
-		m_StaticBatchRoot: {fileID: 0}
-		m_ProbeAnchor: {fileID: 0}
-		m_LightProbeVolumeOverride: {fileID: 0}
-		m_ScaleInLightmap: 1
-		m_ReceiveGI: 1
-		m_PreserveUVs: 0
-		m_IgnoreNormalsForChartDetection: 0
-		m_ImportantGI: 0
-		m_StitchLightmapSeams: 1
-		m_SelectedEditorRenderState: 3
-		m_MinimumChartSize: 4
-		m_AutoUVMaxDistance: 0.5
-		m_AutoUVMaxAngle: 89
-		m_LightmapParameters: {fileID: 0}
-		m_SortingLayerID: 0
-		m_SortingLayer: 0
-		m_SortingOrder: 0
-		m_AdditionalVertexStreams: {fileID: 0}'''
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+ꗈ2
+  m_StaticBatchInfo:
+  firstSubMesh: 0
+  subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}'''
 	MESH_COLLIDER_TEMPLATE = '''--- !u!64 &ꗈ0
-	MeshCollider:
-	m_ObjectHideFlags: 0
-	m_CorrespondingSourceObject: {fileID: 0}
-	m_PrefabInstance: {fileID: 0}
-	m_PrefabAsset: {fileID: 0}
-	m_GameObject: {fileID: ꗈ1}
-	m_Material: {fileID: 0}
-	m_IncludeLayers:
-		serializedVersion: 2
-		m_Bits: 0
-	m_ExcludeLayers:
-		serializedVersion: 2
-		m_Bits: 0
-	m_LayerOverridePriority: 0
-	m_IsTrigger: ꗈ2
-	m_ProvidesContacts: 0
-	m_Enabled: 1
-	serializedVersion: 5
-	m_Convex: ꗈ3
-	m_CookingOptions: 30
-	m_Mesh: {fileID: ꗈ4, guid: ꗈ5, type: 3}'''
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: ꗈ2
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: ꗈ3
+  m_CookingOptions: 30
+  m_Mesh: {fileID: ꗈ4, guid: ꗈ5, type: 3}'''
 	RIGIDBODY_TEMPLATE = '''--- !u!54 &ꗈ0
-	Rigidbody:
-	m_ObjectHideFlags: 0
-	m_CorrespondingSourceObject: {fileID: 0}
-	m_PrefabInstance: {fileID: 0}
-	m_PrefabAsset: {fileID: 0}
-	m_GameObject: {fileID: ꗈ1}
-	serializedVersion: 4
-	m_Mass: ꗈ2
-	m_Drag: ꗈ3
-	m_AngularDrag: ꗈ4
-	m_CenterOfMass: {x: 0, y: 0, z: 0}
-	m_InertiaTensor: {x: 1, y: 1, z: 1}
-	m_InertiaRotation: {x: 0, y: 0, z: 0 w: 1}
-	m_IncludeLayers:
-		serializedVersion: 2
-		m_Bits: 0
-	m_ExcludeLayers:
-		serializedVersion: 2
-		m_Bits: 0
-	m_ImplicitCom: 1
-	m_ImplicitTensor: 1
-	m_UseGravity: ꗈ5
-	m_IsKinematic: ꗈ6
-	m_Interpolate: ꗈ7
-	m_Constraints: ꗈ8
-	m_CollisionDetection: ꗈ9'''
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  serializedVersion: 4
+  m_Mass: ꗈ2
+  m_Drag: ꗈ3
+  m_AngularDrag: ꗈ4
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0 w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: ꗈ5
+  m_IsKinematic: ꗈ6
+  m_Interpolate: ꗈ7
+  m_Constraints: ꗈ8
+  m_CollisionDetection: ꗈ9'''
 	CAMERA_TEMPLATE = '''--- !u!20 &ꗈ0
-	Camera:
-		m_ObjectHideFlags: 0
-		m_CorrespondingSourceObject: {fileID: 0}
-		m_PrefabInstance: {fileID: 0}
-		m_PrefabAsset: {fileID: 0}
-		m_GameObject: {fileID: ꗈ1}
-		m_Enabled: 1
-		serializedVersion: 2
-		m_ClearFlags: 1
-		m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
-		m_projectionMatrixMode: 1
-		m_GateFitMode: 2
-		m_FOVAxisMode: ꗈ2
-		m_Iso: 200
-		m_ShutterSpeed: 0.005
-		m_Aperture: 16
-		m_FocusDistance: 10
-		m_FocalLength: 50
-		m_BladeCount: 5
-		m_Curvature: {x: 2, y: 11}
-		m_BarrelClipping: 0.25
-		m_Anamorphism: 0
-		m_SensorSize: {x: 36, y: 24}
-		m_LensShift: {x: 0, y: 0}
-		m_NormalizedViewPortRect:
-		serializedVersion: 2
-		x: 0
-		y: 0
-		width: 1
-		height: 1
-		near clip plane: ꗈ3
-		far clip plane: ꗈ4
-		field of view: ꗈ5
-		orthographic: ꗈ6
-		orthographic size: ꗈ7
-		m_Depth: 0
-		m_CullingMask:
-		serializedVersion: 2
-		m_Bits: 4294967295
-		m_RenderingPath: -1
-		m_TargetTexture: {fileID: 0}
-		m_TargetDisplay: 0
-		m_TargetEye: 3
-		m_HDR: 1
-		m_AllowMSAA: 1
-		m_AllowDynamicResolution: 0
-		m_ForceIntoRT: 0
-		m_OcclusionCulling: 1
-		m_StereoConvergence: 10
-		m_StereoSeparation: 0.022'''
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: ꗈ2
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+  serializedVersion: 2
+  x: 0
+  y: 0
+  width: 1
+  height: 1
+  near clip plane: ꗈ3
+  far clip plane: ꗈ4
+  field of view: ꗈ5
+  orthographic: ꗈ6
+  orthographic size: ꗈ7
+  m_Depth: 0
+  m_CullingMask:
+  serializedVersion: 2
+  m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022'''
+	gameObjectsAndComponentsText = ''
+	transformIds = []
+	componentIds = []
+	projectExportPath = ''
+	unityVersionPath = ''
+	lastId = 5
 
 	@classmethod
 	def poll (cls, context):
 		return True
 	
 	def execute (self, context):
-		global lastId
-		projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
-		if not os.path.isdir(projectExportPath):
-			os.mkdir(projectExportPath)
+		self.lastId = 5
+		self.projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
+		if not os.path.isdir(self.projectExportPath):
+			os.mkdir(self.projectExportPath)
 		meshesDict = {}
 		for mesh in bpy.data.meshes:
 			meshesDict[mesh.name] = []
 		for obj in bpy.context.scene.objects:
 			if obj.type == 'MESH' and obj.data.name in meshesDict:
 				meshesDict[obj.data.name].append(obj.name)
-				fileExportFolder = os.path.join(projectExportPath, 'Assets', 'Art', 'Models')
+				fileExportFolder = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Models')
 				fileExportPath = os.path.join(fileExportFolder, '')
 				MakeFolderForFile (fileExportPath)
 				previousObjectScale = obj.scale
 				obj.scale *= 100
-				fileExportPath = ExportMesh(fileExportFolder)
+				fileExportPath = ExportMesh(obj, fileExportFolder)
 				obj.scale = previousObjectScale
 				for materialSlot in obj.material_slots:
-					fileExportPath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+					fileExportPath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 					MakeFolderForFile (fileExportPath)
 					material = open(os.path.expanduser('~/HolyBlender/Templates/Material.mat'), 'rb').read().decode('utf-8')
 					material = material.replace(REPLACE_INDICATOR + '0', materialSlot.material.name)
@@ -1392,36 +1397,36 @@ class UnityExportButton (bpy.types.Operator):
 					material = material.replace(REPLACE_INDICATOR + '4', str(materialColor[3]))
 					open(fileExportPath, 'wb').write(material.encode('utf-8'))
 		unityVersionsPath = os.path.expanduser('~/Unity/Hub/Editor')
-		unityVersionPath = ''
+		self.unityVersionPath = ''
 		if os.path.isdir(unityVersionsPath):
 			unityVersions = os.listdir(unityVersionsPath)
 			for unityVersion in unityVersions:
-				_unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
-				if os.path.isfile(_unityVersionPath):
-					unityVersionPath = _unityVersionPath
+				self.unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
+				if os.path.isfile(self.unityVersionPath):
+					self.unityVersionPath = self.unityVersionPath
 					break
-		if unityVersionPath != '':
-			MakeFolderForFile (os.path.join(projectExportPath, 'Assets', 'Editor', ''))
+		if self.unityVersionPath != '':
+			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 
-			os.system('cp ' + os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs') + ' ' + os.path.join(projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
-			os.system('cp ' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + ' ' + projectExportPath + '/Assets/Editor/SystemExtensions.cs')
+			os.system('cp \'' + os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs') + '\' \'' + os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs') + '\'')
+			os.system('cp \'' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + '\' \'' + self.projectExportPath + '/Assets/Editor/SystemExtensions.cs\'')
 
-			command = [ unityVersionPath, '-quit', '-createProject', projectExportPath, '-executeMethod', 'GetUnityProjectInfo.Do', projectExportPath ]
+			command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
 			print(command)
 			
-			subprocess.check_call(command)
+			subprocess.check_call(command.split())
 
 		scenePath = bpy.data.filepath.replace('.blend', '.unity')
 		scenePath = scenePath[scenePath.rfind('/') + 1 :]
-		scenesFolderPath = projectExportPath + '/Assets/Scenes'
+		scenesFolderPath = self.projectExportPath + '/Assets/Scenes'
 		if not os.path.isdir(scenesFolderPath):
 			os.mkdir(scenesFolderPath)
 		if scenePath == '':
 			scenePath = 'Test.unity'
 		scenePath = scenesFolderPath + '/' + scenePath
 		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
-		gameObjectsAndComponentsText = ''
-		transformIds = []
+		self.gameObjectsAndComponentsText = ''
+		self.transformIds = []
 		for obj in bpy.data.objects:
 			shouldMakeObject = True
 			for obj2 in bpy.data.objects:
@@ -1430,15 +1435,15 @@ class UnityExportButton (bpy.types.Operator):
 					break
 			if shouldMakeObject:
 				self.MakeObject (obj)
-		scriptsFolder = os.path.join(projectExportPath, 'Assets', 'Scripts')
-		MakeFolderForFile (os.path.join(projectExportPath, 'Assets', 'Scripts', ''))
+		scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
+		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
 		sendAndRecieveClickEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveClickEvents.cs')
 
 		os.system('cp ' + os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveClickEvents.cs') + ' ' + sendAndRecieveClickEventsScriptPath)
 
 		gameObjectIdAndTransformId = self.MakeEmptyObject('Send And Recieve Click Events')
 		script = self.SCRIPT_TEMPLATE
-		script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
+		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
 		sendAndRecieveClickEventsScriptMetaPath = sendAndRecieveClickEventsScriptPath + '.meta'
 		scriptGuid = GetGuid(sendAndRecieveClickEventsScriptMetaPath)
@@ -1446,40 +1451,37 @@ class UnityExportButton (bpy.types.Operator):
 		scriptMeta += scriptGuid
 		open(sendAndRecieveClickEventsScriptMetaPath, 'wb').write(scriptMeta.encode('utf-8'))
 		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
-		gameObjectsAndComponentsText += script + '\n'
-		componentIds.append(lastId)
-		lastId += 1
-		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', gameObjectsAndComponentsText)
+		self.gameObjectsAndComponentsText += script + '\n'
+		self.componentIds.append(self.lastId)
+		self.lastId += 1
+		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', self.gameObjectsAndComponentsText)
 		sceneRootsText = ''
-		for transformId in transformIds:
+		for transformId in self.transformIds:
 			sceneRoot = self.SCENE_ROOT_TEMPLATE
 			sceneRoot = sceneRoot.replace(REPLACE_INDICATOR, str(transformId))
 			sceneRootsText += sceneRoot + '\n'
 		sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
 		open(scenePath, 'wb').write(sceneText.encode('utf-8'))
-		if unityVersionPath != '':
-			command = [ unityVersionPath, '-createProject', projectExportPath ]
+		if self.unityVersionPath != '':
+			command = [ self.unityVersionPath, '-createProject', self.projectExportPath ]
 			
 			subprocess.check_call(command)
 
 	def MakeEmptyObject (self, name : str, layer = 0, parentTransformId = 0) -> (int, int):
-		global lastId
-		global transformIds
-		global gameObjectsAndComponentsText
 		gameObject = self.GAME_OBJECT_TEMPLATE
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', str(layer))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '4', name)
-		gameObjectsAndComponentsText += gameObject + '\n'
-		gameObjectId = lastId
-		lastId += 1
+		self.gameObjectsAndComponentsText += gameObject + '\n'
+		gameObjectId = self.lastId
+		self.lastId += 1
 		transform = self.TRANSFORM_TEMPLATE
-		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
-		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
+		transform = transform.replace(REPLACE_INDICATOR + '10', '1')
+		transform = transform.replace(REPLACE_INDICATOR + '11', '1')
 		transform = transform.replace(REPLACE_INDICATOR + '12', '[]')
 		transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
-		transform = transform.replace(REPLACE_INDICATOR + '0', str(lastId))
+		transform = transform.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 		transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 		transform = transform.replace(REPLACE_INDICATOR + '2', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '3', '0')
@@ -1489,47 +1491,44 @@ class UnityExportButton (bpy.types.Operator):
 		transform = transform.replace(REPLACE_INDICATOR + '7', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '8', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '9', '1')
-		gameObjectsAndComponentsText += transform + '\n'
-		transformIds.append(lastId)
-		lastId += 1
-		return (gameObjectId, transformId)
+		self.gameObjectsAndComponentsText += transform + '\n'
+		self.transformIds.append(self.lastId)
+		self.lastId += 1
+		return (gameObjectId, self.lastId - 1)
 
 	def MakeObject (self, obj, parentTransformId = 0) -> int:
-		global lastId
-		global transformIds
-		global gameObjectsAndComponentsText
-		componentIds = []
+		self.componentIds = []
 		gameObject = self.GAME_OBJECT_TEMPLATE
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(lastId))
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(lastId + 1))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
-		gameObjectsAndComponentsText += gameObject + '\n'
-		gameObjectId = lastId
-		lastId += 1
+		self.gameObjectsAndComponentsText += gameObject + '\n'
+		gameObjectId = self.lastId
+		self.lastId += 1
 		transform = self.TRANSFORM_TEMPLATE
 		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
 		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
-		myTransformId = lastId
+		myTransformId = self.lastId
 		children = ''
 		for childObj in obj.children:
-			transformId = self.MakeObject(child, lastId)
+			transformId = self.MakeObject(child, self.lastId)
 			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, transformId)
 		meshFileId = '10202'
 		meshGuid = ''
 		if obj.type == 'MESH':
-			filePath = projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
+			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'wb').write(self.MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
-			if unityVersionPath != '':
+			if self.unityVersionPath != '':
 				dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-				fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
 				indexOfFile = dataText.find(fileIdIndicator)
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
 				meshFileId = dataText[indexOfFileId : indexOfEndOfFileId]
 			gameObjectIdAndTransformId = self.MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
-			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, gameObjectIdAndTransformId[1])
+			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(gameObjectIdAndTransformId[1]))
 		elif len(obj.children) == 0:
 			children = '[]'
 		transform = transform.replace(REPLACE_INDICATOR + '12', children)
@@ -1552,13 +1551,13 @@ class UnityExportButton (bpy.types.Operator):
 		transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.z))
 		transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.y))
 		transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
-		gameObjectsAndComponentsText += transform + '\n'
-		transformIds.append(myTransformId)
-		lastId += 1
+		self.gameObjectsAndComponentsText += transform + '\n'
+		self.transformIds.append(myTransformId)
+		self.lastId += 1
 		guidIndicator = 'guid: '
 		if obj.type == 'LIGHT':
 			light = self.LIGHT_TEMPLATE
-			light = light.replace(REPLACE_INDICATOR + '0', str(lastId))
+			light = light.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			lightObject = bpy.data.lights[obj.name]
 			lightType = 2
@@ -1581,25 +1580,25 @@ class UnityExportButton (bpy.types.Operator):
 				innerSpotAngle = spotSize * (1.0 - lightObject.spot_blend)
 			light = light.replace(REPLACE_INDICATOR + '8', str(spotSize))
 			light = light.replace(REPLACE_INDICATOR + '9', str(innerSpotAngle))
-			gameObjectsAndComponentsText += light + '\n'
-			componentIds.append(lastId)
-			lastId += 1
+			self.gameObjectsAndComponentsText += light + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
 		elif obj.type == 'MESH':
 			meshFilter = self.MESH_FILTER_TEMPLATE
-			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(lastId))
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', meshFileId)
 			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
-			gameObjectsAndComponentsText += meshFilter + '\n'
-			componentIds.append(lastId)
-			lastId += 1
+			self.gameObjectsAndComponentsText += meshFilter + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
 			for modifier in obj.modifiers:
 				if modifier.type == 'COLLISION':
-					AddMeshCollider (gameObjectId, False, False, meshFileId, meshGuid)
+					self.AddMeshCollider (gameObjectId, False, False, meshFileId, meshGuid)
 					break
 			if obj.rigid_body != None:
 				rigidbody = self.RIGIDBODY_TEMPLATE
-				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '0', str(lastId))
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '2', str(obj.rigid_body.mass))
 				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '3', str(obj.rigid_body.linear_damping))
@@ -1609,20 +1608,20 @@ class UnityExportButton (bpy.types.Operator):
 				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '7', '0')
 				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '8', '0')
 				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '9', '0')
-				gameObjectsAndComponentsText += rigidbody + '\n'
-				componentIds.append(lastId)
-				lastId += 1
+				self.gameObjectsAndComponentsText += rigidbody + '\n'
+				self.componentIds.append(self.lastId)
+				self.lastId += 1
 			meshRenderer = self.MESH_RENDERER_TEMPLATE
-			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(lastId))
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			materials = ''
 			for materialSlot in obj.material_slots:
-				filePath = projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
+				filePath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
 				materialGuid = GetGuid(filePath)
 				open(filePath, 'wb').write(self.MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
-				if unityVersionPath != '':
+				if self.unityVersionPath != '':
 					dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-					fileIdIndicator = '-' + projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+					fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 					indexOfFile = dataText.find(fileIdIndicator)
 					indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 					indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
@@ -1635,12 +1634,12 @@ class UnityExportButton (bpy.types.Operator):
 				materials += material + '\n'
 			materials = materials[: -1]
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '2', materials)
-			gameObjectsAndComponentsText += meshRenderer + '\n'
-			componentIds.append(lastId)
-			lastId += 1
+			self.gameObjectsAndComponentsText += meshRenderer + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
 		elif obj.type == 'CAMERA':
 			camera = self.CAMERA_TEMPLATE
-			camera = camera.replace(REPLACE_INDICATOR + '0', str(lastId))
+			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			cameraObject = bpy.data.cameras[obj.name]
 			fovAxisMode = 0
@@ -1655,15 +1654,15 @@ class UnityExportButton (bpy.types.Operator):
 				isOrthographic = 1
 			camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
 			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale))
-			gameObjectsAndComponentsText += camera + '\n'
-			componentIds.append(lastId)
-			lastId += 1
+			self.gameObjectsAndComponentsText += camera + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
 		attachedScripts = attachedUnityScriptsDict.get(obj, [])
 		for scriptName in attachedScripts:
 			script = self.SCRIPT_TEMPLATE
-			script = script.replace(REPLACE_INDICATOR + '0', str(lastId))
+			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			filePath = projectExportPath + '/Assets/Standard Assets/Scripts/' + scriptName
+			filePath = self.projectExportPath + '/Assets/Standard Assets/Scripts/' + scriptName
 			MakeFolderForFile (filePath)
 			for textBlock in bpy.data.texts:
 				if textBlock.name == scriptName:
@@ -1678,28 +1677,28 @@ class UnityExportButton (bpy.types.Operator):
 			scriptMeta += scriptGuid
 			open(filePath, 'wb').write(scriptMeta.encode('utf-8'))
 			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
-			gameObjectsAndComponentsText += script + '\n'
-			componentIds.append(lastId)
-			lastId += 1
-		indexOfComponentsList = gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
-		for componentId in componentIds:
+			self.gameObjectsAndComponentsText += script + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		indexOfComponentsList = self.gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
+		for componentId in self.componentIds:
 			component = self.COMPONENT_TEMPLATE
 			component = component.replace(REPLACE_INDICATOR, str(componentId))
-			gameObjectsAndComponentsText = gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + gameObjectsAndComponentsText[indexOfComponentsList :]
-			gameObjectsAndComponentsText = gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
-		return transformId
+			self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + self.gameObjectsAndComponentsText[indexOfComponentsList :]
+			self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
+		return myTransformId
 
 	def AddMeshCollider (self, gameObjectId : int, isTirgger : bool, isConvex : bool, fileId : str, meshGuid : str):
 		meshCollider = self.MESH_COLLIDER_TEMPLATE
-		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(lastId))
+		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '2', str(int(isTirgger)))
 		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '3', str(int(isConvex)))
 		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '4', fileId)
 		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '5', meshGuid)
-		gameObjectsAndComponentsText += meshCollider + '\n'
-		componentIds.append(lastId)
-		lastId += 1
+		self.gameObjectsAndComponentsText += meshCollider + '\n'
+		self.componentIds.append(self.lastId)
+		self.lastId += 1
 
 	def MakeClickableChild (self, name : str, fileId : str, meshGuid : str, parentTransformId = 0) -> (int, int):
 		gameObjectIdAndTransformId = self.MakeEmptyObject(name, 31, parentTransformId)

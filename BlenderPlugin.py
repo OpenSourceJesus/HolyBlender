@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import subprocess, sys, os
 os.system('rm /tmp/HolyBlender*')
 monogame = netghost = False
