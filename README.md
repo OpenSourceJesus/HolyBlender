@@ -4,13 +4,12 @@
 Please feel free to contribute!
 
 # Description
-This project is for people to use Blender to write code, attach scripts to objects, and then export to Unity, Unreal, Godot, bevy, or Net Ghost Science Engine.
+This project is for people to use Blender to write code, attach scripts to objects, and then export to Unity, Unreal, Godot, Bevy, or Net Ghost Science Engine.
 
 Additionally, three tools can be used from the command line: UnityToUnreal, UnityToBevy, and KritaToBlender.
 
 UnityToUnreal and UnityToBevy translate a Unity project to an Unreal or bevy project respectively. KritaToBlender is a tool that can be run in Krita to export the current document to Blender so that the content can be animated.
 
-MakeBlenderPlugin.py (part of the BlenderPlugin tool) provides an interface in Blender for using the tools of this project (KritaToBlender can't be used from BlenderPlugin yet). It can export from Blender to Unity, Unreal, and bevy. Additionally, BlenderPlugin can attach Unity C# scripts (Blender text blocks) to Blender objects and run the scripts. BlenderPlugin can also export from Unity to Unreal and bevy.
 
 # Installation
 Inside the terminal program on your computer, type or copy and paste 'cd ~' and press the Enter key to change directory to your account folder. Then run (type or copy and paste the following and then press Enter) 'git clone https://github.com/OpenSourceJesus/HolyBlender --depth=1' to download the files and folders of this project to the current folder (your account folder). Note that these installation steps except for the first step require internet connection.
@@ -24,8 +23,18 @@ Next, run 'make install_BlenderPlugin' to install the required parts to use Blen
 ## Requirements
 Currently, only Linux operating systems are supported. Testing has only been done on Ubuntu 23.10 and Ubuntu 24.04.
 
-# Usage
-In BlenderPlugin, the export buttons and export paths are in the World Properties. The dropdowns for attaching and detaching scripts are in the Object Properties. All other interface items are found in the Text Editor after you make a text block. Having the 'Unity project import path' empty in the World Properties will export from Blender rather than exporting from the Unity project at the 'Unity project import path'.
+# Basic Usage
+
+```bash
+python3 BlenderPlugin.py
+```
+
+# BlenderPlugin.py
+```
+python3 BlenderPlugin.py [.blend|.py] [--OPTIONS]
+```
+
+In Blender, the export buttons and export paths are in the World Properties. The dropdowns for attaching and detaching scripts are in the Object Properties. All other interface items are found in the Text Editor after you make a text block. Having the 'Unity project import path' empty in the World Properties will export from Blender rather than exporting from the Unity project at the 'Unity project import path'.
 
 For using UnityToBevy without the BlenderPlugin, in the terminal run 'python3 UnityTobevy.py input={path to Unity project to translate from} output={path to bevy project to translate to}'. Replace '{', '}', and what is in between them with the path to the Unity project and the path to the bevy project respectively. You can also add ' exclude={path or part of a path in the Unity project to exclude from the translation}' in the terminal command to not translate any files in the Unity project that contain what is in between the '{' and '}'. UnityToUnreal uses the same rules.
 
@@ -33,8 +42,13 @@ Currently, to use the KritaToBlender tool run the Krita program and then mouse o
 
 Also, I made this project for testing as an input Unity project for translation: 'https://github.com/OpenSourceJesus/HolyBlender-TestUnityProject'.
 
+# Testing
+```bash
+python3 BlenderPlugin.py --test-html
+python3 BlenderPlugin.py --test-bevy
+```
+
 ## Notes
-BlenderPlugin's interface only appears the second time (and the times after that) you run BlenderPlugin.
 
 If you want to want to run BlenderPlugin in a specific blender file then in the terminal run 'blender {path to your Blender file} --python MakeBlenderPlugin.py'. If you want to run BlenderPlugin with a specific Blender executable, then replace 'blender' at the start of the previous terminal command with the path to the Blender executable. You can also leave '{path to your Blender file}' empty to start BlenderPlugin without a Blender file.
 
@@ -56,7 +70,7 @@ This project's translation tools rely on my forks of CSharpToPython (https://git
 Use this webpage to know what should be done in the future of this project (and what has been done) and feel free to add issues (entries) to it: 'https://github.com/OpenSourceJesus/HolyBlender/issues'. Also, my email is 'gileadcosman@gmail.com', and I would love to respond to any questions or comments you have.
 
 # Roadmap
-The tools UnityToStride, UnityToGodot, and UnityToPygame have been started and will hopefully be done eventually. Also, adding spawning and prefab support to the translation tools will hopefully be done eventually. Additionally, support for using KritaToBlender, UnityToStride, UnityToGodot, and UnityToPygame should be added to BlenderPlugin eventually. For viewing or contributing to the list of what should get be done in the future of this project (and what has been done), use this webpage: 'https://github.com/OpenSourceJesus/HolyBlender/issues'.
+The tools UnityToGodot, and UnityToPygame have been started and will hopefully be done eventually. Also, adding spawning and prefab support to the translation tools will hopefully be done eventually. Additionally, support for using KritaToBlender, UnityToStride, UnityToGodot, and UnityToPygame should be added to BlenderPlugin eventually. For viewing or contributing to the list of what should get be done in the future of this project (and what has been done), use this webpage: 'https://github.com/OpenSourceJesus/HolyBlender/issues'.
 
 # Contributing
 I will accept all contributions.

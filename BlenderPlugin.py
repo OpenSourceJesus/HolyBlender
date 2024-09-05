@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import subprocess, sys, os
 os.system('rm /tmp/HolyBlender*')
-netghost = False
+monogame = netghost = False
 
 TEST_BEVY = '''
 txt = bpy.data.texts.new(name='rotate.rs')
@@ -177,6 +177,8 @@ for i,arg in enumerate(sys.argv):
 		open(user_script,'w').write(TEST_HTML)
 	elif arg == '--ghost':
 		netghost = True
+	elif arg == '--monogame' in sys.argv:
+		monogame = True
 	elif arg.startswith('--'):
 		user_opts.append(arg)
 
@@ -199,7 +201,14 @@ if not os.path.isdir('./Blender_bevy_components_workflow'):
 if netghost and not os.path.isdir('./Net-Ghost-SE'):
 	cmd = 'git clone https://github.com/brentharts/Net-Ghost-SE.git --depth=1'
 	print(cmd)
-	
 	subprocess.check_call(cmd.split())
 
+if monogame:
+	if not os.path.isdir('./MonoGame'):
+		cmd = 'git clone https://github.com/MonoGame/MonoGame.git --depth=1'
+		print(cmd)
+		subprocess.check_call(cmd.split())
+	subprocess.check_call(['bash', './build.sh'], cwd='./MonoGame')
+
+## run blender
 subprocess.check_call(command)
