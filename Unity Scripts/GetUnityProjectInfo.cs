@@ -23,7 +23,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 					string guid;
 					long fileId;
 					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						outputText += '-' + filePath + ' ' + fileId + ' ' + guid + ',';
+						outputText += '-' + filePath + ' ' + fileId + ' ' + guid;
 				}
 			}
 		}
@@ -40,10 +40,18 @@ public class GetUnityProjectInfo : MonoBehaviour
 					string guid;
 					long fileId;
 					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						outputText += '-' + filePath + ' ' + fileId + ' ' + guid + ',';
+						outputText += '-' + filePath + ' ' + fileId + ' ' + guid;
 				}
 			}
 		}
-		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
+		string outputPath = "/tmp/HolyBlender Data (BlenderToUnity)";
+		string[] lines = File.ReadAllLines(outputPath);
+		foreach (string line in lines)
+		{
+			string[] data = line.Split(", ");
+			Quaternion rotation = Quaternion.Euler(float.Parse(data[1]), float.Parse(data[2]), float.Parse(data[3]));
+			outputText += '\n' + data[0] + ", " + rotation.x + ", " + rotation.y + ", " + rotation.z + ", " + rotation.w;
+		}
+		File.WriteAllText(outputPath, outputText);
 	}
 }

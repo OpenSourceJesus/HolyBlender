@@ -2,9 +2,9 @@ import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 user_args = None
 for arg in sys.argv:
-	if arg=='--': user_args = []
+	if arg == '--': user_args = []
 	elif type(user_args) is list: user_args.append(arg)
-if user_args:print('user_args:', user_args)
+if user_args: print('user_args:', user_args)
 
 __thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append( __thisdir )
@@ -17,6 +17,11 @@ print(gltf_auto_export)
 bpy.ops.preferences.addon_enable(module='bevy_components')
 bpy.ops.preferences.addon_enable(module='gltf_auto_export')
 
+UNITY_PARSER_PATH = os.path.join(os.path.expanduser('~'), '.local', 'lib', 'python3.10', 'site-packages')
+if os.path.isdir(UNITY_PARSER_PATH):
+	sys.path.append(UNITY_PARSER_PATH)
+	from unityparser import UnityDocument
+
 from SystemExtensions import *
 from StringExtensions import *
 from CollectionExtensions import *
@@ -27,7 +32,6 @@ if os.path.isdir(os.path.join(__thisdir,'Net-Ghost-SE')):
 	print(ghostblender)
 else:
 	ghostblender = None
-
 
 bl_info = {
 	'name': 'HolyBlender',
@@ -715,8 +719,8 @@ class GodotExportButton (bpy.types.Operator):
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
 			
-			os.system('cp \'' + os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd') + '\' \'' + os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd') + '\'')
-			os.system('cp \'' + os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveClickEvents.gd') + '\' \'' + os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveClickEvents.gd') + '\'')
+			os.system('cp "' + os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd') + '" "' + os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd') + '"')
+			os.system('cp "' + os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveClickEvents.gd') + '" "' + os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveClickEvents.gd') + '"')
 
 			self.resources = ''
 			self.nodes = ''
@@ -1408,9 +1412,19 @@ Camera:
 		if self.unityVersionPath != '':
 			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 
-			os.system('cp \'' + os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs') + '\' \'' + os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs') + '\'')
-			os.system('cp \'' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + '\' \'' + self.projectExportPath + '/Assets/Editor/SystemExtensions.cs\'')
+			os.system('cp "' + os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs') + '" "' + os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs') + '"')
+			os.system('cp "' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + '" "' + self.projectExportPath + '/Assets/Editor/SystemExtensions.cs"')
 
+			data = ''
+			for obj in bpy.data.objects:
+				previousObjectRotationMode = obj.rotation_mode 
+				obj.rotation_mode = 'XYZ'
+				rotation = obj.rotation_euler
+				if obj.type == 'CAMERA':
+					rotation.z *= -1
+				data += obj.name + ', ' + str(math.degrees(rotation.x)) + ', ' + str(math.degrees(rotation.z)) + ', ' + str(math.degrees(rotation.y)) + '\n'
+				obj.rotation_mode = previousObjectRotationMode
+			open(os.path.join('/tmp', 'HolyBlender Data (BlenderToUnity)'), 'wb').write(data.encode('utf-8'))
 			command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
 			print(command)
 			
@@ -1439,7 +1453,7 @@ Camera:
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
 		sendAndRecieveClickEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveClickEvents.cs')
 
-		os.system('cp ' + os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveClickEvents.cs') + ' ' + sendAndRecieveClickEventsScriptPath)
+		os.system('cp "' + os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveClickEvents.cs') + '" "' + sendAndRecieveClickEventsScriptPath + '"')
 
 		gameObjectIdAndTransformId = self.MakeEmptyObject('Send And Recieve Click Events')
 		script = self.SCRIPT_TEMPLATE
@@ -1486,7 +1500,7 @@ Camera:
 		transform = transform.replace(REPLACE_INDICATOR + '2', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '3', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '4', '0')
-		transform = transform.replace(REPLACE_INDICATOR + '5', '0')
+		transform = transform.replace(REPLACE_INDICATOR + '5', '1')
 		transform = transform.replace(REPLACE_INDICATOR + '6', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '7', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '8', '0')
@@ -1516,37 +1530,49 @@ Camera:
 			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, transformId)
 		meshFileId = '10202'
 		meshGuid = ''
+		dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		if obj.type == 'MESH':
 			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'wb').write(self.MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
 			if self.unityVersionPath != '':
-				dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+				meshDatas = dataText.split()[0]
 				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
-				indexOfFile = dataText.find(fileIdIndicator)
+				indexOfFile = meshDatas.find(fileIdIndicator)
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-				indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-				meshFileId = dataText[indexOfFileId : indexOfEndOfFileId]
+				indexOfEndOfFileId = meshDatas.find(' ', indexOfFileId)
+				meshFileId = meshDatas[indexOfFileId : indexOfEndOfFileId]
+			self.lastId += 1
 			gameObjectIdAndTransformId = self.MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
 			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(gameObjectIdAndTransformId[1]))
 		elif len(obj.children) == 0:
 			children = '[]'
+		# previousObjectRotationMode = obj.rotation_mode
+		# obj.rotation_mode = 'XYZ'
+		# eulerAngles = obj.rotation_euler
+		# previousYEulerAngles = eulerAngles.y
+		# eulerAngles.x += PI
+		# eulerAngles.y = eulerAngles.z
+		# eulerAngles.z = previousYEulerAngles
+		# rotation = eulerAngles.to_quaternion()
+		# obj.rotation_mode = previousObjectRotationMode
+		rotation = mathutils.Quaternion((0, 0, 0, 1))
+		lines = dataText.split('\n')
+		for line in lines:
+			if line.startswith(obj.name):
+				rotationComponents = line.split(', ')[1 :]
+				rotation.x = float(rotationComponents[0])
+				rotation.y = float(rotationComponents[1])
+				rotation.z = float(rotationComponents[2])
+				rotation.w = float(rotationComponents[3])
 		transform = transform.replace(REPLACE_INDICATOR + '12', children)
 		transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
 		transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
 		transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-		previousObjectRotationMode = obj.rotation_mode
-		obj.rotation_mode = 'XYZ'
-		eulerAngles = obj.rotation_euler
-		previousYEulerAngles = eulerAngles.y
-		eulerAngles.y = eulerAngles.z
-		eulerAngles.z = previousYEulerAngles + PI
-		rotation = eulerAngles.to_quaternion()
 		transform = transform.replace(REPLACE_INDICATOR + '2', str(rotation.x))
 		transform = transform.replace(REPLACE_INDICATOR + '3', str(rotation.y))
 		transform = transform.replace(REPLACE_INDICATOR + '4', str(rotation.z))
 		transform = transform.replace(REPLACE_INDICATOR + '5', str(rotation.w))
-		obj.rotation_mode = previousObjectRotationMode
 		transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
 		transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.z))
 		transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.y))
@@ -1685,7 +1711,7 @@ Camera:
 			component = self.COMPONENT_TEMPLATE
 			component = component.replace(REPLACE_INDICATOR, str(componentId))
 			self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + self.gameObjectsAndComponentsText[indexOfComponentsList :]
-			self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
+		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
 		return myTransformId
 
 	def AddMeshCollider (self, gameObjectId : int, isTirgger : bool, isConvex : bool, fileId : str, meshGuid : str):
@@ -2345,3 +2371,5 @@ if __name__ == '__main__':
 			if arg.endswith('.py'):
 				print('exec:', arg)
 				exec(open(arg).read())
+			elif arg == '--test-unity':
+				bpy.ops.unity.export()

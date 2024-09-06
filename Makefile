@@ -71,4 +71,8 @@ install_HtmlExport:
 	# sudo apt install python3
 	python3 install_HtmlExport.py
 
-.PHONY: install_UnityToGodot build_UnityToGodot UnityToGodot install_UnityToUnreal build_UnityToUnreal UnityToUnreal new_Unreal_project install_UnityToBevy build_UnityToBevy UnityToBevy install_KritaToBlender KritaToBlender install_BlenderPlugin BlenderPlugin install_UnityToStride UnityToStride build_UnityInBlender build_CSToPython build_UnityToPygame, install_HtmlExport
+install_UnityExport:
+	# sudo apt install python3
+	python3 install_UnityExport.py
+
+.PHONY: install_UnityToGodot build_UnityToGodot UnityToGodot install_UnityToUnreal build_UnityToUnreal UnityToUnreal new_Unreal_project install_UnityToBevy build_UnityToBevy UnityToBevy install_KritaToBlender KritaToBlender install_BlenderPlugin BlenderPlugin install_UnityToStride UnityToStride build_UnityInBlender build_CSToPython build_UnityToPygame, install_HtmlExport, install_UnityExport
