@@ -1335,11 +1335,11 @@ Camera:
   m_SensorSize: {x: 36, y: 24}
   m_LensShift: {x: 0, y: 0}
   m_NormalizedViewPortRect:
-  serializedVersion: 2
-  x: 0
-  y: 0
-  width: 1
-  height: 1
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
   near clip plane: ꗈ3
   far clip plane: ꗈ4
   field of view: ꗈ5
@@ -1537,7 +1537,7 @@ Camera:
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'wb').write(self.MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
 			if self.unityVersionPath != '':
-				meshDatas = dataText.split()[0]
+				meshDatas = dataText.split('\n')[0]
 				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
 				indexOfFile = meshDatas.find(fileIdIndicator)
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
