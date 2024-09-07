@@ -1420,10 +1420,11 @@ Camera:
 				previousObjectRotationMode = obj.rotation_mode 
 				obj.rotation_mode = 'XYZ'
 				rotation = obj.rotation_euler
-				if obj.type == 'CAMERA':
-					rotation.z *= -1
-				data += obj.name + ', ' + str(math.degrees(rotation.x)) + ', ' + str(math.degrees(rotation.z)) + ', ' + str(math.degrees(rotation.y)) + '\n'
 				obj.rotation_mode = previousObjectRotationMode
+				yDegrees = math.degrees(rotation.z) + 180
+				if obj.type == 'CAMERA':
+					yDegrees *= -1
+				data += obj.name + ', ' + str(math.degrees(rotation.x) + 90) + ', ' + str(yDegrees) + ', ' + str(math.degrees(rotation.y) + 180) + '\n'
 			open(os.path.join('/tmp', 'HolyBlender Data (BlenderToUnity)'), 'wb').write(data.encode('utf-8'))
 			command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
 			print(command)
@@ -1547,15 +1548,6 @@ Camera:
 			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(gameObjectIdAndTransformId[1]))
 		elif len(obj.children) == 0:
 			children = '[]'
-		# previousObjectRotationMode = obj.rotation_mode
-		# obj.rotation_mode = 'XYZ'
-		# eulerAngles = obj.rotation_euler
-		# previousYEulerAngles = eulerAngles.y
-		# eulerAngles.x += PI
-		# eulerAngles.y = eulerAngles.z
-		# eulerAngles.z = previousYEulerAngles
-		# rotation = eulerAngles.to_quaternion()
-		# obj.rotation_mode = previousObjectRotationMode
 		rotation = mathutils.Quaternion((0, 0, 0, 1))
 		lines = dataText.split('\n')
 		for line in lines:
@@ -1565,6 +1557,15 @@ Camera:
 				rotation.y = float(rotationComponents[1])
 				rotation.z = float(rotationComponents[2])
 				rotation.w = float(rotationComponents[3])
+		# previousObjectRotationMode = obj.rotation_mode
+		# obj.rotation_mode = 'XYZ'
+		# rotation = obj.rotation_euler
+		# if obj.type == 'CAMERA':
+		# 	rotation.x += PI / 2
+		# 	rotation.y += PI
+		# 	rotation.z += PI
+		# rotation = rotation.to_quaternion()
+		# obj.rotation_mode = previousObjectRotationMode
 		transform = transform.replace(REPLACE_INDICATOR + '12', children)
 		transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
 		transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
