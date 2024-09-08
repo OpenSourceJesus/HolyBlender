@@ -11,7 +11,6 @@ public class GetUnityProjectInfo : MonoBehaviour
 		string outputText = "";
 		outputText += GetAssetsInfo(".fbx", typeof(Mesh));
 		outputText += GetAssetsInfo(".mat", typeof(Material));
-		outputText += GetAssetsInfo(".png", typeof(Texture2D));
 		string outputPath = "/tmp/HolyBlender Data (BlenderToUnity)";
 		string[] lines = File.ReadAllLines(outputPath);
 		foreach (string line in lines)
@@ -27,7 +26,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 	{
 		string output = "";
 		string[] args = Environment.GetCommandLineArgs();
-		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".png");
+		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], fileExtension);
 		foreach (string filePath in filePaths)
 		{
 			int indexOfAssets = filePath.IndexOf("Assets");
