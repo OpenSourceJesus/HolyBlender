@@ -1637,6 +1637,14 @@ TextureImporter:
 					material = material.replace(REPLACE_INDICATOR + '3', str(materialColor[2]))
 					material = material.replace(REPLACE_INDICATOR + '4', str(materialColor[3]))
 					open(fileExportPath, 'wb').write(material.encode('utf-8'))
+			elif obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
+				spritePath = obj.data.filepath
+				spritePath = os.path.expanduser('~') + spritePath[1 :]
+				spriteName = spritePath[spritePath.rfind('/') + 1 :]
+				newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
+				MakeFolderForFile (newSpritePath)
+				sprite = open(spritePath, 'rb').read()
+				open(newSpritePath, 'wb').write(sprite)
 		unityVersionsPath = os.path.expanduser('~/Unity/Hub/Editor')
 		self.unityVersionPath = ''
 		if os.path.isdir(unityVersionsPath):
@@ -1769,7 +1777,27 @@ TextureImporter:
 		meshFileId = '10202'
 		meshGuid = ''
 		dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-		if obj.type == 'MESH':
+		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
+			spritePath = obj.data.filepath
+			spritePath = os.path.expanduser('~') + spritePath[1 :]
+			spriteName = spritePath[spritePath.rfind('/') + 1 :]
+			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
+			spriteMeta = SPRITE_META_TEMPLATE
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', GetGuid(newSpritePath))
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
+			open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
+			spriteGuid = GetGuid(spritePath)
+			spriteRenderer = SPRITE_RENDERER_TEMPLATE
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '0', self.lastId)
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '1', gameObjectId)
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '2', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '3', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '4', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', spriteGuid)
+			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		elif obj.type == 'MESH':
 			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'wb').write(self.MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))

@@ -8,42 +8,10 @@ public class GetUnityProjectInfo : MonoBehaviour
 {
 	public static void Do ()
 	{
-		string[] args = Environment.GetCommandLineArgs();
 		string outputText = "";
-		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".fbx");
-		foreach (string filePath in filePaths)
-		{
-			int indexOfAssets = filePath.IndexOf("Assets");
-			string relativeFilePath = filePath.Substring(indexOfAssets);
-			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
-			foreach (Object obj in objects)
-			{
-				if (obj.GetType() == typeof(Mesh))
-				{
-					string guid;
-					long fileId;
-					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						outputText += '-' + filePath + ' ' + fileId + ' ' + guid;
-				}
-			}
-		}
-		filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".mat");
-		foreach (string filePath in filePaths)
-		{
-			int indexOfAssets = filePath.IndexOf("Assets");
-			string relativeFilePath = filePath.Substring(indexOfAssets);
-			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
-			foreach (Object obj in objects)
-			{
-				if (obj.GetType() == typeof(Material))
-				{
-					string guid;
-					long fileId;
-					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						outputText += '-' + filePath + ' ' + fileId + ' ' + guid;
-				}
-			}
-		}
+		outputText += GetAssetsInfo(".fbx", typeof(Mesh));
+		outputText += GetAssetsInfo(".mat", typeof(Material));
+		outputText += GetAssetsInfo(".png", typeof(Texture2D));
 		string outputPath = "/tmp/HolyBlender Data (BlenderToUnity)";
 		string[] lines = File.ReadAllLines(outputPath);
 		foreach (string line in lines)
@@ -53,5 +21,29 @@ public class GetUnityProjectInfo : MonoBehaviour
 			outputText += '\n' + data[0] + ", " + rotation.x + ", " + rotation.y + ", " + rotation.z + ", " + rotation.w;
 		}
 		File.WriteAllText(outputPath, outputText);
+	}
+
+	static string GetAssetsInfo (string fileExtension, Type assetType)
+	{
+		string output = "";
+		string[] args = Environment.GetCommandLineArgs();
+		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], ".png");
+		foreach (string filePath in filePaths)
+		{
+			int indexOfAssets = filePath.IndexOf("Assets");
+			string relativeFilePath = filePath.Substring(indexOfAssets);
+			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
+			foreach (Object obj in objects)
+			{
+				if (obj.GetType() == assetType)
+				{
+					string guid;
+					long fileId;
+					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
+						output += '-' + filePath + ' ' + fileId + ' ' + guid;
+				}
+			}
+		}
+		return output;
 	}
 }
