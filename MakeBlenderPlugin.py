@@ -1830,8 +1830,9 @@ TextureImporter:
 			spritePath = os.path.expanduser('~') + spritePath[1 :]
 			spriteName = spritePath[spritePath.rfind('/') + 1 :]
 			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
+			spriteGuid = GetGuid(newSpritePath)
 			spriteMeta = self.SPRITE_META_TEMPLATE
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', GetGuid(newSpritePath))
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', spriteGuid)
 			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
 			open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
 			spriteRenderer = self.SPRITE_RENDERER_TEMPLATE
@@ -1840,7 +1841,7 @@ TextureImporter:
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '2', '0')
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '3', '0')
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '4', '0')
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', GetGuid(spritePath))
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', spriteGuid)
 			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
