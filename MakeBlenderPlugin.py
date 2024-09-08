@@ -1713,7 +1713,6 @@ TextureImporter:
 		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 		self.gameObjectsAndComponentsText += script + '\n'
 		self.componentIds.append(self.lastId)
-		self.lastId += 1
 		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', self.gameObjectsAndComponentsText)
 		sceneRootsText = ''
 		for transformId in self.transformIds:
@@ -1766,9 +1765,6 @@ TextureImporter:
 		self.gameObjectsAndComponentsText += gameObject + '\n'
 		gameObjectId = self.lastId
 		self.lastId += 1
-		transform = self.TRANSFORM_TEMPLATE
-		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
-		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
 		myTransformId = self.lastId
 		children = ''
 		for childObj in obj.children:
@@ -1777,27 +1773,7 @@ TextureImporter:
 		meshFileId = '10202'
 		meshGuid = ''
 		dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
-			spritePath = obj.data.filepath
-			spritePath = os.path.expanduser('~') + spritePath[1 :]
-			spriteName = spritePath[spritePath.rfind('/') + 1 :]
-			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
-			spriteMeta = SPRITE_META_TEMPLATE
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', GetGuid(newSpritePath))
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
-			open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
-			spriteGuid = GetGuid(spritePath)
-			spriteRenderer = SPRITE_RENDERER_TEMPLATE
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '0', self.lastId)
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '1', gameObjectId)
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '2', '0')
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '3', '0')
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '4', '0')
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', spriteGuid)
-			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
-			self.componentIds.append(self.lastId)
-			self.lastId += 1
-		elif obj.type == 'MESH':
+		if obj.type == 'MESH':
 			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'wb').write(self.MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
@@ -1831,6 +1807,9 @@ TextureImporter:
 		# 	rotation.z += PI
 		# rotation = rotation.to_quaternion()
 		# obj.rotation_mode = previousObjectRotationMode
+		transform = self.TRANSFORM_TEMPLATE
+		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
+		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
 		transform = transform.replace(REPLACE_INDICATOR + '12', children)
 		transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
 		transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
@@ -1846,11 +1825,26 @@ TextureImporter:
 		self.gameObjectsAndComponentsText += transform + '\n'
 		self.transformIds.append(myTransformId)
 		self.lastId += 1
-		guidIndicator = 'guid: '
-		if obj.type == 'LIGHT':
-			light = self.LIGHT_TEMPLATE
-			light = light.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
+			spritePath = obj.data.filepath
+			spritePath = os.path.expanduser('~') + spritePath[1 :]
+			spriteName = spritePath[spritePath.rfind('/') + 1 :]
+			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
+			spriteMeta = self.SPRITE_META_TEMPLATE
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', GetGuid(newSpritePath))
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
+			open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
+			spriteRenderer = self.SPRITE_RENDERER_TEMPLATE
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '2', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '3', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '4', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', GetGuid(spritePath))
+			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		elif obj.type == 'LIGHT':
 			lightObject = bpy.data.lights[obj.name]
 			lightType = 2
 			if lightObject.type == 'SUN':
@@ -1859,17 +1853,20 @@ TextureImporter:
 				lightType = 0
 			elif lightObject.type == 'AREA':
 				lightType = 3
+			spotSize = 0
+			innerSpotAngle = 0
+			if lightType == 0:
+				spotSize = lightObject.spot_size
+				innerSpotAngle = spotSize * (1.0 - lightObject.spot_blend)
+			light = self.LIGHT_TEMPLATE
+			light = light.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			light = light.replace(REPLACE_INDICATOR + '2', str(lightType))
 			light = light.replace(REPLACE_INDICATOR + '3', str(lightObject.color[0]))
 			light = light.replace(REPLACE_INDICATOR + '4', str(lightObject.color[1]))
 			light = light.replace(REPLACE_INDICATOR + '5', str(lightObject.color[2]))
 			light = light.replace(REPLACE_INDICATOR + '6', str(lightObject.energy * WATTS_TO_CANDELAS))
 			light = light.replace(REPLACE_INDICATOR + '7', str(10))
-			spotSize = 0
-			innerSpotAngle = 0
-			if lightType == 0:
-				spotSize = lightObject.spot_size
-				innerSpotAngle = spotSize * (1.0 - lightObject.spot_blend)
 			light = light.replace(REPLACE_INDICATOR + '8', str(spotSize))
 			light = light.replace(REPLACE_INDICATOR + '9', str(innerSpotAngle))
 			self.gameObjectsAndComponentsText += light + '\n'
@@ -1903,9 +1900,6 @@ TextureImporter:
 				self.gameObjectsAndComponentsText += rigidbody + '\n'
 				self.componentIds.append(self.lastId)
 				self.lastId += 1
-			meshRenderer = self.MESH_RENDERER_TEMPLATE
-			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			materials = ''
 			for materialSlot in obj.material_slots:
 				filePath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
@@ -1925,25 +1919,28 @@ TextureImporter:
 				material = material.replace(REPLACE_INDICATOR + '1', materialGuid)
 				materials += material + '\n'
 			materials = materials[: -1]
+			meshRenderer = self.MESH_RENDERER_TEMPLATE
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '2', materials)
 			self.gameObjectsAndComponentsText += meshRenderer + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
 		elif obj.type == 'CAMERA':
-			camera = self.CAMERA_TEMPLATE
-			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			cameraObject = bpy.data.cameras[obj.name]
 			fovAxisMode = 0
 			if cameraObject.sensor_fit == 'HORIZONTAL':
 				fovAxisMode = 1
+			isOrthographic = 0
+			if cameraObject.type == 'ORTHO':
+				isOrthographic = 1
+			camera = self.CAMERA_TEMPLATE
+			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			camera = camera.replace(REPLACE_INDICATOR + '2', str(fovAxisMode))
 			camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObject.clip_start))
 			camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObject.clip_end))
 			camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObject.angle * (180.0 / PI)))
-			isOrthographic = 0
-			if cameraObject.type == 'ORTHO':
-				isOrthographic = 1
 			camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
 			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale))
 			self.gameObjectsAndComponentsText += camera + '\n'
@@ -1951,9 +1948,6 @@ TextureImporter:
 			self.lastId += 1
 		attachedScripts = attachedUnityScriptsDict.get(obj, [])
 		for scriptName in attachedScripts:
-			script = self.SCRIPT_TEMPLATE
-			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			filePath = self.projectExportPath + '/Assets/Standard Assets/Scripts/' + scriptName
 			MakeFolderForFile (filePath)
 			for textBlock in bpy.data.texts:
@@ -1968,6 +1962,9 @@ TextureImporter:
 			scriptMeta = self.SCRIPT_META_TEMPLATE
 			scriptMeta += scriptGuid
 			open(filePath, 'wb').write(scriptMeta.encode('utf-8'))
+			script = self.SCRIPT_TEMPLATE
+			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 			self.gameObjectsAndComponentsText += script + '\n'
 			self.componentIds.append(self.lastId)
