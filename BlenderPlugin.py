@@ -19,12 +19,11 @@ LOCALHOST_PORT = 8000
 class BlenderServer (BaseHTTPRequestHandler):
 	def do_GET (self):
 		self.send_response(200)
-		self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-		self.send_header("Pragma", "no-cache")
-		self.send_header("Expires", "0")
+		self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+		self.send_header('Pragma', 'no-cache')
+		self.send_header('Expires', '0')
 
 		ret = 'OK'
-		hint = ''
 		if self.path.endswith('.ico'):
 			pass
 		elif self.path == '/':
@@ -58,7 +57,7 @@ class BlenderServer (BaseHTTPRequestHandler):
 		if type(ret) is not bytes:
 			ret = ret.encode('utf-8')
 
-		self.send_header("Content-Length", str(len(ret)))
+		self.send_header('Content-Length', str(len(ret)))
 		self.end_headers()
 
 		try:
@@ -72,13 +71,13 @@ print(httpd)
 timer = None
 @bpy.utils.register_class
 class HttpServerOperator (bpy.types.Operator):
-	"HolyBlender HTTP Server"
-	bl_idname = "httpd.run"
-	bl_label = "httpd"
+	'HolyBlender HTTP Server'
+	bl_idname = 'httpd.run'
+	bl_label = 'httpd'
 	bl_options = {'REGISTER'}
 
 	def modal (self, context, event):
-		if event.type == "TIMER":
+		if event.type == 'TIMER':
 			if HTTPD_ACTIVE:
 				httpd.handle_request() # this blocks for a short time
 		return {'PASS_THROUGH'} # will not supress event bubbles
@@ -87,7 +86,7 @@ class HttpServerOperator (bpy.types.Operator):
 		global timer
 		if timer is None:
 			timer = self._timer = context.window_manager.event_timer_add(
-				time_step=0.016666667,
+				time_step=0.033333334,
 				window=context.window
 			)
 			context.window_manager.modal_handler_add(self)
@@ -121,8 +120,8 @@ xhttp.onreadystatechange = function() {
 		self.innerHTML = xhttp.responseText.replaceAll('<', '[').replaceAll('>', ']');
 	}
 };
-xhttp.overrideMimeType( "text/plain; charset=utf-8" );
-xhttp.open("GET", self.getAttribute('id'), true);
+xhttp.overrideMimeType('text/plain; charset=utf-8');
+xhttp.open('GET', self.getAttribute('id'), true);
 xhttp.send();
 """
 

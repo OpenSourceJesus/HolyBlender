@@ -22,6 +22,7 @@ if os.path.isdir(UNITY_PARSER_PATH):
 	sys.path.append(UNITY_PARSER_PATH)
 	from unityparser import UnityDocument
 
+sys.path.append(os.path.join(__thisdir, 'Extensions'))
 from SystemExtensions import *
 from StringExtensions import *
 from CollectionExtensions import *
@@ -424,10 +425,11 @@ class HTMLExportButton (bpy.types.Operator):
 		bpy.ops.object.select_all(action='DESELECT')
 		bpy.context.view_layer.objects.active = cameraObj
 		cameraObj.select_set(True)
-		preivousAreaType = bpy.context.area.type
-		bpy.context.area.type = 'VIEW_3D'
-		bpy.ops.view3d.object_as_camera()
-		bpy.context.area.type = preivousAreaType
+		bpy.context.scene.camera = cameraObj
+		for area in bpy.context.screen.areas:
+			if area.type == 'VIEW_3D':
+				area.spaces.active.region_3d.view_perspective = 'CAMERA'
+				break
 		bpy.context.scene.render.film_transparent = True
 		bpy.context.scene.render.image_settings.color_mode = 'RGBA'
 		previousCameraLocation = cameraObj.location
