@@ -23,3 +23,6 @@ def MakeFolderForFile (path : str):
 		if indexOfSlash == -1:
 			break
 		_path = path[: indexOfSlash]
+
+def CopyFile (fromPath : str, toPath : str):
+	open(toPath, 'wb').write(open(fromPath, 'rb').read())

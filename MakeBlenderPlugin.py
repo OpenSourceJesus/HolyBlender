@@ -713,10 +713,8 @@ class GodotExportButton (bpy.types.Operator):
 			
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
 			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
-			
-			os.system('cp "' + os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd') + '" "' + os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd') + '"')
-			os.system('cp "' + os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveClickEvents.gd') + '" "' + os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveClickEvents.gd') + '"')
-
+			CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd'), os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd'))
+			CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveServerEvents.gd'), os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveServerEvents.gd'))
 			self.resources = ''
 			self.nodes = ''
 			self.exportedObjs = []
@@ -727,7 +725,7 @@ class GodotExportButton (bpy.types.Operator):
 			resource = self.RESOURCE_TEMPLATE
 			resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
 			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
-			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'SendAndRecieveClickEvents.gd'))
+			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'SendAndRecieveServerEvents.gd'))
 			resource = resource.replace(REPLACE_INDICATOR + '3', id)
 			self.resources += resource
 			node3d = self.NODE_TEMPLATE
@@ -1692,19 +1690,17 @@ TextureImporter:
 				self.MakeObject (obj)
 		scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
-		sendAndRecieveClickEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveClickEvents.cs')
-
-		os.system('cp "' + os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveClickEvents.cs') + '" "' + sendAndRecieveClickEventsScriptPath + '"')
-
-		gameObjectIdAndTransformId = self.MakeEmptyObject('Send And Recieve Click Events')
+		sendAndRecieveServerEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveServerEvents.cs')
+		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveServerEvents.cs'), sendAndRecieveServerEventsScriptPath)
+		gameObjectIdAndTransformId = self.MakeEmptyObject('Send And Recieve Server Events')
 		script = self.SCRIPT_TEMPLATE
 		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
-		sendAndRecieveClickEventsScriptMetaPath = sendAndRecieveClickEventsScriptPath + '.meta'
-		scriptGuid = GetGuid(sendAndRecieveClickEventsScriptMetaPath)
+		sendAndRecieveServerEventsScriptMetaPath = sendAndRecieveServerEventsScriptPath + '.meta'
+		scriptGuid = GetGuid(sendAndRecieveServerEventsScriptMetaPath)
 		scriptMeta = self.SCRIPT_META_TEMPLATE
 		scriptMeta += scriptGuid
-		open(sendAndRecieveClickEventsScriptMetaPath, 'wb').write(scriptMeta.encode('utf-8'))
+		open(sendAndRecieveServerEventsScriptMetaPath, 'wb').write(scriptMeta.encode('utf-8'))
 		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 		self.gameObjectsAndComponentsText += script + '\n'
 		self.componentIds.append(self.lastId)

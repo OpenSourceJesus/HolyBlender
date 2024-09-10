@@ -2,8 +2,15 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 
-public class SendAndRecieveClickEvents : MonoBehaviour
+public class SendAndRecieveServerEvents : MonoBehaviour
 {
+	public string jsonText;
+
+	void OnEnable ()
+	{
+		StartCoroutine(JsonEvent (jsonText));
+	}
+
 	void Update ()
 	{
 		if (Input.GetMouseButtonDown(0))
@@ -18,6 +25,17 @@ public class SendAndRecieveClickEvents : MonoBehaviour
 	IEnumerator OnClickEvent (string objectName)
 	{
 		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/" + objectName);
+		yield return webRequest.SendWebRequest();
+		if (webRequest.result == UnityWebRequest.Result.Success)
+			print("Web request result: " + webRequest.downloadHandler.text);
+		else
+			print(webRequest.error);
+	}
+
+
+	IEnumerator JsonEvent (string jsonText)
+	{
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/exec?" + jsonText.Base64Encode());
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
 			print("Web request result: " + webRequest.downloadHandler.text);

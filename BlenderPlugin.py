@@ -10,11 +10,12 @@ bpy.ops.bevy.export()
 '''
 
 TEST_SERVER = '''
-import bpy
+import bpy, json
 from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
 
 LOCALHOST_PORT = 8000
+JSON_INDICATOR = 'exec?'
 
 class BlenderServer (BaseHTTPRequestHandler):
 	def do_GET (self):
@@ -49,7 +50,11 @@ class BlenderServer (BaseHTTPRequestHandler):
 				bpy.ops.export_scene.gltf(filepath=tmp, export_selected = True)
 				ret = open(tmp,'rb').read()
 		elif self.path[1:] in bpy.data.objects:
-			ret = str(bpy.data.objects[self.path[1:]])
+			ret = str(bpy.data.objects[self.path[1 :]])
+		else:
+			jsonText = self.path[1 + len(JSON_INDICATOR) :]
+			print('YAY' + jsonText)
+			ret = json.loads(jsonText)
 		if ret is None:
 			ret = 'None?'
 		if type(ret) is not bytes:
@@ -57,7 +62,7 @@ class BlenderServer (BaseHTTPRequestHandler):
 		self.send_header('Content-Length', str(len(ret)))
 		self.end_headers()
 		try:
-			self.wfile.write( ret )
+			self.wfile.write(ret)
 		except BrokenPipeError:
 			print('CLIENT WRITE ERROR: failed bytes', len(ret))
 
