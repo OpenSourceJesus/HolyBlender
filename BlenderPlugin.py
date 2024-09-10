@@ -10,7 +10,7 @@ bpy.ops.bevy.export()
 '''
 
 TEST_SERVER = '''
-import bpy, json
+import bpy, json, base64, mathutils
 from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
 
@@ -53,8 +53,16 @@ class BlenderServer (BaseHTTPRequestHandler):
 			ret = str(bpy.data.objects[self.path[1 :]])
 		else:
 			jsonText = self.path[1 + len(JSON_INDICATOR) :]
-			print('YAY' + jsonText)
-			ret = json.loads(jsonText)
+			jsonText = jsonText.encode("ascii")
+			jsonText = base64.b64decode(jsonText)
+			jsonText = jsonText.decode("ascii")
+			jsonData = json.loads(jsonText)
+			obj = bpy.data.objects[jsonData['objectName']]
+			valueName = jsonData['valueName']
+			value = jsonData['value']
+			if valueName == 'location':
+				obj.location = mathutils.Vector((float(value['x']), float(value['y']), float(value['z'])))
+				print('YAY' + str(obj.location))
 		if ret is None:
 			ret = 'None?'
 		if type(ret) is not bytes:

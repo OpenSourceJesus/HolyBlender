@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Text.RegularExpressions;
 
 public static class StringExtensions
@@ -141,13 +142,13 @@ public static class StringExtensions
 
 	public static string Base64Encode (this string text) 
 	{
-		byte[] bytes = Text.Encoding.UTF8.GetBytes(text);
+		byte[] bytes = Encoding.UTF8.GetBytes(text);
 		return Convert.ToBase64String(bytes);
 	}
 	
 	public static string Base64Decode (this string base64EncodedData) 
 	{
 		byte[] bytes = Convert.FromBase64String(base64EncodedData);
-		return Text.Encoding.UTF8.GetString(bytes);
+		return Encoding.UTF8.GetString(bytes);
 	}
 }

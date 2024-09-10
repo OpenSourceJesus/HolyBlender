@@ -230,6 +230,7 @@ WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
 UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
 GODOT_SCRIPTS_PATH = os.path.join(__thisdir, 'Godot Scripts')
+EXTENSIONS_PATH = os.path.join(__thisdir, 'Extensions')
 TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
@@ -1649,10 +1650,10 @@ TextureImporter:
 					break
 		if self.unityVersionPath != '':
 			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
-
-			os.system('cp "' + os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs') + '" "' + os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs') + '"')
-			os.system('cp "' + os.path.expanduser('~/HolyBlender/SystemExtensions.cs') + '" "' + self.projectExportPath + '/Assets/Editor/SystemExtensions.cs"')
-
+			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
+			CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
+			CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(self.projectExportPath, 'Assets', 'Scripts', 'SystemExtensions.cs'))
+			CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(self.projectExportPath, 'Assets', 'Scripts', 'StringExtensions.cs'))
 			data = ''
 			for obj in bpy.data.objects:
 				previousObjectRotationMode = obj.rotation_mode 

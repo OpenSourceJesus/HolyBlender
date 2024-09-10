@@ -1,13 +1,14 @@
+using System;
 using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 
 public class SendAndRecieveServerEvents : MonoBehaviour
 {
-	public string jsonText;
-
 	void OnEnable ()
 	{
+		Vector3Value value = new Vector3Value("Cube", "location", new _Vector3(2, 2, 2));
+		string jsonText = JsonUtility.ToJson(value);
 		StartCoroutine(JsonEvent (jsonText));
 	}
 
@@ -41,5 +42,43 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 			print("Web request result: " + webRequest.downloadHandler.text);
 		else
 			print(webRequest.error);
+	}
+
+	[Serializable]
+	class Vector3Value : Value<_Vector3>
+	{
+		public Vector3Value (string objectName, string valueName, _Vector3 value) : base (objectName, valueName, value)
+		{
+		}
+	}
+
+	[Serializable]
+	class Value<T>
+	{
+		public string objectName;
+		public string valueName;
+		public T value;
+
+		public Value (string objectName, string valueName, T value)
+		{
+			this.objectName = objectName;
+			this.valueName = valueName;
+			this.value = value;
+		}
+	}
+
+	[Serializable]
+	class _Vector3
+	{
+		public float x;
+		public float y;
+		public float z;
+
+		public _Vector3 (float x, float y, float z)
+		{
+			this.x = x;
+			this.y = y;
+			this.z = z;
+		}
 	}
 }
