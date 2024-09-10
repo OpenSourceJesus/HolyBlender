@@ -22,7 +22,6 @@ class BlenderServer (BaseHTTPRequestHandler):
 		self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
 		self.send_header('Pragma', 'no-cache')
 		self.send_header('Expires', '0')
-
 		ret = 'OK'
 		if self.path.endswith('.ico'):
 			pass
@@ -38,11 +37,11 @@ class BlenderServer (BaseHTTPRequestHandler):
 			name = self.path.split('/')[-1]
 			if name in bpy.data.objects:
 				ret = str(bpy.data.objects[name])
-		elif os.path.isfile(self.path[1:]): # the .wasm file
+		elif os.path.isfile(self.path[1:]): # The .wasm file
 			ret = open(self.path[1:], 'rb').read()
 		elif self.path.endswith('.glb'):
 			bpy.ops.object.select_all(action='DESELECT')
-			name = self.path.split('/')[-1][: -len('.glb') ]
+			name = self.path.split('/')[-1][: -len('.glb')]
 			if name in bpy.data.objects:
 				ob = bpy.data.objects[name]
 				ob.select_set(True)
@@ -51,15 +50,12 @@ class BlenderServer (BaseHTTPRequestHandler):
 				ret = open(tmp,'rb').read()
 		elif self.path[1:] in bpy.data.objects:
 			ret = str(bpy.data.objects[self.path[1:]])
-
 		if ret is None:
 			ret = 'None?'
 		if type(ret) is not bytes:
 			ret = ret.encode('utf-8')
-
 		self.send_header('Content-Length', str(len(ret)))
 		self.end_headers()
-
 		try:
 			self.wfile.write( ret )
 		except BrokenPipeError:
@@ -77,10 +73,9 @@ class HttpServerOperator (bpy.types.Operator):
 	bl_options = {'REGISTER'}
 
 	def modal (self, context, event):
-		if event.type == 'TIMER':
-			if HTTPD_ACTIVE:
-				httpd.handle_request() # this blocks for a short time
-		return {'PASS_THROUGH'} # will not supress event bubbles
+		if event.type == 'TIMER' and HTTPD_ACTIVE:
+			httpd.handle_request() # Blocks for a short time
+		return {'PASS_THROUGH'} # Doesn't supress event bubbles
 
 	def invoke (self, context, event):
 		global timer
@@ -97,9 +92,7 @@ class HttpServerOperator (bpy.types.Operator):
 		return self.invoke(context, None)
 
 HTTPD_ACTIVE = True
-bpy.ops.httpd.run()
-
-'''
+bpy.ops.httpd.run()'''
 
 TEST_HTML = '''
 from random import random
@@ -134,7 +127,7 @@ box-shadow: 5px 5px 10px black;
 css = bpy.data.texts.new(name='css')
 css.from_string(CSS)
 
-for i in range(4):
+for i in range(0):
 	bpy.ops.mesh.primitive_cube_add()
 	ob = bpy.context.active_object
 	ob.location.x = i * 3
@@ -142,8 +135,7 @@ for i in range(4):
 	ob.rotation_euler = [random(), random(), random()]
 	ob.html_on_click = onclick
 	ob.html_css = css
-bpy.ops.html.export()
-''' % TEST_SERVER
+bpy.ops.html.export()''' % TEST_SERVER
 
 blender = 'blender'
 if sys.platform == 'win32': # Windows
@@ -168,11 +160,11 @@ for i,arg in enumerate(sys.argv):
 	elif arg == '--test-bevy':
 		test_bevy = True
 		tmp = '/tmp/__test_bevy__.py'
-		open(tmp,'w').write(TEST_BEVY)
+		open(tmp, 'w').write(TEST_BEVY)
 		user_script = tmp
 	elif arg == '--test-html':
 		user_script = '/tmp/__test_html__.py'
-		open(user_script,'w').write(TEST_HTML)
+		open(user_script, 'w').write(TEST_HTML)
 	elif arg == '--ghost':
 		netghost = True
 	elif arg == '--monogame' in sys.argv:
@@ -208,5 +200,5 @@ if monogame:
 		subprocess.check_call(cmd.split())
 	subprocess.check_call(['bash', './build.sh'], cwd='./MonoGame')
 
-## run blender
+# Run blender
 subprocess.check_call(command)

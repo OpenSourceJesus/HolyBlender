@@ -139,13 +139,13 @@ public static class StringExtensions
 		return (charIndex > 0 && (int.TryParse("" + str[charIndex - 1], out i) || str[charIndex - 1] == '.')) || (charIndex < str.Length - 1 && (int.TryParse("" + str[charIndex + 1], out i) || str[charIndex + 1] == '.'));
 	}
 
-	public static string Base64Encode (string text) 
+	public static string Base64Encode (this string text) 
 	{
 		byte[] bytes = Text.Encoding.UTF8.GetBytes(text);
 		return Convert.ToBase64String(bytes);
 	}
 	
-	public static string Base64Decode (string base64EncodedData) 
+	public static string Base64Decode (this string base64EncodedData) 
 	{
 		byte[] bytes = Convert.FromBase64String(base64EncodedData);
 		return Text.Encoding.UTF8.GetString(bytes);

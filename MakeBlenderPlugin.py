@@ -17,11 +17,6 @@ print(gltf_auto_export)
 bpy.ops.preferences.addon_enable(module='bevy_components')
 bpy.ops.preferences.addon_enable(module='gltf_auto_export')
 
-UNITY_PARSER_PATH = os.path.join(os.path.expanduser('~'), '.local', 'lib', 'python3.10', 'site-packages')
-if os.path.isdir(UNITY_PARSER_PATH):
-	sys.path.append(UNITY_PARSER_PATH)
-	from unityparser import UnityDocument
-
 sys.path.append(os.path.join(__thisdir, 'Extensions'))
 from SystemExtensions import *
 from StringExtensions import *
@@ -439,12 +434,10 @@ class HTMLExportButton (bpy.types.Operator):
 		previousCameraType = camera.type
 		camera.type = 'ORTHO'
 		previousCameraOrthoScale = camera.ortho_scale
-
 		html = [
 			'<!DOCTYPE html>',
 			'<html><head><script>',
 		]
-
 		js_blocks = {}
 		imgs = []
 		for obj in bpy.data.objects:
@@ -467,11 +460,11 @@ class HTMLExportButton (bpy.types.Operator):
 				cameraSize = mathutils.Vector((camera.sensor_width, camera.sensor_height))
 				imageData = open(imagePath, 'rb').read()
 				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
-				#multiplyUnits = 256
 				multiplyUnits = 50
-				zindex = int(bounds[0].y)
-				zindex += 10
-				if zindex < 0: zindex = 0
+				zIndex = int(bounds[0].y)
+				zIndex += 10
+				if zIndex < 0:
+					zIndex = 0
 				onclick =  ''
 				if obj.html_on_click:
 					fname = '__on_click_' + obj.html_on_click.name.replace('.','_')
@@ -479,16 +472,16 @@ class HTMLExportButton (bpy.types.Operator):
 						js = 'function %s(self){%s}' % (fname, obj.html_on_click.as_string())
 						js_blocks[obj.html_on_click.name] = js
 					onclick = 'javascript:%s(this)' % fname
-				user_css = ''
+				userCss = ''
 				if obj.html_css:
-					user_css = obj.html_css.as_string().replace('\n', ' ').strip()
+					userCss = obj.html_css.as_string().replace('\n', ' ').strip()
 				imageText = '<img id="%s" onclick="%s" style="position:fixed; left:%spx; top:%spx; z-index:%s;%s" src="data:image/gif;base64,%s">\n' %(
 					obj.name,
 					onclick,
 					bounds[0].x * multiplyUnits,
 					-bounds[0].z * multiplyUnits,
-					zindex,
-					user_css,
+					zIndex,
+					userCss,
 					base64EncodedStr
 				)
 				imgs.append(imageText)
@@ -499,18 +492,18 @@ class HTMLExportButton (bpy.types.Operator):
 		cameraObj.rotation_euler = previousCameraRotation
 		camera.type = previousCameraType
 		camera.ortho_scale = previousCameraOrthoScale
-
 		for tname in js_blocks:
-			html.append('//'+tname)
+			html.append('//' + tname)
 			html.append(js_blocks[tname])
-
 		html.append('</script>')
+		html.append('</head>')
 		html.append('<body>')
 		html += imgs
 		html.append('</body></html>')
 		htmlText = '\n'.join(html)
 		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
-		if '__index__.html' not in bpy.data.texts: bpy.data.texts.new(name='__index__.html')
+		if '__index__.html' not in bpy.data.texts:
+			bpy.data.texts.new(name='__index__.html')
 		bpy.data.texts['__index__.html'].from_string(htmlText)
 		if bpy.data.worlds[0].holyserver:
 			scope = globals()
@@ -989,7 +982,7 @@ GameObject:
 ꗈ2
   m_Layer: ꗈ3
   m_Name: ꗈ4
-  m_TagString: Untagged
+  m_TagString: ꗈ5
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1734,6 +1727,7 @@ TextureImporter:
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', str(layer))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '4', name)
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '5', 'Untagged')
 		self.gameObjectsAndComponentsText += gameObject + '\n'
 		gameObjectId = self.lastId
 		self.lastId += 1
@@ -1759,11 +1753,15 @@ TextureImporter:
 
 	def MakeObject (self, obj, parentTransformId = 0) -> int:
 		self.componentIds = []
+		tag = 'Untagged'
+		if obj.type == 'CAMERA':
+			tag = 'MainCamera'
 		gameObject = self.GAME_OBJECT_TEMPLATE
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
 		self.gameObjectsAndComponentsText += gameObject + '\n'
 		gameObjectId = self.lastId
 		self.lastId += 1
@@ -1994,7 +1992,7 @@ TextureImporter:
 
 	def MakeClickableChild (self, name : str, fileId : str, meshGuid : str, parentTransformId = 0) -> (int, int):
 		gameObjectIdAndTransformId = self.MakeEmptyObject(name, 31, parentTransformId)
-		self.AddMeshCollider (gameObjectIdAndTransformId[0], True, False, fileId, meshGuid)
+		self.AddMeshCollider (gameObjectIdAndTransformId[0], True, True, fileId, meshGuid)
 		return gameObjectIdAndTransformId
 
 class UnrealTranslateButton (bpy.types.Operator):

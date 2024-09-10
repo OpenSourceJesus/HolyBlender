@@ -1,7 +1,9 @@
 import os
 
-cmd = 'pip install -U unityparser'
-if os.uname().nodename != 'pop-os':
-	cmd += ' --break-system-packages'
+cmd = '''wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb
+sudo dpkg -i packages-microsoft-prod.deb
+rm packages-microsoft-prod.deb
+sudo apt-get update && \
+	sudo apt-get install -y dotnet-sdk-8.0'''
 
 os.system(cmd)
