@@ -1071,140 +1071,9 @@ MonoBehaviour:
   m_GameObject: {fileID: ꗈ1}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ꗈ2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_Version: 3
-  m_UsePipelineSettings: 1
-  m_AdditionalLightsShadowResolutionTier: 2
-  m_LightLayerMask: 1
-  m_RenderingLayers: 1
-  m_CustomShadowLayers: 0
-  m_ShadowLayerMask: 1
-  m_ShadowRenderingLayers: 1
-  m_LightCookieSize: {x: 1, y: 1}
-  m_LightCookieOffset: {x: 0, y: 0}
-  m_SoftShadowQuality: 0'''
-	SCRIPT_META_TEMPLATE = '''fileFormatVersion: 2
-guid: '''
-	MATERIAL_META_TEMPLATE = '''fileFormatVersion: 2
-guid: ꗈ
-NativeFormatImporter:
-  externalObjects: {}
-  mainObjectFileID: 2100000
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: '''
-	MESH_META_TEMPLATE = '''fileFormatVersion: 2
-guid: ꗈ
-ModelImporter:
-  serializedVersion: 22200
-  internalIDToNameTable: []
-  externalObjects: {}
-  materials:
-    materialImportMode: 2
-    materialName: 0
-    materialSearch: 1
-    materialLocation: 1
-  animations:
-    legacyGenerateAnimations: 4
-    bakeSimulation: 0
-    resampleCurves: 1
-    optimizeGameObjects: 0
-    removeConstantScaleCurves: 0
-    motionNodeName: 
-    animationImportErrors: 
-    animationImportWarnings: 
-    animationRetargetingWarnings: 
-    animationDoRetargetingWarnings: 0
-    importAnimatedCustomProperties: 0
-    importConstraints: 0
-    animationCompression: 1
-    animationRotationError: 0.5
-    animationPositionError: 0.5
-    animationScaleError: 0.5
-    animationWrapMode: 0
-    extraExposedTransformPaths: []
-    extraUserProperties: []
-    clipAnimations: []
-    isReadable: 0
-  meshes:
-    lODScreenPercentages: []
-    globalScale: 1
-    meshCompression: 0
-    addColliders: 0
-    useSRGBMaterialColor: 1
-    sortHierarchyByName: 1
-    importPhysicalCameras: 1
-    importVisibility: 1
-    importBlendShapes: 1
-    importCameras: 1
-    importLights: 1
-    nodeNameCollisionStrategy: 1
-    fileIdsGeneration: 2
-    swapUVChannels: 0
-    generateSecondaryUV: 0
-    useFileUnits: 1
-    keepQuads: 0
-    weldVertices: 1
-    bakeAxisConversion: 0
-    preserveHierarchy: 0
-    skinWeightsMode: 0
-    maxBonesPerVertex: 4
-    minBoneWeight: 0.001
-    optimizeBones: 1
-    meshOptimizationFlags: -1
-    indexFormat: 0
-    secondaryUVAngleDistortion: 8
-    secondaryUVAreaDistortion: 15.000001
-    secondaryUVHardAngle: 88
-    secondaryUVMarginMethod: 1
-    secondaryUVMinLightmapResolution: 40
-    secondaryUVMinObjectScale: 1
-    secondaryUVPackMargin: 4
-    useFileScale: 1
-    strictVertexDataChecks: 0
-  tangentSpace:
-    normalSmoothAngle: 60
-    normalImportMode: 0
-    tangentImportMode: 3
-    normalCalculationMode: 4
-    legacyComputeAllNormalsFromSmoothingGroupsWhenMeshHasBlendShapes: 0
-    blendShapeNormalImportMode: 1
-    normalSmoothingSource: 0
-  referencedClips: []
-  importAnimation: 1
-  humanDescription:
-    serializedVersion: 3
-    human: []
-    skeleton: []
-    armTwist: 0.5
-    foreArmTwist: 0.5
-    upperLegTwist: 0.5
-    legTwist: 0.5
-    armStretch: 0.05
-    legStretch: 0.05
-    feetSpacing: 0
-    globalScale: 1
-    rootMotionBoneName: 
-    hasTranslationDoF: 0
-    hasExtraRoot: 0
-    skeletonHasParents: 1
-  lastHumanDescriptionAvatarSource: {instanceID: 0}
-  autoGenerateAvatarMappingIfUnspecified: 1
-  animationType: 2
-  humanoidOversampling: 1
-  avatarSetup: 0
-  addHumanoidExtraRootOnlyWhenUsingAvatar: 1
-  importBlendShapeDeformPercent: 1
-  remapMaterialsIfMaterialImportModeIsNone: 0
-  additionalBone: 0
-  userData: 
-  assetBundleName: 
-  assetBundleVariant: '''
+  m_Script: {fileID: 11500000, guid: ꗈ2, type: 3}'''
 	MESH_FILTER_TEMPLATE = '''--- !u!33 &ꗈ0
 MeshFilter:
-  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
@@ -1212,69 +1081,21 @@ MeshFilter:
   m_Mesh: {fileID: ꗈ2, guid: ꗈ3, type: 3}'''
 	MESH_RENDERER_TEMPLATE = '''--- !u!23 &ꗈ0
 MeshRenderer:
-  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: ꗈ1}
-  m_Enabled: 1
-  m_CastShadows: 1
-  m_ReceiveShadows: 1
-  m_DynamicOccludee: 1
-  m_StaticShadowCaster: 0
-  m_MotionVectors: 1
-  m_LightProbeUsage: 1
-  m_ReflectionProbeUsage: 1
-  m_RayTracingMode: 2
-  m_RayTraceProcedural: 0
-  m_RayTracingAccelStructBuildFlagsOverride: 0
-  m_RayTracingAccelStructBuildFlags: 1
-  m_RenderingLayerMask: 1
-  m_RendererPriority: 0
   m_Materials:
-ꗈ2
-  m_StaticBatchInfo:
-  firstSubMesh: 0
-  subMeshCount: 0
-  m_StaticBatchRoot: {fileID: 0}
-  m_ProbeAnchor: {fileID: 0}
-  m_LightProbeVolumeOverride: {fileID: 0}
-  m_ScaleInLightmap: 1
-  m_ReceiveGI: 1
-  m_PreserveUVs: 0
-  m_IgnoreNormalsForChartDetection: 0
-  m_ImportantGI: 0
-  m_StitchLightmapSeams: 1
-  m_SelectedEditorRenderState: 3
-  m_MinimumChartSize: 4
-  m_AutoUVMaxDistance: 0.5
-  m_AutoUVMaxAngle: 89
-  m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 0
-  m_AdditionalVertexStreams: {fileID: 0}'''
+ꗈ2'''
 	MESH_COLLIDER_TEMPLATE = '''--- !u!64 &ꗈ0
 MeshCollider:
-  m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: ꗈ1}
   m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
   m_IsTrigger: ꗈ2
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
   m_Convex: ꗈ3
-  m_CookingOptions: 30
   m_Mesh: {fileID: ꗈ4, guid: ꗈ5, type: 3}'''
 	RIGIDBODY_TEMPLATE = '''--- !u!54 &ꗈ0
 Rigidbody:
@@ -1616,10 +1437,7 @@ TextureImporter:
 				fileExportFolder = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Models')
 				fileExportPath = os.path.join(fileExportFolder, '')
 				MakeFolderForFile (fileExportPath)
-				previousObjectScale = obj.scale
-				obj.scale *= 100
 				fileExportPath = ExportMesh(obj, fileExportFolder)
-				obj.scale = previousObjectScale
 				for materialSlot in obj.material_slots:
 					fileExportPath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 					MakeFolderForFile (fileExportPath)
@@ -1699,9 +1517,7 @@ TextureImporter:
 		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
 		sendAndRecieveServerEventsScriptMetaPath = sendAndRecieveServerEventsScriptPath + '.meta'
 		scriptGuid = GetGuid(sendAndRecieveServerEventsScriptMetaPath)
-		scriptMeta = self.SCRIPT_META_TEMPLATE
-		scriptMeta += scriptGuid
-		open(sendAndRecieveServerEventsScriptMetaPath, 'wb').write(scriptMeta.encode('utf-8'))
+		open(sendAndRecieveServerEventsScriptMetaPath, 'w').write('guid: ' + scriptGuid)
 		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 		self.gameObjectsAndComponentsText += script + '\n'
 		self.componentIds.append(self.lastId)
@@ -1773,7 +1589,7 @@ TextureImporter:
 		if obj.type == 'MESH':
 			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
-			open(filePath, 'wb').write(self.MESH_META_TEMPLATE.replace(REPLACE_INDICATOR, meshGuid).encode('utf-8'))
+			open(filePath, 'w').write('guid: ' + meshGuid)
 			if self.unityVersionPath != '':
 				meshDatas = dataText.split('\n')[0]
 				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
@@ -1902,7 +1718,7 @@ TextureImporter:
 			for materialSlot in obj.material_slots:
 				filePath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
 				materialGuid = GetGuid(filePath)
-				open(filePath, 'wb').write(self.MATERIAL_META_TEMPLATE.replace(REPLACE_INDICATOR, materialGuid).encode('utf-8'))
+				open(filePath, 'w').write('guid: ' + materialGuid)
 				if self.unityVersionPath != '':
 					dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 					fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'

@@ -15,15 +15,27 @@ from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
 
 LOCALHOST_PORT = 8000
+JOIN_INDICATOR = 'join?'
+LEFT_INDICATOR = 'left?'
+CLICK_INDICATOR = 'click?'
 JSON_INDICATOR = 'exec?'
+
+data = []
+clients = []
 
 class BlenderServer (BaseHTTPRequestHandler):
 	def do_GET (self):
+		global data
+		global clients
 		self.send_response(200)
 		self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
 		self.send_header('Pragma', 'no-cache')
 		self.send_header('Expires', '0')
 		ret = 'OK'
+		client = None
+		if len(self.path.split('?')) > 1:
+			client = self.path.split('?')[-2]
+			print(client)
 		if self.path.endswith('.ico'):
 			pass
 		elif self.path == '/':
@@ -49,20 +61,25 @@ class BlenderServer (BaseHTTPRequestHandler):
 				tmp = '/tmp/__httpd__.glb'
 				bpy.ops.export_scene.gltf(filepath=tmp, export_selected = True)
 				ret = open(tmp,'rb').read()
-		elif self.path[1:] in bpy.data.objects:
-			ret = str(bpy.data.objects[self.path[1 :]])
+		elif self.path[1 + len(CLICK_INDICATOR) :] in bpy.data.objects:
+			ret = str(bpy.data.objects[self.path[1 + len(CLICK_INDICATOR) :]])
+		elif self.path[1 :].startswith(JOIN_INDICATOR):
+			clients.append(client)
+		elif self.path[1 :].startswith(LEFT_INDICATOR):
+			clients.remove(client)
 		else:
-			jsonText = self.path[1 + len(JSON_INDICATOR) :]
+			jsonText = self.path.split('?')[-1]
 			jsonText = jsonText.encode("ascii")
 			jsonText = base64.b64decode(jsonText)
 			jsonText = jsonText.decode("ascii")
 			jsonData = json.loads(jsonText)
+			data.append(jsonData)
 			obj = bpy.data.objects[jsonData['objectName']]
 			valueName = jsonData['valueName']
 			value = jsonData['value']
 			if valueName == 'location':
 				obj.location = mathutils.Vector((float(value['x']), float(value['y']), float(value['z'])))
-				print('YAY' + str(obj.location))
+			ret = str(data)
 		if ret is None:
 			ret = 'None?'
 		if type(ret) is not bytes:
