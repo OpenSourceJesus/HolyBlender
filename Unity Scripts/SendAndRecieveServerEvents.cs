@@ -8,11 +8,13 @@ using UnityEngine.Networking;
 public class SendAndRecieveServerEvents : MonoBehaviour
 {
 	public float pollInterval = .05f;
+	public static int clientId = -1;
 	float pollTimer;
-	string ipAddress;
+	static string ipAddress;
 
 	void Start ()
 	{
+		ipAddress = GetLocalIPAddress();
 		StartCoroutine(JoinEvent ());
 	}
 
@@ -33,26 +35,45 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 		pollTimer -= Time.deltaTime;
 		if (pollTimer <= 0)
 		{
-			Vector3Value value = new Vector3Value("Cube", "location", new _Vector3(GameObject.Find("Cube").transform.position));
-			StartCoroutine(JsonEvent (value));
+			StartCoroutine(PollEvent ());
 			pollTimer += pollInterval;
 		}
 	}
 	
+	IEnumerator PollEvent ()
+	{
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/poll?" + ipAddress + '?');
+		yield return webRequest.SendWebRequest();
+		if (webRequest.result == UnityWebRequest.Result.Success)
+		{
+			string result = webRequest.downloadHandler.text;
+			print("Web request result: " + result);
+			foreach (string line in result.Split('\n', StringSplitOptions.RemoveEmptyEntries))
+			{
+				Vector3Value vector3Value = JsonUtility.FromJson<Vector3Value>(line.Replace('\'', '\"'));
+				if (vector3Value.valueName == "location")
+					GameObject.Find(vector3Value.objectName).transform.position = vector3Value.value.ToVec3();
+			}
+		}
+		else
+			print(webRequest.error);
+	}
+	
 	IEnumerator JoinEvent ()
 	{
-		ipAddress = GetLocalIPAddress();
 		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/join?" + ipAddress + '?');
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
-			print("Web request result: " + webRequest.downloadHandler.text);
+		{
+			clientId = int.Parse(webRequest.downloadHandler.text);
+			print("Web request result: " + clientId);
+		}
 		else
 			print(webRequest.error);
 	}
 	
 	IEnumerator LeftEvent ()
 	{
-		ipAddress = GetLocalIPAddress();
 		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/left?" + ipAddress + '?');
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
@@ -71,8 +92,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 			print(webRequest.error);
 	}
 
-
-	IEnumerator JsonEvent (object obj)
+	public static IEnumerator JsonEvent (object obj)
 	{
 		string jsonText = JsonUtility.ToJson(obj);
 		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/exec?" + ipAddress + '?' + jsonText.Base64Encode());
@@ -95,7 +115,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	}
 
 	[Serializable]
-	class Vector3Value : Value<_Vector3>
+	public class Vector3Value : Value<_Vector3>
 	{
 		public Vector3Value (string objectName, string valueName, _Vector3 value) : base (objectName, valueName, value)
 		{
@@ -103,7 +123,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	}
 
 	[Serializable]
-	class Value<T>
+	public class Value<T>
 	{
 		public string objectName;
 		public string valueName;
@@ -118,7 +138,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	}
 
 	[Serializable]
-	class _Vector3
+	public class _Vector3
 	{
 		public float x;
 		public float y;
@@ -133,6 +153,11 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 
 		public _Vector3 (Vector3 v) : this (v.x, v.y, v.z)
 		{
+		}
+
+		public Vector3 ToVec3 ()
+		{
+			return new Vector3(x, y, z);
 		}
 	}
 }

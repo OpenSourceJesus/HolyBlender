@@ -70,7 +70,6 @@ public class GrowAndShrink : MonoBehaviour
 	}
 }''',
 	'Keyboard And Mouse Controls (Unity)' : '''using UnityEngine;
-using UnityEngine.InputSystem;
 
 public class WASDAndMouseControls : MonoBehaviour
 {
@@ -79,13 +78,13 @@ public class WASDAndMouseControls : MonoBehaviour
 	void Update ()
 	{
 		Vector3 move = Vector3.zero;
-		if (Keyboard.current.aKey.isPressed)
+		if (Input.GetKey(KeyCode.A))
 			move.x -= 1.0f;
-		if (Keyboard.current.dKey.isPressed)
+		if (Input.GetKey(KeyCode.D))
 			move.x += 1.0f;
-		if (Keyboard.current.sKey.isPressed)
+		if (Input.GetKey(KeyCode.S))
 			move.y -= 1.0f;
-		if (Keyboard.current.wKey.isPressed)
+		if (Input.GetKey(KeyCode.W))
 			move.y += 1.0f;
 		move.Normalize();
 		transform.position += move * moveSpeed * Time.deltaTime;
@@ -136,21 +135,38 @@ function Test ()
 <a href="/bpy/data/objects/Cube">Cube</a>
 '''
 BLENDER_SERVER = '''
-import bpy
+import bpy, json, base64, mathutils
 from http.server import HTTPServer
 from http.server import BaseHTTPRequestHandler
 
 LOCALHOST_PORT = 8000
+POLL_INDICATOR = 'poll?'
+JOIN_INDICATOR = 'join?'
+LEFT_INDICATOR = 'left?'
+JSON_INDICATOR = 'exec?'
+
+events = []
+clients = []
+lastClientId = 0
+unsentClientsEventsDict = {}
 
 class BlenderServer (BaseHTTPRequestHandler):
 	def do_GET (self):
+		global events
+		global clients
+		global lastClientId
+		global unsentClientsEventsDict
 		self.send_response(200)
-		self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
-		self.send_header("Pragma", "no-cache")
-		self.send_header("Expires", "0")
-
+		self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+		self.send_header('Pragma', 'no-cache')
+		self.send_header('Expires', '0')
 		ret = 'OK'
-		hint = ''
+		client = None
+		data = None
+		urlComponents = self.path.split('?')
+		if len(urlComponents) > 1:
+			client = urlComponents[-2]
+			data = urlComponents[-1]
 		if self.path.endswith('.ico'):
 			pass
 		elif self.path == '/':
@@ -165,55 +181,79 @@ class BlenderServer (BaseHTTPRequestHandler):
 			name = self.path.split('/')[-1]
 			if name in bpy.data.objects:
 				ret = str(bpy.data.objects[name])
-		elif os.path.isfile(self.path[1:]): # the .wasm file
+		elif os.path.isfile(self.path[1:]): # The .wasm file
 			ret = open(self.path[1:], 'rb').read()
 		elif self.path.endswith('.glb'):
 			bpy.ops.object.select_all(action='DESELECT')
-			name = self.path.split('/')[-1][: -len('.glb') ]
+			name = self.path.split('/')[-1][: -len('.glb')]
 			if name in bpy.data.objects:
 				ob = bpy.data.objects[name]
 				ob.select_set(True)
 				tmp = '/tmp/__httpd__.glb'
 				bpy.ops.export_scene.gltf(filepath=tmp, export_selected = True)
 				ret = open(tmp,'rb').read()
-
+		elif data in bpy.data.objects:
+			ret = str(bpy.data.objects[data])
+		elif self.path[1 :].startswith(JOIN_INDICATOR):
+			clients.append(client)
+			ret = str(lastClientId)
+			lastClientId += 1
+			unsentClientsEventsDict[client] = events
+		elif self.path[1 :].startswith(LEFT_INDICATOR):
+			clients.remove(client)
+			del unsentClientsEventsDict[client]
+		elif self.path[1 :].startswith(JSON_INDICATOR):
+			jsonText = data
+			jsonText = jsonText.encode("ascii")
+			jsonText = base64.b64decode(jsonText)
+			jsonText = jsonText.decode("ascii")
+			jsonData = json.loads(jsonText)
+			events.append(jsonData)
+			obj = bpy.data.objects[jsonData['objectName']]
+			valueName = jsonData['valueName']
+			value = jsonData['value']
+			if valueName == 'location':
+				obj.location = mathutils.Vector((float(value['x']), float(value['y']), float(value['z'])))
+			for _client in clients:
+				if _client != client:
+					unsentClientsEventsDict[_client].append(jsonData)
+		else: # elif self.path[1 :].startswith(POLL_INDICATOR):
+			ret = ''
+			for event in unsentClientsEventsDict[client]:
+				ret += str(event) + \'\\n\'
+			unsentClientsEventsDict[client].clear()
 		if ret is None:
 			ret = 'None?'
 		if type(ret) is not bytes:
 			ret = ret.encode('utf-8')
-
-		self.send_header("Content-Length", str(len(ret)))
+		self.send_header('Content-Length', str(len(ret)))
 		self.end_headers()
-
 		try:
-			self.wfile.write( ret )
+			self.wfile.write(ret)
 		except BrokenPipeError:
 			print('CLIENT WRITE ERROR: failed bytes', len(ret))
-
 
 httpd = HTTPServer(('localhost', LOCALHOST_PORT), BlenderServer)
 httpd.timeout=0.1
 print(httpd)
-
 timer = None
-
 @bpy.utils.register_class
 class HttpServerOperator (bpy.types.Operator):
-	"HolyBlender HTTP Server"
-	bl_idname = "httpd.run"
-	bl_label = "httpd"
+	'HolyBlender HTTP Server'
+	bl_idname = 'httpd.run'
+	bl_label = 'httpd'
 	bl_options = {'REGISTER'}
-	def modal(self, context, event):
-		if event.type == "TIMER":
-			if HTTPD_ACTIVE:
-				httpd.handle_request() # this blocks for a short time
-		return {'PASS_THROUGH'} # will not supress event bubbles
+
+	def modal (self, context, event):
+		if event.type == 'TIMER' and HTTPD_ACTIVE:
+			httpd.handle_request() # Blocks for a short time
+		return {'PASS_THROUGH'} # Doesn't supress event bubbles
 
 	def invoke (self, context, event):
 		global timer
 		if timer is None:
 			timer = self._timer = context.window_manager.event_timer_add(
-				time_step=0.016666667,
+				time_step=0.033333334,
 				window=context.window
 			)
 			context.window_manager.modal_handler_add(self)
@@ -224,8 +264,7 @@ class HttpServerOperator (bpy.types.Operator):
 		return self.invoke(context, None)
 
 HTTPD_ACTIVE = True
-bpy.ops.httpd.run()
-'''
+bpy.ops.httpd.run()'''
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
 UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
@@ -266,6 +305,7 @@ class WorldPanel (bpy.types.Panel):
 		self.layout.prop(context.world, 'godotExportPath')
 		self.layout.prop(context.world, 'bevy_project_path')
 		self.layout.prop(context.world, 'htmlExportPath')
+		self.layout.prop(context.world, 'holyserver')
 		self.layout.prop(context.world, 'html_code')
 		self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
@@ -1437,7 +1477,10 @@ TextureImporter:
 				fileExportFolder = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Models')
 				fileExportPath = os.path.join(fileExportFolder, '')
 				MakeFolderForFile (fileExportPath)
+				# prevoiusObjectSize = obj.scale
+				# obj.scale *= 100
 				fileExportPath = ExportMesh(obj, fileExportFolder)
+				# obj.scale = prevoiusObjectSize
 				for materialSlot in obj.material_slots:
 					fileExportPath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 					MakeFolderForFile (fileExportPath)
@@ -1587,12 +1630,12 @@ TextureImporter:
 		meshGuid = ''
 		dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		if obj.type == 'MESH':
-			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx.meta'
+			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'w').write('guid: ' + meshGuid)
 			if self.unityVersionPath != '':
 				meshDatas = dataText.split('\n')[0]
-				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.data.name + '.fbx'
+				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx'
 				indexOfFile = meshDatas.find(fileIdIndicator)
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = meshDatas.find(' ', indexOfFileId)
@@ -1756,13 +1799,13 @@ TextureImporter:
 			camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObject.clip_end))
 			camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObject.angle * (180.0 / PI)))
 			camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
-			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale))
+			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale / 2))
 			self.gameObjectsAndComponentsText += camera + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
 		attachedScripts = attachedUnityScriptsDict.get(obj, [])
 		for scriptName in attachedScripts:
-			filePath = self.projectExportPath + '/Assets/Standard Assets/Scripts/' + scriptName
+			filePath = self.projectExportPath + '/Assets/Scripts/' + scriptName
 			MakeFolderForFile (filePath)
 			for textBlock in bpy.data.texts:
 				if textBlock.name == scriptName:
@@ -1773,9 +1816,7 @@ TextureImporter:
 					break
 			filePath += '.meta'
 			scriptGuid = GetGuid(filePath)
-			scriptMeta = self.SCRIPT_META_TEMPLATE
-			scriptMeta += scriptGuid
-			open(filePath, 'wb').write(scriptMeta.encode('utf-8'))
+			open(filePath, 'w').write('guid: ' + scriptGuid)
 			script = self.SCRIPT_TEMPLATE
 			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
@@ -2226,7 +2267,7 @@ def UpdateInspectorFields (textBlock):
 			continue
 		indexOfVariableName = text.find(' ', indexOfVariableName + 1)
 		type = text[indexOfType : indexOfVariableName]
-		indexOfPotentialEndOfVariable = IndexOfAny(text, [ ' '  ';' , '=' ], indexOfVariableName + 1)
+		indexOfPotentialEndOfVariable = IndexOfAny(text, [ ' ', ';' , '=' ], indexOfVariableName + 1)
 		variableName = text[indexOfVariableName : indexOfPotentialEndOfVariable]
 		variableName = variableName.strip()
 		shouldBreak = False
@@ -2439,6 +2480,8 @@ def InitTexts ():
 	if '__Server__.py' not in bpy.data.texts:
 		textBlock = bpy.data.texts.new(name='__Server__.py')
 		textBlock.from_string(BLENDER_SERVER)
+		if bpy.data.worlds[0].holyserver == None:
+			bpy.data.worlds[0].holyserver = textBlock
 
 if __name__ == '__main__':
 	register ()

@@ -9,128 +9,10 @@ bpy.data.objects["Cube"].bevy_script0 = txt
 bpy.ops.bevy.export()
 '''
 
-TEST_SERVER = '''
-import bpy, json, base64, mathutils
-from http.server import HTTPServer
-from http.server import BaseHTTPRequestHandler
-
-LOCALHOST_PORT = 8000
-JOIN_INDICATOR = 'join?'
-LEFT_INDICATOR = 'left?'
-CLICK_INDICATOR = 'click?'
-JSON_INDICATOR = 'exec?'
-
-data = []
-clients = []
-
-class BlenderServer (BaseHTTPRequestHandler):
-	def do_GET (self):
-		global data
-		global clients
-		self.send_response(200)
-		self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-		self.send_header('Pragma', 'no-cache')
-		self.send_header('Expires', '0')
-		ret = 'OK'
-		client = None
-		if len(self.path.split('?')) > 1:
-			client = self.path.split('?')[-2]
-			print(client)
-		if self.path.endswith('.ico'):
-			pass
-		elif self.path == '/':
-			if '__index__.html' in bpy.data.texts:
-				ret = bpy.data.texts['__index__.html'].as_string()
-			else:
-				for t in bpy.data.texts:
-					if t.name.endswith('.html'):
-						ret = t.as_string()
-						break
-		elif self.path.startswith('/bpy/data/objects/'):
-			name = self.path.split('/')[-1]
-			if name in bpy.data.objects:
-				ret = str(bpy.data.objects[name])
-		elif os.path.isfile(self.path[1:]): # The .wasm file
-			ret = open(self.path[1:], 'rb').read()
-		elif self.path.endswith('.glb'):
-			bpy.ops.object.select_all(action='DESELECT')
-			name = self.path.split('/')[-1][: -len('.glb')]
-			if name in bpy.data.objects:
-				ob = bpy.data.objects[name]
-				ob.select_set(True)
-				tmp = '/tmp/__httpd__.glb'
-				bpy.ops.export_scene.gltf(filepath=tmp, export_selected = True)
-				ret = open(tmp,'rb').read()
-		elif self.path[1 + len(CLICK_INDICATOR) :] in bpy.data.objects:
-			ret = str(bpy.data.objects[self.path[1 + len(CLICK_INDICATOR) :]])
-		elif self.path[1 :].startswith(JOIN_INDICATOR):
-			clients.append(client)
-		elif self.path[1 :].startswith(LEFT_INDICATOR):
-			clients.remove(client)
-		else:
-			jsonText = self.path.split('?')[-1]
-			jsonText = jsonText.encode("ascii")
-			jsonText = base64.b64decode(jsonText)
-			jsonText = jsonText.decode("ascii")
-			jsonData = json.loads(jsonText)
-			data.append(jsonData)
-			obj = bpy.data.objects[jsonData['objectName']]
-			valueName = jsonData['valueName']
-			value = jsonData['value']
-			if valueName == 'location':
-				obj.location = mathutils.Vector((float(value['x']), float(value['y']), float(value['z'])))
-			ret = str(data)
-		if ret is None:
-			ret = 'None?'
-		if type(ret) is not bytes:
-			ret = ret.encode('utf-8')
-		self.send_header('Content-Length', str(len(ret)))
-		self.end_headers()
-		try:
-			self.wfile.write(ret)
-		except BrokenPipeError:
-			print('CLIENT WRITE ERROR: failed bytes', len(ret))
-
-httpd = HTTPServer(('localhost', LOCALHOST_PORT), BlenderServer)
-httpd.timeout=0.1
-print(httpd)
-timer = None
-@bpy.utils.register_class
-class HttpServerOperator (bpy.types.Operator):
-	'HolyBlender HTTP Server'
-	bl_idname = 'httpd.run'
-	bl_label = 'httpd'
-	bl_options = {'REGISTER'}
-
-	def modal (self, context, event):
-		if event.type == 'TIMER' and HTTPD_ACTIVE:
-			httpd.handle_request() # Blocks for a short time
-		return {'PASS_THROUGH'} # Doesn't supress event bubbles
-
-	def invoke (self, context, event):
-		global timer
-		if timer is None:
-			timer = self._timer = context.window_manager.event_timer_add(
-				time_step=0.033333334,
-				window=context.window
-			)
-			context.window_manager.modal_handler_add(self)
-			return {'RUNNING_MODAL'}
-		return {'FINISHED'}
-
-	def execute (self, context):
-		return self.invoke(context, None)
-
-HTTPD_ACTIVE = True
-bpy.ops.httpd.run()'''
-
 TEST_HTML = '''
 from random import random
 
-SERVER = """%s"""
-server = bpy.data.texts.new(name='__server__.py')
-server.from_string(SERVER)
-bpy.data.worlds[0].holyserver = server
+bpy.data.worlds[0].holyserver = bpy.data.texts['__Server__.py']
 
 JS = """
 window.alert(self);
@@ -165,7 +47,7 @@ for i in range(0):
 	ob.rotation_euler = [random(), random(), random()]
 	ob.html_on_click = onclick
 	ob.html_css = css
-bpy.ops.html.export()''' % TEST_SERVER
+bpy.ops.html.export()'''
 
 blender = 'blender'
 if sys.platform == 'win32': # Windows
@@ -230,5 +112,4 @@ if monogame:
 		subprocess.check_call(cmd.split())
 	subprocess.check_call(['bash', './build.sh'], cwd='./MonoGame')
 
-# Run blender
-subprocess.check_call(command)
+subprocess.check_call(command) # Run blender
