@@ -146,14 +146,14 @@ LEFT_INDICATOR = 'left?'
 JSON_INDICATOR = 'exec?'
 
 events = []
-clients = []
+clientIds = []
 lastClientId = 0
 unsentClientsEventsDict = {}
 
 class BlenderServer (BaseHTTPRequestHandler):
 	def do_GET (self):
 		global events
-		global clients
+		global clientIds
 		global lastClientId
 		global unsentClientsEventsDict
 		self.send_response(200)
@@ -161,11 +161,15 @@ class BlenderServer (BaseHTTPRequestHandler):
 		self.send_header('Pragma', 'no-cache')
 		self.send_header('Expires', '0')
 		ret = 'OK'
-		client = None
-		data = None
+		clientId = -1
+		data = ''
 		urlComponents = self.path.split('?')
 		if len(urlComponents) > 1:
-			client = urlComponents[-2]
+			clientId = urlComponents[-2]
+			try:
+				clientId = int(clientId)
+			except:
+				print('Player ' + clientId + ' joined')
 			data = urlComponents[-1]
 		if self.path.endswith('.ico'):
 			pass
@@ -195,13 +199,13 @@ class BlenderServer (BaseHTTPRequestHandler):
 		elif data in bpy.data.objects:
 			ret = str(bpy.data.objects[data])
 		elif self.path[1 :].startswith(JOIN_INDICATOR):
-			clients.append(client)
+			clientIds.append(lastClientId)
+			unsentClientsEventsDict[lastClientId] = events
 			ret = str(lastClientId)
 			lastClientId += 1
-			unsentClientsEventsDict[client] = events
 		elif self.path[1 :].startswith(LEFT_INDICATOR):
-			clients.remove(client)
-			del unsentClientsEventsDict[client]
+			clientIds.remove(clientId)
+			del unsentClientsEventsDict[clientId]
 		elif self.path[1 :].startswith(JSON_INDICATOR):
 			jsonText = data
 			jsonText = jsonText.encode("ascii")
@@ -214,14 +218,14 @@ class BlenderServer (BaseHTTPRequestHandler):
 			value = jsonData['value']
 			if valueName == 'location':
 				obj.location = mathutils.Vector((float(value['x']), float(value['y']), float(value['z'])))
-			for _client in clients:
-				if _client != client:
-					unsentClientsEventsDict[_client].append(jsonData)
+			for _clientId in clientIds:
+				if _clientId != clientId:
+					unsentClientsEventsDict[_clientId].append(jsonData)
 		else: # elif self.path[1 :].startswith(POLL_INDICATOR):
 			ret = ''
-			for event in unsentClientsEventsDict[client]:
+			for event in unsentClientsEventsDict[clientId]:
 				ret += str(event) + \'\\n\'
-			unsentClientsEventsDict[client].clear()
+			unsentClientsEventsDict[clientId].clear()
 		if ret is None:
 			ret = 'None?'
 		if type(ret) is not bytes:

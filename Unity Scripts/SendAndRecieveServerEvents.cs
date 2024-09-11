@@ -7,7 +7,7 @@ using UnityEngine.Networking;
 
 public class SendAndRecieveServerEvents : MonoBehaviour
 {
-	public float pollInterval = .05f;
+	public float pollInterval = 0.1f;
 	public static int clientId = -1;
 	float pollTimer;
 	static string ipAddress;
@@ -42,7 +42,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	
 	IEnumerator PollEvent ()
 	{
-		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/poll?" + ipAddress + '?');
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/poll?" + clientId + '?');
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
 		{
@@ -51,7 +51,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 			foreach (string line in result.Split('\n', StringSplitOptions.RemoveEmptyEntries))
 			{
 				Vector3Value vector3Value = JsonUtility.FromJson<Vector3Value>(line.Replace('\'', '\"'));
-				if (vector3Value.valueName == "location")
+				if (vector3Value.objectName != name && vector3Value.valueName == "location")
 					GameObject.Find(vector3Value.objectName).transform.position = vector3Value.value.ToVec3();
 			}
 		}
@@ -74,7 +74,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	
 	IEnumerator LeftEvent ()
 	{
-		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/left?" + ipAddress + '?');
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/left?" + clientId + '?');
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
 			print("Web request result: " + webRequest.downloadHandler.text);
@@ -84,7 +84,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 
 	IEnumerator ClickEvent (string objectName)
 	{
-		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/click?" + ipAddress + '?' + objectName);
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/click?" + clientId + '?' + objectName);
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
 			print("Web request result: " + webRequest.downloadHandler.text);
@@ -95,7 +95,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	public static IEnumerator JsonEvent (object obj)
 	{
 		string jsonText = JsonUtility.ToJson(obj);
-		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/exec?" + ipAddress + '?' + jsonText.Base64Encode());
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/exec?" + clientId + '?' + jsonText.Base64Encode());
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
 			print("Web request result: " + webRequest.downloadHandler.text);
