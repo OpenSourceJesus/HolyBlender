@@ -169,7 +169,7 @@ class BlenderServer (BaseHTTPRequestHandler):
 			try:
 				clientId = int(clientId)
 			except:
-				print('Player ' + clientId + ' joined')
+				print('Player ' + str(lastClientId) + ' joined')
 			data = urlComponents[-1]
 		if self.path.endswith('.ico'):
 			pass
@@ -1009,6 +1009,8 @@ class BevyExportButton (bpy.types.Operator):
 class UnityExportButton (bpy.types.Operator):
 	bl_idname = 'unity.export'
 	bl_label = 'Export To Unity'
+	INIT_YAML_TEXT = '''%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:'''
 	MATERIAL_TEMPLATE = '    - {fileID: ꗈ0, guid: ꗈ1, type: 2}'
 	COMPONENT_TEMPLATE = '    - component: {fileID: ꗈ}'
 	CHILD_TRANSFORM_TEMPLATE = '    - {fileID: ꗈ}'
@@ -1456,6 +1458,69 @@ TextureImporter:
   userData: 
   assetBundleName: 
   assetBundleVariant: '''
+	PREFAB_INSTANCE_TEMPLATE = '''--- !u!1001 &ꗈ0
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: ꗈ1}
+    m_Modifications:
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8879364713982270700, guid: ꗈ2, type: 3}
+      propertyPath: m_Name
+      value: ꗈ3
+      objectReference: {fileID: 0}
+	ꗈ4
+    m_RemovedComponents: ꗈ5
+    m_RemovedGameObjects: ꗈ6
+    m_AddedGameObjects: ꗈ7
+    m_AddedComponents: ꗈ8
+  m_SourcePrefab: {fileID: 100100000, guid: ꗈ2, type: 3}
+--- !u!4 &ꗈ9 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+  m_PrefabInstance: {fileID: ꗈ0}
+  m_PrefabAsset: {fileID: 0}'''
 	gameObjectsAndComponentsText = ''
 	transformIds = []
 	componentIds = []
@@ -1544,6 +1609,15 @@ TextureImporter:
 			scenePath = 'Test.unity'
 		scenePath = scenesFolderPath + '/' + scenePath
 		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
+		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Prefabs')
+		MakeFolderForFile (os.path.join(prefabsPath, ''))
+		for collection in bpy.data.collections:
+			self.gameObjectsAndComponentsText = ''
+			self.MakeObject (obj)
+			prefab = self.INIT_YAML_TEXT
+			for gameObjectOrComponentText in self.gameObjectsAndComponentsText:
+				prefab += '\n' + gameObjectOrComponentText
+			open(os.path.join(prefabsPath, collection.name), 'w').write(prefab)
 		self.gameObjectsAndComponentsText = ''
 		self.transformIds = []
 		for obj in bpy.data.objects:
@@ -1560,20 +1634,20 @@ TextureImporter:
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveServerEvents.cs'), sendAndRecieveServerEventsScriptPath)
 		gameObjectIdAndTransformId = self.MakeEmptyObject('Send And Recieve Server Events')
 		script = self.SCRIPT_TEMPLATE
-		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
 		sendAndRecieveServerEventsScriptMetaPath = sendAndRecieveServerEventsScriptPath + '.meta'
 		scriptGuid = GetGuid(sendAndRecieveServerEventsScriptMetaPath)
 		open(sendAndRecieveServerEventsScriptMetaPath, 'w').write('guid: ' + scriptGuid)
+		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
 		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 		self.gameObjectsAndComponentsText += script + '\n'
 		self.componentIds.append(self.lastId)
-		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', self.gameObjectsAndComponentsText)
 		sceneRootsText = ''
 		for transformId in self.transformIds:
 			sceneRoot = self.SCENE_ROOT_TEMPLATE
 			sceneRoot = sceneRoot.replace(REPLACE_INDICATOR, str(transformId))
 			sceneRootsText += sceneRoot + '\n'
+		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', self.gameObjectsAndComponentsText)
 		sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
 		open(scenePath, 'wb').write(sceneText.encode('utf-8'))
 		if self.unityVersionPath != '':

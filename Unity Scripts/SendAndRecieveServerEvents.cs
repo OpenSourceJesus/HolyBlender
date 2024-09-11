@@ -1,8 +1,6 @@
 using System;
-using System.Net;
 using UnityEngine;
 using System.Collections;
-using System.Net.Sockets;
 using UnityEngine.Networking;
 
 public class SendAndRecieveServerEvents : MonoBehaviour
@@ -10,11 +8,9 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	public float pollInterval = 0.1f;
 	public static int clientId = -1;
 	float pollTimer;
-	static string ipAddress;
 
 	void Start ()
 	{
-		ipAddress = GetLocalIPAddress();
 		StartCoroutine(JoinEvent ());
 	}
 
@@ -61,7 +57,7 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 	
 	IEnumerator JoinEvent ()
 	{
-		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/join?" + ipAddress + '?');
+		UnityWebRequest webRequest = UnityWebRequest.Get("http://localhost:8000/join??");
 		yield return webRequest.SendWebRequest();
 		if (webRequest.result == UnityWebRequest.Result.Success)
 		{
@@ -101,17 +97,6 @@ public class SendAndRecieveServerEvents : MonoBehaviour
 			print("Web request result: " + webRequest.downloadHandler.text);
 		else
 			print(webRequest.error);
-	}
-
-	public static string GetLocalIPAddress ()
-	{
-		IPHostEntry host = Dns.GetHostEntry(Dns.GetHostName());
-		foreach (var ip in host.AddressList)
-		{
-			if (ip.AddressFamily == AddressFamily.InterNetwork)
-				return ip.ToString();
-		}
-		throw new Exception("No network adapters with an IPv4 address in the system!");
 	}
 
 	[Serializable]
