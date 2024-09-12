@@ -1527,6 +1527,8 @@ Transform:
 	projectExportPath = ''
 	unityVersionPath = ''
 	lastId = 5
+	prefabGuidsDict = {}
+	isMakingScene = False
 
 	@classmethod
 	def poll (cls, context):
@@ -1611,13 +1613,19 @@ Transform:
 		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
 		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Prefabs')
 		MakeFolderForFile (os.path.join(prefabsPath, ''))
+		self.isMakingScene = False
+		self.prefabGuidsDict.clear()
 		for collection in bpy.data.collections:
 			self.gameObjectsAndComponentsText = ''
-			self.MakeObject (obj)
+			prefabPath = os.path.join(prefabsPath, collection.name + '.prefab')
+			self.prefabGuidsDict[collection.name] = GetGuid(prefabPath)
+			open(prefabPath + '.meta', 'w').write('guid: ' + self.prefabGuidsDict[collection.name])
+			for obj in collection.objects:
+				self.MakeObject (obj)
 			prefab = self.INIT_YAML_TEXT
-			for gameObjectOrComponentText in self.gameObjectsAndComponentsText:
-				prefab += '\n' + gameObjectOrComponentText
-			open(os.path.join(prefabsPath, collection.name), 'w').write(prefab)
+			prefab += '\n' + self.gameObjectsAndComponentsText
+			open(prefabPath, 'w').write(prefab)
+		self.isMakingScene = True
 		self.gameObjectsAndComponentsText = ''
 		self.transformIds = []
 		for obj in bpy.data.objects:
@@ -1687,17 +1695,40 @@ Transform:
 
 	def MakeObject (self, obj, parentTransformId = 0) -> int:
 		self.componentIds = []
-		tag = 'Untagged'
-		if obj.type == 'CAMERA':
-			tag = 'MainCamera'
-		gameObject = self.GAME_OBJECT_TEMPLATE
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
-		gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
-		self.gameObjectsAndComponentsText += gameObject + '\n'
+		prefabName = ''
+		for collection in bpy.data.collections:
+			for obj2 in collection.objects:
+				if obj == obj2:
+					prefabName = collection.name
+					break
+			if prefabName != '':
+				break
+		gameObject = ''
 		gameObjectId = self.lastId
+		if prefabName == '' or not self.isMakingScene:
+			tag = 'Untagged'
+			if obj.type == 'CAMERA':
+				tag = 'MainCamera'
+			gameObject = self.GAME_OBJECT_TEMPLATE
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
+		else:
+			self.lastId += 1
+			gameObject = self.PREFAB_INSTANCE_TEMPLATE
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(gameObjectId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(parentTransformId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '2', self.prefabGuidsDict[prefabName])
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', prefabName)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', '')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '6', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '7', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '8', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '9', str(self.lastId))
+		self.gameObjectsAndComponentsText += gameObject + '\n'
 		self.lastId += 1
 		myTransformId = self.lastId
 		children = ''
