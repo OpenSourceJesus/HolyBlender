@@ -1466,59 +1466,59 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: ꗈ1}
     m_Modifications:
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalPosition.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalPosition.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalRotation.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalRotation.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalRotation.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.x
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.y
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 8879364713982270700, guid: ꗈ2, type: 3}
+    - target: {fileID: ꗈ4, guid: ꗈ3, type: 3}
       propertyPath: m_Name
-      value: ꗈ3
+      value: ꗈ5
       objectReference: {fileID: 0}
-	ꗈ4
-    m_RemovedComponents: ꗈ5
-    m_RemovedGameObjects: ꗈ6
-    m_AddedGameObjects: ꗈ7
-    m_AddedComponents: ꗈ8
-  m_SourcePrefab: {fileID: 100100000, guid: ꗈ2, type: 3}
---- !u!4 &ꗈ9 stripped
+	ꗈ6
+    m_RemovedComponents: ꗈ7
+    m_RemovedGameObjects: ꗈ8
+    m_AddedGameObjects: ꗈ9
+    m_AddedComponents: ꗈ10
+  m_SourcePrefab: {fileID: 100100000, guid: ꗈ3, type: 3}
+--- !u!4 &ꗈ11 stripped
 Transform:
-  m_CorrespondingSourceObject: {fileID: 5125873004793848012, guid: ꗈ2, type: 3}
+  m_CorrespondingSourceObject: {fileID: ꗈ2, guid: ꗈ3, type: 3}
   m_PrefabInstance: {fileID: ꗈ0}
   m_PrefabAsset: {fileID: 0}'''
 	gameObjectsAndComponentsText = ''
@@ -1542,6 +1542,8 @@ Transform:
 		meshesDict = {}
 		for mesh in bpy.data.meshes:
 			meshesDict[mesh.name] = []
+		scriptsPath = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
+		MakeFolderForFile (os.path.join(scriptsPath, ''))
 		for obj in bpy.context.scene.objects:
 			if obj.type == 'MESH' and obj.data.name in meshesDict:
 				meshesDict[obj.data.name].append(obj.name)
@@ -1555,9 +1557,9 @@ Transform:
 				for materialSlot in obj.material_slots:
 					fileExportPath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 					MakeFolderForFile (fileExportPath)
-					material = open(os.path.expanduser('~/HolyBlender/Templates/Material.mat'), 'rb').read().decode('utf-8')
-					material = material.replace(REPLACE_INDICATOR + '0', materialSlot.material.name)
 					materialColor = materialSlot.material.diffuse_color
+					material = open(os.path.join(TEMPLATES_PATH, 'Material.mat'), 'rb').read().decode('utf-8')
+					material = material.replace(REPLACE_INDICATOR + '0', materialSlot.material.name)
 					material = material.replace(REPLACE_INDICATOR + '1', str(materialColor[0]))
 					material = material.replace(REPLACE_INDICATOR + '2', str(materialColor[1]))
 					material = material.replace(REPLACE_INDICATOR + '3', str(materialColor[2]))
@@ -1582,10 +1584,9 @@ Transform:
 					break
 		if self.unityVersionPath != '':
 			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
-			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
 			CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
-			CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(self.projectExportPath, 'Assets', 'Scripts', 'SystemExtensions.cs'))
-			CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(self.projectExportPath, 'Assets', 'Scripts', 'StringExtensions.cs'))
+			CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
+			CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(scriptsPath, 'StringExtensions.cs'))
 			data = ''
 			for obj in bpy.data.objects:
 				previousObjectRotationMode = obj.rotation_mode 
@@ -1602,16 +1603,7 @@ Transform:
 			
 			subprocess.check_call(command.split())
 
-		scenePath = bpy.data.filepath.replace('.blend', '.unity')
-		scenePath = scenePath[scenePath.rfind('/') + 1 :]
-		scenesFolderPath = self.projectExportPath + '/Assets/Scenes'
-		if not os.path.isdir(scenesFolderPath):
-			os.mkdir(scenesFolderPath)
-		if scenePath == '':
-			scenePath = 'Test.unity'
-		scenePath = scenesFolderPath + '/' + scenePath
-		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
-		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Prefabs')
+		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources')
 		MakeFolderForFile (os.path.join(prefabsPath, ''))
 		self.isMakingScene = False
 		self.prefabGuidsDict.clear()
@@ -1641,20 +1633,30 @@ Transform:
 		sendAndRecieveServerEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveServerEvents.cs')
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveServerEvents.cs'), sendAndRecieveServerEventsScriptPath)
 		gameObjectIdAndTransformId = self.MakeEmptyObject('Send And Recieve Server Events')
-		script = self.SCRIPT_TEMPLATE
 		sendAndRecieveServerEventsScriptMetaPath = sendAndRecieveServerEventsScriptPath + '.meta'
 		scriptGuid = GetGuid(sendAndRecieveServerEventsScriptMetaPath)
 		open(sendAndRecieveServerEventsScriptMetaPath, 'w').write('guid: ' + scriptGuid)
+		script = self.SCRIPT_TEMPLATE
 		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
 		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 		self.gameObjectsAndComponentsText += script + '\n'
 		self.componentIds.append(self.lastId)
+		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', self.COMPONENT_TEMPLATE.replace(REPLACE_INDICATOR, str(self.lastId)))
 		sceneRootsText = ''
 		for transformId in self.transformIds:
 			sceneRoot = self.SCENE_ROOT_TEMPLATE
 			sceneRoot = sceneRoot.replace(REPLACE_INDICATOR, str(transformId))
 			sceneRootsText += sceneRoot + '\n'
+		scenePath = bpy.data.filepath.replace('.blend', '.unity')
+		scenePath = scenePath[scenePath.rfind('/') + 1 :]
+		scenesFolderPath = self.projectExportPath + '/Assets/Scenes'
+		if not os.path.isdir(scenesFolderPath):
+			os.mkdir(scenesFolderPath)
+		if scenePath == '':
+			scenePath = 'Test.unity'
+		scenePath = scenesFolderPath + '/' + scenePath
+		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
 		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', self.gameObjectsAndComponentsText)
 		sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
 		open(scenePath, 'wb').write(sceneText.encode('utf-8'))
@@ -1696,47 +1698,23 @@ Transform:
 	def MakeObject (self, obj, parentTransformId = 0) -> int:
 		self.componentIds = []
 		prefabName = ''
-		for collection in bpy.data.collections:
-			for obj2 in collection.objects:
-				if obj == obj2:
-					prefabName = collection.name
-					break
-			if prefabName != '':
-				break
+		# for collection in bpy.data.collections:
+		# 	for obj2 in collection.objects:
+		# 		if obj == obj2:
+		# 			prefabName = collection.name
+		# 			break
+		# 	if prefabName != '':
+		# 		break
 		gameObject = ''
-		gameObjectId = self.lastId
-		if prefabName == '' or not self.isMakingScene:
-			tag = 'Untagged'
-			if obj.type == 'CAMERA':
-				tag = 'MainCamera'
-			gameObject = self.GAME_OBJECT_TEMPLATE
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
-		else:
-			self.lastId += 1
-			gameObject = self.PREFAB_INSTANCE_TEMPLATE
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(gameObjectId))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(parentTransformId))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '2', self.prefabGuidsDict[prefabName])
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', prefabName)
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', '')
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', '[]')
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '6', '[]')
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '7', '[]')
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '8', '[]')
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '9', str(self.lastId))
-		self.gameObjectsAndComponentsText += gameObject + '\n'
-		self.lastId += 1
-		myTransformId = self.lastId
-		children = ''
-		for childObj in obj.children:
-			transformId = self.MakeObject(child, self.lastId)
-			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, transformId)
 		meshFileId = '10202'
 		meshGuid = ''
+		gameObjectId = self.lastId
+		myTransformId = self.lastId + 1
+		self.lastId += 2
+		children = ''
+		for childObj in obj.children:
+			transformId = self.MakeObject(childObj, self.lastId)
+			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
 		dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		if obj.type == 'MESH':
 			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx.meta'
@@ -1749,46 +1727,72 @@ Transform:
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = meshDatas.find(' ', indexOfFileId)
 				meshFileId = meshDatas[indexOfFileId : indexOfEndOfFileId]
-			self.lastId += 1
 			gameObjectIdAndTransformId = self.MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
 			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(gameObjectIdAndTransformId[1]))
 		elif len(obj.children) == 0:
 			children = '[]'
-		rotation = mathutils.Quaternion((0, 0, 0, 1))
-		lines = dataText.split('\n')
-		for line in lines:
-			if line.startswith(obj.name):
-				rotationComponents = line.split(', ')[1 :]
-				rotation.x = float(rotationComponents[0])
-				rotation.y = float(rotationComponents[1])
-				rotation.z = float(rotationComponents[2])
-				rotation.w = float(rotationComponents[3])
-		# previousObjectRotationMode = obj.rotation_mode
-		# obj.rotation_mode = 'XYZ'
-		# rotation = obj.rotation_euler
-		# if obj.type == 'CAMERA':
-		# 	rotation.x += PI / 2
-		# 	rotation.y += PI
-		# 	rotation.z += PI
-		# rotation = rotation.to_quaternion()
-		# obj.rotation_mode = previousObjectRotationMode
-		transform = self.TRANSFORM_TEMPLATE
-		transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
-		transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
-		transform = transform.replace(REPLACE_INDICATOR + '12', children)
-		transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
-		transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
-		transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-		transform = transform.replace(REPLACE_INDICATOR + '2', str(rotation.x))
-		transform = transform.replace(REPLACE_INDICATOR + '3', str(rotation.y))
-		transform = transform.replace(REPLACE_INDICATOR + '4', str(rotation.z))
-		transform = transform.replace(REPLACE_INDICATOR + '5', str(rotation.w))
-		transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
-		transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.z))
-		transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.y))
-		transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
-		self.gameObjectsAndComponentsText += transform + '\n'
-		self.transformIds.append(myTransformId)
+		if prefabName == '' or not self.isMakingScene:
+			tag = 'Untagged'
+			if obj.type == 'CAMERA':
+				tag = 'MainCamera'
+			gameObject = self.GAME_OBJECT_TEMPLATE
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(gameObjectId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(myTransformId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
+			self.lastId += 1
+			rotation = mathutils.Quaternion((0, 0, 0, 1))
+			lines = dataText.split('\n')
+			for line in lines:
+				if line.startswith(obj.name):
+					rotationComponents = line.split(', ')[1 :]
+					rotation.x = float(rotationComponents[0])
+					rotation.y = float(rotationComponents[1])
+					rotation.z = float(rotationComponents[2])
+					rotation.w = float(rotationComponents[3])
+			# previousObjectRotationMode = obj.rotation_mode
+			# obj.rotation_mode = 'XYZ'
+			# rotation = obj.rotation_euler
+			# if obj.type == 'CAMERA':
+			# 	rotation.x += PI / 2
+			# 	rotation.y += PI
+			# 	rotation.z += PI
+			# rotation = rotation.to_quaternion()
+			# obj.rotation_mode = previousObjectRotationMode
+			transform = self.TRANSFORM_TEMPLATE
+			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
+			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
+			transform = transform.replace(REPLACE_INDICATOR + '12', children)
+			transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
+			transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
+			transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			transform = transform.replace(REPLACE_INDICATOR + '2', str(rotation.x))
+			transform = transform.replace(REPLACE_INDICATOR + '3', str(rotation.y))
+			transform = transform.replace(REPLACE_INDICATOR + '4', str(rotation.z))
+			transform = transform.replace(REPLACE_INDICATOR + '5', str(rotation.w))
+			transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
+			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.z))
+			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.y))
+			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
+			self.gameObjectsAndComponentsText += transform + '\n'
+			self.transformIds.append(myTransformId)
+		else:
+			gameObject = self.PREFAB_INSTANCE_TEMPLATE
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '10', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '11', str(myTransformId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(gameObjectId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(parentTransformId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '2', '6')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', self.prefabGuidsDict[prefabName])
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', '5')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', prefabName)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '6', '')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '7', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '8', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '9', '[]')
+			self.transformIds.append(gameObjectId)
+		self.gameObjectsAndComponentsText += gameObject + '\n'
 		self.lastId += 1
 		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
 			spritePath = obj.data.filepath
