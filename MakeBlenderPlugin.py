@@ -7,8 +7,8 @@ for arg in sys.argv:
 if user_args: print('user_args:', user_args)
 
 __thisdir = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append( __thisdir )
-sys.path.append( os.path.join(__thisdir, 'Blender_bevy_components_workflow/tools') )
+sys.path.append(__thisdir)
+sys.path.append(os.path.join(__thisdir, 'Blender_bevy_components_workflow/tools'))
 print(sys.path)
 import bevy_components
 print(bevy_components)
@@ -16,6 +16,10 @@ import gltf_auto_export
 print(gltf_auto_export)
 bpy.ops.preferences.addon_enable(module='bevy_components')
 bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+sys.path.append(os.path.join(__thisdir, 'blender-to-unity-fbx-exporter'))
+import blender_to_unity_fbx_exporter as fbxExporter
+print(fbxExporter)
+bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
 
 sys.path.append(os.path.join(__thisdir, 'Extensions'))
 from SystemExtensions import *
@@ -681,7 +685,7 @@ class UnrealExportButton (bpy.types.Operator):
 		data += '\nMeshes'
 		for obj in objectGroup:
 			if obj.type == 'MESH':
-				ExportMesh (obj, '/tmp')
+				ExportObject (obj, '/tmp')
 				data += '\n' + self.GetBasicObjectData(obj)
 				if obj.rigid_body != None:
 					data += '☣️' + str(obj.rigid_body.mass) + '☣️' + str(obj.rigid_body.linear_damping) + '☣️' + str(obj.rigid_body.angular_damping) + '☣️' + str(obj.rigid_body.enabled)
@@ -794,7 +798,7 @@ class GodotExportButton (bpy.types.Operator):
 			fileExportFolder = os.path.join(self.godotExportPath, 'Art', 'Models')
 			fileExportPath = os.path.join(fileExportFolder, '')
 			MakeFolderForFile (fileExportPath)
-			fileExportPath = ExportMesh(obj, fileExportFolder)
+			fileExportPath = ExportObject(obj, fileExportFolder)
 			id = self.GetId(7)
 			resource = self.RESOURCE_TEMPLATE
 			resource = resource.replace(REPLACE_INDICATOR + '0', 'PackedScene')
@@ -1522,13 +1526,14 @@ Transform:
   m_PrefabInstance: {fileID: ꗈ0}
   m_PrefabAsset: {fileID: 0}'''
 	gameObjectsAndComponentsText = ''
-	transformIds = []
+	rootTransformsIds = []
 	componentIds = []
 	projectExportPath = ''
 	unityVersionPath = ''
 	lastId = 5
 	prefabGuidsDict = {}
 	isMakingScene = False
+	dataText = ''
 
 	@classmethod
 	def poll (cls, context):
@@ -1552,7 +1557,7 @@ Transform:
 				MakeFolderForFile (fileExportPath)
 				# prevoiusObjectSize = obj.scale
 				# obj.scale *= 100
-				fileExportPath = ExportMesh(obj, fileExportFolder)
+				fileExportPath = ExportObject(obj, fileExportFolder)
 				# obj.scale = prevoiusObjectSize
 				for materialSlot in obj.material_slots:
 					fileExportPath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
@@ -1588,21 +1593,20 @@ Transform:
 			CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
 			CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(scriptsPath, 'StringExtensions.cs'))
 			data = ''
-			for obj in bpy.data.objects:
-				previousObjectRotationMode = obj.rotation_mode 
-				obj.rotation_mode = 'XYZ'
-				rotation = obj.rotation_euler
-				obj.rotation_mode = previousObjectRotationMode
-				yDegrees = math.degrees(rotation.z) + 180
-				if obj.type == 'CAMERA':
-					yDegrees *= -1
-				data += obj.name + ', ' + str(math.degrees(rotation.x) + 90) + ', ' + str(yDegrees) + ', ' + str(math.degrees(rotation.y) + 180) + '\n'
+			for obj in bpy.context.scene.objects:
+				rotation = obj.matrix_local.to_euler()
+				rotation.x -= PI / 2
+				# rotation.z += PI
+				# if obj.type == 'CAMERA':
+				# 	rotation.z += PI
+				data += obj.name + ', ' + str(math.degrees(rotation.x)) + ', ' + str(math.degrees(rotation.y)) + ', ' + str(math.degrees(rotation.z)) + '\n'
 			open(os.path.join('/tmp', 'HolyBlender Data (BlenderToUnity)'), 'wb').write(data.encode('utf-8'))
 			command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
 			print(command)
 			
 			subprocess.check_call(command.split())
 
+		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources')
 		MakeFolderForFile (os.path.join(prefabsPath, ''))
 		self.isMakingScene = False
@@ -1619,14 +1623,9 @@ Transform:
 			open(prefabPath, 'w').write(prefab)
 		self.isMakingScene = True
 		self.gameObjectsAndComponentsText = ''
-		self.transformIds = []
-		for obj in bpy.data.objects:
-			shouldMakeObject = True
-			for obj2 in bpy.data.objects:
-				if obj in obj2.children:
-					shouldMakeObject = False
-					break
-			if shouldMakeObject:
+		self.rootTransformsIds = []
+		for obj in bpy.context.scene.objects:
+			if obj.parent == None:
 				self.MakeObject (obj)
 		scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
@@ -1644,7 +1643,7 @@ Transform:
 		self.componentIds.append(self.lastId)
 		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', self.COMPONENT_TEMPLATE.replace(REPLACE_INDICATOR, str(self.lastId)))
 		sceneRootsText = ''
-		for transformId in self.transformIds:
+		for transformId in self.rootTransformsIds:
 			sceneRoot = self.SCENE_ROOT_TEMPLATE
 			sceneRoot = sceneRoot.replace(REPLACE_INDICATOR, str(transformId))
 			sceneRootsText += sceneRoot + '\n'
@@ -1691,7 +1690,8 @@ Transform:
 		transform = transform.replace(REPLACE_INDICATOR + '8', '0')
 		transform = transform.replace(REPLACE_INDICATOR + '9', '1')
 		self.gameObjectsAndComponentsText += transform + '\n'
-		self.transformIds.append(self.lastId)
+		if parentTransformId == 0:
+			self.rootTransformsIds.append(self.lastId)
 		self.lastId += 1
 		return (gameObjectId, self.lastId - 1)
 
@@ -1713,15 +1713,14 @@ Transform:
 		self.lastId += 2
 		children = ''
 		for childObj in obj.children:
-			transformId = self.MakeObject(childObj, self.lastId)
+			transformId = self.MakeObject(childObj, myTransformId)
 			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
-		dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		if obj.type == 'MESH':
 			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'w').write('guid: ' + meshGuid)
 			if self.unityVersionPath != '':
-				meshDatas = dataText.split('\n')[0]
+				meshDatas = self.dataText.split('\n')[0]
 				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx'
 				indexOfFile = meshDatas.find(fileIdIndicator)
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
@@ -1742,27 +1741,27 @@ Transform:
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
 			self.lastId += 1
-			rotation = mathutils.Quaternion((0, 0, 0, 1))
-			lines = dataText.split('\n')
-			for line in lines:
-				if line.startswith(obj.name):
-					rotationComponents = line.split(', ')[1 :]
-					rotation.x = float(rotationComponents[0])
-					rotation.y = float(rotationComponents[1])
-					rotation.z = float(rotationComponents[2])
-					rotation.w = float(rotationComponents[3])
-			# previousObjectRotationMode = obj.rotation_mode
-			# obj.rotation_mode = 'XYZ'
-			# rotation = obj.rotation_euler
-			# if obj.type == 'CAMERA':
-			# 	rotation.x += PI / 2
-			# 	rotation.y += PI
-			# 	rotation.z += PI
-			# rotation = rotation.to_quaternion()
-			# obj.rotation_mode = previousObjectRotationMode
+			# rotation = mathutils.Quaternion((0, 0, 0, 1))
+			# lines = self.dataText.split('\n')
+			# for line in lines:
+			# 	if line.startswith(obj.name):
+			# 		rotationComponents = line.split(', ')[1 :]
+			# 		rotation.x = float(rotationComponents[0])
+			# 		rotation.y = float(rotationComponents[1])
+			# 		rotation.z = float(rotationComponents[2])
+			# 		rotation.w = float(rotationComponents[3])
+			location = obj.matrix_local.translation
+			rotation = obj.matrix_local.to_euler()
+			if obj.type != 'MESH':
+				rotation.x -= PI / 2
+				previousYRot = rotation.y
+				rotation.y = -rotation.z
+				rotation.z = -previousYRot
+			rotation = rotation.to_quaternion()
+			scale = obj.matrix_local.to_scale()
 			transform = self.TRANSFORM_TEMPLATE
-			transform = transform.replace(REPLACE_INDICATOR + '10', str(obj.scale.z))
-			transform = transform.replace(REPLACE_INDICATOR + '11', str(obj.scale.y))
+			transform = transform.replace(REPLACE_INDICATOR + '10', str(scale.z))
+			transform = transform.replace(REPLACE_INDICATOR + '11', str(scale.y))
 			transform = transform.replace(REPLACE_INDICATOR + '12', children)
 			transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
 			transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
@@ -1771,12 +1770,11 @@ Transform:
 			transform = transform.replace(REPLACE_INDICATOR + '3', str(rotation.y))
 			transform = transform.replace(REPLACE_INDICATOR + '4', str(rotation.z))
 			transform = transform.replace(REPLACE_INDICATOR + '5', str(rotation.w))
-			transform = transform.replace(REPLACE_INDICATOR + '6', str(obj.location.x))
-			transform = transform.replace(REPLACE_INDICATOR + '7', str(obj.location.z))
-			transform = transform.replace(REPLACE_INDICATOR + '8', str(obj.location.y))
-			transform = transform.replace(REPLACE_INDICATOR + '9', str(obj.scale.x))
+			transform = transform.replace(REPLACE_INDICATOR + '6', str(location.x))
+			transform = transform.replace(REPLACE_INDICATOR + '7', str(location.z))
+			transform = transform.replace(REPLACE_INDICATOR + '8', str(location.y))
+			transform = transform.replace(REPLACE_INDICATOR + '9', str(scale.x))
 			self.gameObjectsAndComponentsText += transform + '\n'
-			self.transformIds.append(myTransformId)
 		else:
 			gameObject = self.PREFAB_INSTANCE_TEMPLATE
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '10', '[]')
@@ -1791,7 +1789,8 @@ Transform:
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '7', '[]')
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '8', '[]')
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '9', '[]')
-			self.transformIds.append(gameObjectId)
+		if parentTransformId == 0:
+			self.rootTransformsIds.append(myTransformId)
 		self.gameObjectsAndComponentsText += gameObject + '\n'
 		self.lastId += 1
 		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
@@ -1876,12 +1875,11 @@ Transform:
 				materialGuid = GetGuid(filePath)
 				open(filePath, 'w').write('guid: ' + materialGuid)
 				if self.unityVersionPath != '':
-					dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 					fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
-					indexOfFile = dataText.find(fileIdIndicator)
+					indexOfFile = self.dataText.find(fileIdIndicator)
 					indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
-					indexOfEndOfFileId = dataText.find(' ', indexOfFileId)
-					fileId = dataText[indexOfFileId : indexOfEndOfFileId]
+					indexOfEndOfFileId = self.dataText.find(' ', indexOfFileId)
+					fileId = self.dataText[indexOfFileId : indexOfEndOfFileId]
 				else:
 					fileId = '10303'
 				material = self.MATERIAL_TEMPLATE
@@ -1897,22 +1895,22 @@ Transform:
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
 		elif obj.type == 'CAMERA':
-			cameraObject = bpy.data.cameras[obj.name]
+			cameraObj = bpy.data.cameras[obj.name]
 			fovAxisMode = 0
-			if cameraObject.sensor_fit == 'HORIZONTAL':
+			if cameraObj.sensor_fit == 'HORIZONTAL':
 				fovAxisMode = 1
 			isOrthographic = 0
-			if cameraObject.type == 'ORTHO':
+			if cameraObj.type == 'ORTHO':
 				isOrthographic = 1
 			camera = self.CAMERA_TEMPLATE
 			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			camera = camera.replace(REPLACE_INDICATOR + '2', str(fovAxisMode))
-			camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObject.clip_start))
-			camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObject.clip_end))
-			camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObject.angle * (180.0 / PI)))
+			camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObj.clip_start))
+			camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObj.clip_end))
+			camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObj.angle * (180.0 / PI)))
 			camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
-			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObject.ortho_scale / 2))
+			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObj.ortho_scale / 2))
 			self.gameObjectsAndComponentsText += camera + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
@@ -1961,7 +1959,7 @@ Transform:
 		gameObjectIdAndTransformId = self.MakeEmptyObject(name, 31, parentTransformId)
 		self.AddMeshCollider (gameObjectIdAndTransformId[0], True, True, fileId, meshGuid)
 		return gameObjectIdAndTransformId
-
+	
 class UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
 	bl_label = 'Translate To Unreal'
@@ -2056,12 +2054,14 @@ def BuildTool (toolName : str):
 
 	subprocess.check_call(command)
 
-def ExportMesh (obj, folder : str) -> str:
+def ExportObject (obj, folder : str) -> str:
 	filePath = os.path.join(folder, obj.name + '.fbx')
 	filePath = filePath.replace(' ', '_')
 	bpy.ops.object.select_all(action='DESELECT')
 	bpy.context.view_layer.objects.active = obj
 	obj.select_set(True)
+	if obj.parent == None:
+		fbxExporter.fix_object(obj)
 	bpy.ops.export_scene.fbx(filepath=filePath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
 	return filePath
 
@@ -2070,12 +2070,13 @@ def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
 	_max = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
 	if obj.type == 'MESH':
 		for vertex in obj.data.vertices:
-			_min.x = min((obj.matrix_world @ vertex.co).x, _min.x)
-			_min.y = min((obj.matrix_world @ vertex.co).y, _min.y)
-			_min.z = min((obj.matrix_world @ vertex.co).z, _min.z)
-			_max.x = max((obj.matrix_world @ vertex.co).x, _max.x)
-			_max.y = max((obj.matrix_world @ vertex.co).y, _max.y)
-			_max.z = max((obj.matrix_world @ vertex.co).z, _max.z)
+			vertex = obj.matrix_world @ vertex.co
+			_min.x = min(vertex.x, _min.x)
+			_min.y = min(vertex.y, _min.y)
+			_min.z = min(vertex.z, _min.z)
+			_max.x = max(vertex.x, _max.x)
+			_max.y = max(vertex.y, _max.y)
+			_max.z = max(vertex.z, _max.z)
 	else:
 		print('GetObjectBounds is not implemented for object types besides meshes')
 	return ((_min + _max) / 2, _max - _min)
@@ -2543,7 +2544,7 @@ def register ():
 		setattr(bpy.types.Object, 'unreal_script' + str(i), bpy.props.PointerProperty(name='Attach Unreal script', type=bpy.types.Text, update=OnUpdateUnrealScripts))
 		setattr(bpy.types.Object, 'godotScript' + str(i), bpy.props.PointerProperty(name='Attach Godot script', type=bpy.types.Text, update=OnUpdateGodotScripts))
 		setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text, update=OnUpdateBevyScripts))
-	for obj in bpy.data.objects:
+	for obj in bpy.context.scene.objects:
 		attachedScripts = []
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
 			script = getattr(obj, 'unity_script' + str(i))
