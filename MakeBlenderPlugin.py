@@ -1932,6 +1932,10 @@ Transform:
 			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+			for property in obj.keys():
+				scriptIndicator = '_' + scriptName
+				if property.endswith(scriptIndicator):
+					script += '\n  ' + property[: -len(scriptName) - 1] + ': ' + str(obj[property])
 			self.gameObjectsAndComponentsText += script + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
@@ -2413,9 +2417,10 @@ def UpdateInspectorFields (textBlock):
 							value = True
 						else:
 							value = False
-					attachedScript = attachedScript.replace('.cs', '')
-					attachedScript = attachedScript.replace('.cpp', '')
-					attachedScript = attachedScript.replace('.h', '')
+					elif type == 'Color':
+						value = (1.0, 1.0, 1.0, 1.0)
+					elif type == 'GameObject' or type == 'Transform':
+						value = obj
 					propertyName = variableName + '_' + attachedScript
 					if propertyName not in obj.keys():
 						obj[propertyName] = value
