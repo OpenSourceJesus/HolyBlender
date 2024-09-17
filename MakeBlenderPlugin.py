@@ -282,6 +282,8 @@ TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
 MAX_SCRIPTS_PER_OBJECT = 16
+NULL_INT = 1234567936
+NULL_COLOR = [NULL_INT, NULL_INT, NULL_INT, NULL_INT]
 unrealCodePath = ''
 unrealCodePathSuffix = os.path.join('', 'Source', '')
 excludeItems = [ os.path.join('', 'Library') ]
@@ -295,8 +297,8 @@ attachedBevyScriptsDict = {}
 previousRunningScripts = []
 textBlocksTextsDict = {}
 previousTextBlocksTextsDict = {}
-propertiesDefaultValuesDict = {}
-propertiesTypesDict = {}
+varaiblesTypesDict = {}
+propertyNames = []
 childrenDict = {}
 
 class WorldPanel (bpy.types.Panel):
@@ -306,7 +308,7 @@ class WorldPanel (bpy.types.Panel):
 	bl_region_type = 'WINDOW'
 	bl_context = 'world'
 
-	def draw(self, context):
+	def draw (self, context):
 		self.layout.prop(context.world, 'unity_project_import_path')
 		self.layout.prop(context.world, 'unity_project_export_path')
 		self.layout.prop(context.world, 'unrealExportPath')
@@ -322,6 +324,18 @@ class WorldPanel (bpy.types.Panel):
 		self.layout.operator(HTMLExportButton.bl_idname, icon='CONSOLE')
 		self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
 
+class ScriptVariablesPanel (bpy.types.Panel):
+	bl_label = "Scripts Public Variables"
+	bl_idname = "OBJECT_PT_Script_Public_Variables"
+	bl_space_type = "PROPERTIES"
+	bl_region_type = "WINDOW"
+	bl_context = "object"
+
+	def draw (self, context):
+		for propertyName in propertyNames:
+			if varaiblesTypesDict[propertyName] == 'Color' and not Equals(getattr(context.active_object, propertyName), NULL_COLOR):
+				self.layout.prop(context.active_object, propertyName)
+
 class UnityScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_Unity_Scripts_Panel'
 	bl_label = 'HolyBlender Unity Scripts'
@@ -329,15 +343,15 @@ class UnityScriptsPanel (bpy.types.Panel):
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
 
-	def draw(self, context):
+	def draw (self, context):
 		self.layout.label(text='Attach Unity scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasProperty = getattr(context.active_object, 'unity_script' + str(i)) != None
-			if hasProperty or not foundUnassignedScript:
+			hasScript = getattr(context.active_object, 'unity_script' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
 				self.layout.prop(context.active_object, 'unity_script' + str(i))
 			if not foundUnassignedScript:
-				foundUnassignedScript = not hasProperty
+				foundUnassignedScript = not hasScript
 
 class UnrealScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_Unreal_Scripts_Panel'
@@ -346,15 +360,15 @@ class UnrealScriptsPanel (bpy.types.Panel):
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
 
-	def draw(self, context):
+	def draw (self, context):
 		self.layout.label(text='Attach Unreal scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasProperty = getattr(context.active_object, 'unreal_script' + str(i)) != None
-			if hasProperty or not foundUnassignedScript:
+			hasScript = getattr(context.active_object, 'unreal_script' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
 				self.layout.prop(context.active_object, 'unreal_script' + str(i))
 			if not foundUnassignedScript:
-				foundUnassignedScript = not hasProperty
+				foundUnassignedScript = not hasScript
 
 class GodotScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_Godot_Scripts_Panel'
@@ -363,15 +377,15 @@ class GodotScriptsPanel (bpy.types.Panel):
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
 
-	def draw(self, context):
+	def draw (self, context):
 		self.layout.label(text='Attach Godot scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasProperty = getattr(context.active_object, 'godotScript' + str(i)) != None
-			if hasProperty or not foundUnassignedScript:
+			hasScript = getattr(context.active_object, 'godotScript' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
 				self.layout.prop(context.active_object, 'godotScript' + str(i))
 			if not foundUnassignedScript:
-				foundUnassignedScript = not hasProperty
+				foundUnassignedScript = not hasScript
 
 class BevyScriptsPanel (bpy.types.Panel):
 	bl_idname = 'OBJECT_PT_bevy_Scripts_Panel'
@@ -380,15 +394,15 @@ class BevyScriptsPanel (bpy.types.Panel):
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
 
-	def draw(self, context):
+	def draw (self, context):
 		self.layout.label(text='Attach bevy scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasProperty = getattr(context.active_object, 'bevy_script' + str(i)) != None
-			if hasProperty or not foundUnassignedScript:
+			hasScript = getattr(context.active_object, 'bevy_script' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
 				self.layout.prop(context.active_object, 'bevy_script' + str(i))
 			if not foundUnassignedScript:
-				foundUnassignedScript = not hasProperty
+				foundUnassignedScript = not hasScript
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -1534,6 +1548,7 @@ Transform:
 	prefabGuidsDict = {}
 	isMakingScene = False
 	dataText = ''
+	gameObjectOrTrsVarDict = {}
 
 	@classmethod
 	def poll (cls, context):
@@ -1611,6 +1626,7 @@ Transform:
 		MakeFolderForFile (os.path.join(prefabsPath, ''))
 		self.isMakingScene = False
 		self.prefabGuidsDict.clear()
+		self.gameObjectOrTrsVarDict.clear()
 		for collection in bpy.data.collections:
 			self.gameObjectsAndComponentsText = ''
 			prefabPath = os.path.join(prefabsPath, collection.name + '.prefab')
@@ -1932,10 +1948,21 @@ Transform:
 			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
-			for property in obj.keys():
-				scriptIndicator = '_' + scriptName
-				if property.endswith(scriptIndicator):
-					script += '\n  ' + property[: -len(scriptName) - 1] + ': ' + str(obj[property])
+			hasPublicVariable = False
+			for propertyName in propertyNames:
+				scriptIndicator = scriptName + '_'
+				if propertyName.startswith(scriptIndicator):
+					propertyValue = getattr(obj, propertyName)
+					variableType = varaiblesTypesDict[propertyName]
+					if variableType == 'Color':
+						if not Equals(propertyValue, NULL_COLOR):
+							color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
+							script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
+					elif variableType == 'GameObject' or variableType == 'Transform':
+						self.gameObjectOrTrsVarDict[(obj, propertyName)] = propertyValue
+						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
+					else:
+						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
 			self.gameObjectsAndComponentsText += script + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
@@ -2049,7 +2076,8 @@ classes = [
 	UnrealScriptsPanel,
 	GodotScriptsPanel,
 	BevyScriptsPanel,
-	WorldPanel
+	WorldPanel,
+	ScriptVariablesPanel
 ]
 
 def BuildTool (toolName : str):
@@ -2334,6 +2362,7 @@ def OnUpdateUnityScripts (self, context):
 		script = getattr(self, 'unity_script' + str(i))
 		if script != None:
 			attachedScripts.append(script.name)
+			UpdateScriptVariables (script)
 	attachedUnityScriptsDict[self] = attachedScripts
 
 def OnUpdateUnrealScripts (self, context):
@@ -2343,6 +2372,7 @@ def OnUpdateUnrealScripts (self, context):
 		script = getattr(self, 'unreal_script' + str(i))
 		if script != None:
 			attachedScripts.append(script.name)
+			UpdateScriptVariables (script)
 	attachedUnrealScriptsDict[self] = attachedScripts
 
 def OnUpdateGodotScripts (self, context):
@@ -2352,6 +2382,7 @@ def OnUpdateGodotScripts (self, context):
 		script = getattr(self, 'godotScript' + str(i))
 		if script != None:
 			attachedScripts.append(script.name)
+			UpdateScriptVariables (script)
 	attachedGodotScriptsDict[self] = attachedScripts
 
 def OnUpdateBevyScripts (self, context):
@@ -2361,12 +2392,13 @@ def OnUpdateBevyScripts (self, context):
 		script = getattr(self, 'bevy_script' + str(i))
 		if script != None:
 			attachedScripts.append(script.name)
+			UpdateScriptVariables (script)
 	attachedBevyScriptsDict[self] = attachedScripts
 
-def UpdateInspectorFields (textBlock):
+def UpdateScriptVariables (textBlock):
 	global attachedUnityScriptsDict
-	global propertiesTypesDict
-	global propertiesDefaultValuesDict
+	global varaiblesTypesDict
+	global propertyNames
 	text = textBlock.as_string()
 	publicIndicator = 'public '
 	indexOfPublicIndicator = text.find(publicIndicator)
@@ -2392,42 +2424,75 @@ def UpdateInspectorFields (textBlock):
 		for obj in attachedUnityScriptsDict.keys():
 			for attachedScript in attachedUnityScriptsDict[obj]:
 				if attachedScript == textBlock.name:
-					value = ''
-					isSetToValue = False
-					if text[indexOfPotentialEndOfVariable] == '=':
-						indexOfSemicolon = text.find(';', indexOfPotentialEndOfVariable + 1)
-						value = text[indexOfPotentialEndOfVariable + 1 : indexOfSemicolon]
-						value = value.strip()
-						isSetToValue = True
-					if type == 'int':
-						if not isSetToValue:
-							value = 0
-						else:
-							value = int(value)
-					elif type == 'float' or type == 'double':
-						if not isSetToValue:
-							value = 0.0
-						else:
-							value = value.replace('f', '')
-							value = float(value)
-					elif type == 'bool':
-						if not isSetToValue:
-							value = False
-						elif value == 'true':
-							value = True
-						else:
-							value = False
-					elif type == 'Color':
-						value = (1.0, 1.0, 1.0, 1.0)
-					elif type == 'GameObject' or type == 'Transform':
-						value = obj
-					propertyName = variableName + '_' + attachedScript
-					if propertyName not in obj.keys():
-						obj[propertyName] = value
-						propertiesDefaultValuesDict[variableName] = value
-					else:
-						propertiesDefaultValuesDict[variableName] = obj[propertyName]
-					propertiesTypesDict[variableName] = type
+					propertyName = attachedScript + '_' + variableName
+					if propertyName not in propertyNames:
+						value = ''
+						isSetToValue = False
+						if text[indexOfPotentialEndOfVariable] == '=':
+							indexOfSemicolon = text.find(';', indexOfPotentialEndOfVariable + 1)
+							value = text[indexOfPotentialEndOfVariable + 1 : indexOfSemicolon]
+							value = value.strip()
+							isSetToValue = True
+						if type == 'int':
+							if not isSetToValue:
+								value = 0
+							else:
+								try:
+									i = 0.0
+									i = value.replace('f', '')
+									i = int(i)
+									value = i
+								except:
+									print('Couldn\'t find the value' + variableName +  ' should be set to')
+							setattr(bpy.types.Object, propertyName, bpy.props.IntProperty(name=propertyName, default=NULL_INT))
+						elif type == 'float' or type == 'double':
+							if not isSetToValue:
+								value = 0.0
+							else:
+								try:
+									f = value.replace('f', '')
+									f = float(f)
+									value = f
+								except:
+									print('Couldn\'t find the value' + variableName +  ' should be set to')
+							setattr(bpy.types.Object, propertyName, bpy.props.FloatProperty(name=propertyName, default=NULL_INT))
+						elif type == 'bool':
+							if not isSetToValue:
+								value = False
+							elif value == 'true':
+								value = True
+							else:
+								value = False
+							setattr(bpy.types.Object, propertyName, bpy.props.BoolProperty(name=propertyName, default=NULL_INT))
+						elif type == 'Color':
+							color = [1, 1, 1, 1]
+							if isSetToValue:
+								try:
+									colorIndicator = 'new Color('
+									indexOfComma = value.find(',')
+									color[0] = float(value[len(colorIndicator) : indexOfComma].replace('f', ''))
+									indexOfComponentEnd = value.find(',', indexOfComma)
+									color[1] = float(value[indexOfComma + 1 : indexOfComponentEnd].replace('f', ''))
+									indexOfComma = indexOfComponentEnd
+									indexOfComponentEnd = value.find(',', indexOfComma)
+									gaveAlpha = indexOfComponentEnd != -1
+									if not gaveAlpha:
+										indexOfComponentEnd = value.find(')')
+									color[2] = float(value[indexOfComma + 1 : indexOfComponentEnd].replace('f', ''))
+									if gaveAlpha:
+										indexOfComma = indexOfComponentEnd
+										indexOfComponentEnd = value.find(')')
+										color[3] = float(value[indexOfComma + 1 : indexOfComponentEnd].replace('f', ''))
+								except:
+									print('Couldn\'t find the value' + variableName +  ' should be set to')
+							value = color
+							setattr(bpy.types.Object, propertyName, bpy.props.FloatVectorProperty(name=propertyName, size=4, subtype='COLOR', soft_min=0, soft_max=1, default=NULL_COLOR))
+						elif type == 'GameObject' or type == 'Transform':
+							value = obj
+							setattr(bpy.types.Object, propertyName, bpy.props.PointerProperty(name=propertyName, type=bpy.types.Object))
+						setattr(obj, propertyName, value)
+						propertyNames.append(propertyName)
+					varaiblesTypesDict[propertyName] = type
 					shouldBreak = True
 					break
 			if shouldBreak:
@@ -2446,7 +2511,7 @@ def OnRedrawView ():
 			continue
 		textBlocksTextsDict[textBlock.name] = textBlock.as_string()
 		if textBlock.name not in previousTextBlocksTextsDict or previousTextBlocksTextsDict[textBlock.name] != textBlock.as_string():
-			UpdateInspectorFields (textBlock)
+			UpdateScriptVariables (textBlock)
 	previousTextBlocksTextsDict = textBlocksTextsDict.copy()
 	bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
 	bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
@@ -2472,14 +2537,8 @@ def OnRedrawView ():
 						print(command)
 
 						subprocess.check_call(command)
+
 					runCSInBlender.Run (filePath, obj)
-	# id = 0
-	# size = 32
-	# blf.size(id, size)
-	# blf.color(id, 0, 1, 0, 0.8)
-	# x = 0
-	# y = 0
-	# blf.draw(id, 'Hello World!')
 
 def register ():
 	MakeFolderForFile ('/tmp/')
@@ -2574,10 +2633,7 @@ def register ():
 			if script != None:
 				attachedScripts.append(script.name)
 		attachedBevyScriptsDict[obj] = attachedScripts
-	handle = bpy.types.SpaceView3D.draw_handler_add(
-		OnRedrawView,
-		tuple([]),
-		'WINDOW', 'POST_PIXEL')
+	bpy.types.SpaceView3D.draw_handler_add(OnRedrawView, tuple([]), 'WINDOW', 'POST_PIXEL')
 	bpy.ops.blender_plugin.start()
 
 def unregister ():
