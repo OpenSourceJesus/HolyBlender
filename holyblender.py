@@ -27,9 +27,23 @@ if gi:
 			btn.connect("clicked", self.on_open_blender)
 			vbox.pack_start(btn, False, False, 0)
 
+			btn = Gtk.Button(label='Make Character')
+			btn.connect("clicked", self.on_open_ink)
+			vbox.pack_start(btn, False, False, 0)
+
 		def on_open_blender(self, btn):
-			#self.close()
 			open_holyblender()
+		def on_open_ink(self, btn):
+			open_ink3d()
+
+def open_ink3d():
+	if not os.path.isdir('./inkscape2019'):
+		cmd = 'git clone --depth 1 https://github.com/brentharts/inkscape2019.git'
+		print(cmd)
+		subprocess.check_call(cmd.split())
+	cmd = ['python3', './inkscape.py']
+	print(cmd)
+	subprocess.check_call(cmd, cwd='./inkscape2019')
 
 def open_holyblender():
 	cmd = ['python3', './BlenderPlugin.py']
