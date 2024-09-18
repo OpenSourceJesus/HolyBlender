@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, subprocess, atexit
+import os, sys, subprocess, atexit, json
 
 try:
 	import gi
@@ -36,12 +36,49 @@ if gi:
 		def on_open_ink(self, btn):
 			open_ink3d()
 
+TB_FUNCS = '''
+static void on_click_unity_export(GtkWidget *widget, gpointer data) {
+	std::cout << "clicked unity button" << std::endl;
+	inkscape_save_temp();
+	__inkstate__ = 3000;
+}
+'''
+
+TB = '''
+	{
+		auto btn = gtk_button_new_with_label("Unity");
+		gtk_grid_attach(GTK_GRID(grid), btn, 0, 1, 1, 1);
+		g_signal_connect(btn, "clicked", G_CALLBACK(on_click_unity_export), NULL);
+	}
+
+'''
+
+TB_SETUP = '''
+def on_unity_event():
+	blend = ink2blend()
+	cmd = ["python3", "./BlenderPlugin.py", blend]
+	print(cmd)
+	subprocess.check_call(cmd, cwd="..")
+
+PLUGIN_EVENTS[3000] = on_unity_event
+
+'''
+
+PLUGINK = {
+	'toolbar_funcs':TB_FUNCS,
+	'toolbar' : TB,
+	'python'  : TB_SETUP,
+}
+
 def open_ink3d():
 	if not os.path.isdir('./inkscape2019'):
 		cmd = 'git clone --depth 1 https://github.com/brentharts/inkscape2019.git'
 		print(cmd)
 		subprocess.check_call(cmd.split())
-	cmd = ['python3', './inkscape.py']
+
+	tmp = '/tmp/holyblender.plugink'
+	open(tmp, 'w').write(json.dumps(PLUGINK))
+	cmd = ['python3', './inkscape.py', tmp]
 	print(cmd)
 	subprocess.check_call(cmd, cwd='./inkscape2019')
 
