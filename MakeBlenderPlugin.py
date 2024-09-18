@@ -17,9 +17,14 @@ print(gltf_auto_export)
 bpy.ops.preferences.addon_enable(module='bevy_components')
 bpy.ops.preferences.addon_enable(module='gltf_auto_export')
 sys.path.append(os.path.join(__thisdir, 'blender-to-unity-fbx-exporter'))
-import blender_to_unity_fbx_exporter as fbxExporter
-print(fbxExporter)
-bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
+
+try:
+	import blender_to_unity_fbx_exporter as fbxExporter
+	print(fbxExporter)
+except:
+	fbxExporter = None
+if fbxExporter:
+	bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
 
 sys.path.append(os.path.join(__thisdir, 'Extensions'))
 from SystemExtensions import *
