@@ -300,6 +300,7 @@ previousTextBlocksTextsDict = {}
 varaiblesTypesDict = {}
 propertyNames = []
 childrenDict = {}
+gameObjectAndTrsVarsDict = {}
 
 class WorldPanel (bpy.types.Panel):
 	bl_idname = 'WORLD_PT_World_Panel'
@@ -333,7 +334,13 @@ class ScriptVariablesPanel (bpy.types.Panel):
 
 	def draw (self, context):
 		for propertyName in propertyNames:
-			if varaiblesTypesDict[propertyName] == 'Color' and not Equals(getattr(context.active_object, propertyName), NULL_COLOR):
+			if varaiblesTypesDict[propertyName] == 'Color':
+				if not Equals(getattr(context.active_object, propertyName), NULL_COLOR):
+					self.layout.prop(context.active_object, propertyName)
+			elif varaiblesTypesDict[propertyName] == 'GameObject' or varaiblesTypesDict[propertyName] == 'Transform':
+				if propertyName in gameObjectAndTrsVarsDict[context.active_object]:
+					self.layout.prop(context.active_object, propertyName)
+			else:
 				self.layout.prop(context.active_object, propertyName)
 
 class UnityScriptsPanel (bpy.types.Panel):
@@ -1548,7 +1555,10 @@ Transform:
 	prefabGuidsDict = {}
 	isMakingScene = False
 	dataText = ''
-	gameObjectOrTrsVarDict = {}
+	gameObjectAndTrsVarsDict = {}
+	gameObjectIdsDict = {}
+	trsIdsDict = {}
+	exportedObjs = []
 
 	@classmethod
 	def poll (cls, context):
@@ -1607,15 +1617,6 @@ Transform:
 			CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
 			CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
 			CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(scriptsPath, 'StringExtensions.cs'))
-			data = ''
-			for obj in bpy.context.scene.objects:
-				rotation = obj.matrix_local.to_euler()
-				rotation.x -= PI / 2
-				# rotation.z += PI
-				# if obj.type == 'CAMERA':
-				# 	rotation.z += PI
-				data += obj.name + ', ' + str(math.degrees(rotation.x)) + ', ' + str(math.degrees(rotation.y)) + ', ' + str(math.degrees(rotation.z)) + '\n'
-			open(os.path.join('/tmp', 'HolyBlender Data (BlenderToUnity)'), 'wb').write(data.encode('utf-8'))
 			command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
 			print(command)
 			
@@ -1626,14 +1627,18 @@ Transform:
 		MakeFolderForFile (os.path.join(prefabsPath, ''))
 		self.isMakingScene = False
 		self.prefabGuidsDict.clear()
-		self.gameObjectOrTrsVarDict.clear()
+		self.gameObjectAndTrsVarsDict.clear()
+		self.gameObjectIdsDict.clear()
+		self.trsIdsDict.clear()
+		self.exportedObjs.clear()
 		for collection in bpy.data.collections:
 			self.gameObjectsAndComponentsText = ''
 			prefabPath = os.path.join(prefabsPath, collection.name + '.prefab')
 			self.prefabGuidsDict[collection.name] = GetGuid(prefabPath)
 			open(prefabPath + '.meta', 'w').write('guid: ' + self.prefabGuidsDict[collection.name])
 			for obj in collection.objects:
-				self.MakeObject (obj)
+				if GetObjectId(obj) not in self.exportedObjs:
+					self.MakeObject (obj)
 			prefab = self.INIT_YAML_TEXT
 			prefab += '\n' + self.gameObjectsAndComponentsText
 			open(prefabPath, 'w').write(prefab)
@@ -1641,23 +1646,30 @@ Transform:
 		self.gameObjectsAndComponentsText = ''
 		self.rootTransformsIds = []
 		for obj in bpy.context.scene.objects:
-			if obj.parent == None:
+			if obj.parent == None and GetObjectId(obj) not in self.exportedObjs:
 				self.MakeObject (obj)
 		scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
 		sendAndRecieveServerEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveServerEvents.cs')
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveServerEvents.cs'), sendAndRecieveServerEventsScriptPath)
-		gameObjectIdAndTransformId = self.MakeEmptyObject('Send And Recieve Server Events')
+		gameObjectIdAndTrsId = self.MakeEmptyObject('Send And Recieve Server Events')
 		sendAndRecieveServerEventsScriptMetaPath = sendAndRecieveServerEventsScriptPath + '.meta'
 		scriptGuid = GetGuid(sendAndRecieveServerEventsScriptMetaPath)
 		open(sendAndRecieveServerEventsScriptMetaPath, 'w').write('guid: ' + scriptGuid)
 		script = self.SCRIPT_TEMPLATE
 		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTransformId[0]))
+		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTrsId[0]))
 		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
 		self.gameObjectsAndComponentsText += script + '\n'
 		self.componentIds.append(self.lastId)
 		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', self.COMPONENT_TEMPLATE.replace(REPLACE_INDICATOR, str(self.lastId)))
+		for key in self.gameObjectAndTrsVarsDict:
+			if varaiblesTypesDict[key[1]] == 'GameObject':
+				self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR, '{fileID: ' + str(self.gameObjectIdsDict[self.gameObjectAndTrsVarsDict[key]]) + '}')
+			else:# elif varaiblesTypesDict[key[1]] == 'Transform':
+				for obj in self.trsIdsDict:
+					print(obj)
+				self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR, '{fileID: ' + str(self.trsIdsDict[self.gameObjectAndTrsVarsDict[key]]) + '}')
 		sceneRootsText = ''
 		for transformId in self.rootTransformsIds:
 			sceneRoot = self.SCENE_ROOT_TEMPLATE
@@ -1729,8 +1741,9 @@ Transform:
 		self.lastId += 2
 		children = ''
 		for childObj in obj.children:
-			transformId = self.MakeObject(childObj, myTransformId)
-			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
+			if GetObjectId(childObj) not in self.exportedObjs:
+				transformId = self.MakeObject(childObj, myTransformId)
+				children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
 		if obj.type == 'MESH':
 			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx.meta'
 			meshGuid = GetGuid(filePath)
@@ -1742,8 +1755,8 @@ Transform:
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = meshDatas.find(' ', indexOfFileId)
 				meshFileId = meshDatas[indexOfFileId : indexOfEndOfFileId]
-			gameObjectIdAndTransformId = self.MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
-			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(gameObjectIdAndTransformId[1]))
+			gameObjectIdAndTrsId = self.MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
+			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(gameObjectIdAndTrsId[1]))
 		elif len(obj.children) == 0:
 			children = '[]'
 		if prefabName == '' or not self.isMakingScene:
@@ -1757,15 +1770,6 @@ Transform:
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
 			self.lastId += 1
-			# rotation = mathutils.Quaternion((0, 0, 0, 1))
-			# lines = self.dataText.split('\n')
-			# for line in lines:
-			# 	if line.startswith(obj.name):
-			# 		rotationComponents = line.split(', ')[1 :]
-			# 		rotation.x = float(rotationComponents[0])
-			# 		rotation.y = float(rotationComponents[1])
-			# 		rotation.z = float(rotationComponents[2])
-			# 		rotation.w = float(rotationComponents[3])
 			location = obj.matrix_local.translation
 			rotation = obj.matrix_local.to_euler()
 			if obj.type != 'MESH':
@@ -1959,7 +1963,7 @@ Transform:
 							color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
 							script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
 					elif variableType == 'GameObject' or variableType == 'Transform':
-						self.gameObjectOrTrsVarDict[(obj, propertyName)] = propertyValue
+						self.gameObjectAndTrsVarsDict[(obj, propertyName)] = propertyValue
 						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
 					else:
 						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
@@ -1972,6 +1976,9 @@ Transform:
 			component = component.replace(REPLACE_INDICATOR, str(componentId))
 			self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + self.gameObjectsAndComponentsText[indexOfComponentsList :]
 		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
+		self.gameObjectIdsDict[obj] = gameObjectId
+		self.trsIdsDict[obj] = myTransformId
+		self.exportedObjs.append(GetObjectId(obj))
 		return myTransformId
 
 	def AddMeshCollider (self, gameObjectId : int, isTirgger : bool, isConvex : bool, fileId : str, meshGuid : str):
@@ -1987,9 +1994,9 @@ Transform:
 		self.lastId += 1
 
 	def MakeClickableChild (self, name : str, fileId : str, meshGuid : str, parentTransformId = 0) -> (int, int):
-		gameObjectIdAndTransformId = self.MakeEmptyObject(name, 31, parentTransformId)
-		self.AddMeshCollider (gameObjectIdAndTransformId[0], True, True, fileId, meshGuid)
-		return gameObjectIdAndTransformId
+		gameObjectAndTrsId = self.MakeEmptyObject(name, 31, parentTransformId)
+		self.AddMeshCollider (gameObjectAndTrsId[0], True, True, fileId, meshGuid)
+		return gameObjectAndTrsId
 	
 class UnrealTranslateButton (bpy.types.Operator):
 	bl_idname = 'unreal.translate'
@@ -2112,6 +2119,13 @@ def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
 	else:
 		print('GetObjectBounds is not implemented for object types besides meshes')
 	return ((_min + _max) / 2, _max - _min)
+
+def GetObjectId (obj):
+	id = str(obj)
+	idIndicator = 'at '
+	id = id[id.rfind(idIndicator) + len(idIndicator) :]
+	print('YAY' + id)
+	return id
 
 def GetGuid (filePath : str):
 	return hashlib.md5(filePath.encode('utf-8')).hexdigest()
@@ -2397,6 +2411,7 @@ def OnUpdateBevyScripts (self, context):
 
 def UpdateScriptVariables (textBlock):
 	global attachedUnityScriptsDict
+	global gameObjectAndTrsVarsDict
 	global varaiblesTypesDict
 	global propertyNames
 	text = textBlock.as_string()
@@ -2490,6 +2505,10 @@ def UpdateScriptVariables (textBlock):
 						elif type == 'GameObject' or type == 'Transform':
 							value = obj
 							setattr(bpy.types.Object, propertyName, bpy.props.PointerProperty(name=propertyName, type=bpy.types.Object))
+							if obj in gameObjectAndTrsVarsDict:
+								gameObjectAndTrsVarsDict[obj].append(propertyName)
+							else:
+								gameObjectAndTrsVarsDict[obj] = [propertyName]
 						setattr(obj, propertyName, value)
 						propertyNames.append(propertyName)
 					varaiblesTypesDict[propertyName] = type

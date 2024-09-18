@@ -1,4 +1,4 @@
-import subprocess, sys, os
+import subprocess, sys, os, install_UnityExport
 os.system('rm /tmp/HolyBlender*')
 monogame = netghost = False
 

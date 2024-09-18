@@ -11,15 +11,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 		string outputText = "";
 		outputText += GetAssetsInfo(".fbx", typeof(Mesh));
 		outputText += GetAssetsInfo(".mat", typeof(Material));
-		string outputPath = "/tmp/HolyBlender Data (BlenderToUnity)";
-		string[] lines = File.ReadAllLines(outputPath);
-		foreach (string line in lines)
-		{
-			string[] data = line.Split(", ");
-			Quaternion rotation = Quaternion.Euler(float.Parse(data[1]), float.Parse(data[2]), float.Parse(data[3]));
-			outputText += '\n' + data[0] + ", " + rotation.x + ", " + rotation.y + ", " + rotation.z + ", " + rotation.w;
-		}
-		File.WriteAllText(outputPath, outputText);
+		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
 	}
 
 	static string GetAssetsInfo (string fileExtension, Type assetType)
