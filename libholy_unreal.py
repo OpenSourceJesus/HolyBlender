@@ -17,7 +17,7 @@ for i in range(MAX_SCRIPTS_PER_OBJECT):
 
 @bpy.utils.register_class
 class WorldPanel (bpy.types.Panel):
-	bl_idname = 'WORLD_PT_World_Panel'
+	bl_idname = 'WORLD_PT_WorldUnreal_Panel'
 	bl_label = 'HolyUnreal'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
