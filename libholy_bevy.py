@@ -88,7 +88,7 @@ class BevyTranslateButton (bpy.types.Operator):
 
 @bpy.utils.register_class
 class WorldPanel(bpy.types.Panel):
-	bl_idname = 'WORLD_PT_World_Panel'
+	bl_idname = 'WORLD_PT_WorldBevy_Panel'
 	bl_label = 'HolyBevy'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
