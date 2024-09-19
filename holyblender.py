@@ -49,6 +49,12 @@ static void on_click_unreal_export(GtkWidget *widget, gpointer data) {
 	__inkstate__ = 3001;
 }
 
+static void on_click_bevy_export(GtkWidget *widget, gpointer data) {
+	std::cout << "clicked unreal button" << std::endl;
+	inkscape_save_temp();
+	__inkstate__ = 3001;
+}
+
 '''
 
 TB = '''
@@ -62,25 +68,37 @@ TB = '''
 		gtk_grid_attach(GTK_GRID(grid), btn, 0, 4, 1, 1);
 		g_signal_connect(btn, "clicked", G_CALLBACK(on_click_unreal_export), NULL);
 	}
+	{
+		auto btn = gtk_button_new_with_label("Bevy");
+		gtk_grid_attach(GTK_GRID(grid), btn, 0, 5, 1, 1);
+		g_signal_connect(btn, "clicked", G_CALLBACK(on_click_bevy_export), NULL);
+	}
 
 '''
 
 TB_SETUP = '''
 def on_unity_event():
 	blend = ink2blend()
-	cmd = ["python3", "./libholy_unity.py", blend]
+	cmd = ["blender", blend, '--python', "./libholy_unity.py"]
 	print(cmd)
 	subprocess.check_call(cmd, cwd="..")
 
 def on_unreal_event():
 	blend = ink2blend()
-	cmd = ["python3", "./libholy_unreal.py", blend]
+	cmd = ["blender", blend, '--python', "./libholy_unreal.py"]
+	print(cmd)
+	subprocess.check_call(cmd, cwd="..")
+
+def on_bevy_event():
+	blend = ink2blend()
+	cmd = ["blender", blend, '--python', "./libholy_bevy.py"]
 	print(cmd)
 	subprocess.check_call(cmd, cwd="..")
 
 
 PLUGIN_EVENTS[3000] = on_unity_event
 PLUGIN_EVENTS[3001] = on_unreal_event
+PLUGIN_EVENTS[3002] = on_bevy_event
 
 '''
 
