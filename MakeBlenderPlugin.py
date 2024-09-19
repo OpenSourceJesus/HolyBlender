@@ -1565,6 +1565,19 @@ Transform:
 		return True
 	
 	def execute (self, context):
+		unityVersionsPath = os.path.expanduser(os.path.join('~', 'Unity', 'Hub', 'Editor'))
+		self.unityVersionPath = ''
+		if os.path.isdir(unityVersionsPath):
+			unityVersions = os.listdir(unityVersionsPath)
+			for unityVersion in unityVersions:
+				self.unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
+				if os.path.isfile(self.unityVersionPath):
+					self.unityVersionPath = self.unityVersionPath
+					break
+		if self.unityVersionPath == '':
+			print('No Unity version installed')
+			return
+		__thisdir = os.path.split(os.path.abspath(__file__))[0]
 		self.lastId = 5
 		self.projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
 		if not os.path.isdir(self.projectExportPath):
@@ -1603,24 +1616,16 @@ Transform:
 				MakeFolderForFile (newSpritePath)
 				sprite = open(spritePath, 'rb').read()
 				open(newSpritePath, 'wb').write(sprite)
-		unityVersionsPath = os.path.expanduser('~/Unity/Hub/Editor')
-		self.unityVersionPath = ''
-		if os.path.isdir(unityVersionsPath):
-			unityVersions = os.listdir(unityVersionsPath)
-			for unityVersion in unityVersions:
-				self.unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
-				if os.path.isfile(self.unityVersionPath):
-					self.unityVersionPath = self.unityVersionPath
-					break
-		if self.unityVersionPath != '':
-			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
-			CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
-			CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
-			CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(scriptsPath, 'StringExtensions.cs'))
-			command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
-			print(command)
-			
-			subprocess.check_call(command.split())
+		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
+		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
+		CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
+		CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(scriptsPath, 'StringExtensions.cs'))
+		command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
+		print(command)
+		
+		subprocess.check_call(command.split())
+
+		os.system('cp -r ' + os.path.join(__thisdir, 'UnityGLTF') + ' ' + os.path.join(self.projectExportPath, 'Assets', 'UnityGLTF'))
 
 		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources')

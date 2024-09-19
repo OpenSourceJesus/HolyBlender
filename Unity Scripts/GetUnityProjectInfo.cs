@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using UnityEngine;
 using UnityEditor;
+using UnityEditor.PackageManager;
+using UnityEditor.PackageManager.Requests;
 using Object = UnityEngine.Object;
 
 public class GetUnityProjectInfo : MonoBehaviour
@@ -12,6 +14,22 @@ public class GetUnityProjectInfo : MonoBehaviour
 		outputText += GetAssetsInfo(".fbx", typeof(Mesh));
 		outputText += GetAssetsInfo(".mat", typeof(Material));
 		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
+		AddPackage ("com.unity.mathematics");
+		AddPackage ("com.unity.nuget.newtonsoft-json");
+		AddPackage ("com.unity.shadergraph");
+		AddPackage ("com.unity.test-framework");
+	}
+
+	static void AddPackage (string name)
+	{
+		AddRequest addRequest = Client.Add(name);
+		while (!addRequest.IsCompleted)
+		{
+		}
+		if (addRequest.Error == null)
+			print("Package " + name + " added");
+		else
+			print(addRequest.Error);
 	}
 
 	static string GetAssetsInfo (string fileExtension, Type assetType)
