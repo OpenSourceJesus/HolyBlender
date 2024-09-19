@@ -1092,7 +1092,7 @@ Transform:
 
 @bpy.utils.register_class
 class WorldPanel(bpy.types.Panel):
-	bl_idname = 'WORLD_PT_World_Panel'
+	bl_idname = 'WORLD_PT_WorldUnity_Panel'
 	bl_label = 'HolyUnity'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
