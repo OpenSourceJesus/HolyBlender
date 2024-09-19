@@ -13,19 +13,19 @@ bpy.types.World.godotExportPath = bpy.props.StringProperty(
 )
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):
-	setattr(bpy.types.Object, 'godotScript' + str(i), bpy.props.PointerProperty(name='Attach Godot script', type=bpy.types.Text, update=OnUpdateGodotScripts))
+	setattr(bpy.types.Object, 'godotScript' + str(i), bpy.props.PointerProperty(name='Attach Godot script', type=bpy.types.Text))
 
 
 @bpy.utils.register_class
 class WorldPanel(bpy.types.Panel):
-	bl_idname = 'WORLD_PT_World_Panel'
+	bl_idname = 'WORLD_PT_WorldGodot_Panel'
 	bl_label = 'HolyGodot'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
 	bl_context = 'world'
 	def draw (self, context):
 		self.layout.prop(context.world, 'godotExportPath')
-		self.layout.operator(GodotExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator('godot.export', icon='CONSOLE')
 
 
 @bpy.utils.register_class
