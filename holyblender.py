@@ -42,13 +42,25 @@ static void on_click_unity_export(GtkWidget *widget, gpointer data) {
 	inkscape_save_temp();
 	__inkstate__ = 3000;
 }
+
+static void on_click_unreal_export(GtkWidget *widget, gpointer data) {
+	std::cout << "clicked unreal button" << std::endl;
+	inkscape_save_temp();
+	__inkstate__ = 3001;
+}
+
 '''
 
 TB = '''
 	{
 		auto btn = gtk_button_new_with_label("Unity");
-		gtk_grid_attach(GTK_GRID(grid), btn, 0, 1, 1, 1);
+		gtk_grid_attach(GTK_GRID(grid), btn, 0, 3, 1, 1);
 		g_signal_connect(btn, "clicked", G_CALLBACK(on_click_unity_export), NULL);
+	}
+	{
+		auto btn = gtk_button_new_with_label("Unreal");
+		gtk_grid_attach(GTK_GRID(grid), btn, 0, 4, 1, 1);
+		g_signal_connect(btn, "clicked", G_CALLBACK(on_click_unreal_export), NULL);
 	}
 
 '''
@@ -56,11 +68,19 @@ TB = '''
 TB_SETUP = '''
 def on_unity_event():
 	blend = ink2blend()
-	cmd = ["python3", "./BlenderPlugin.py", blend]
+	cmd = ["python3", "./libholy_unity.py", blend]
 	print(cmd)
 	subprocess.check_call(cmd, cwd="..")
 
+def on_unreal_event():
+	blend = ink2blend()
+	cmd = ["python3", "./libholy_unreal.py", blend]
+	print(cmd)
+	subprocess.check_call(cmd, cwd="..")
+
+
 PLUGIN_EVENTS[3000] = on_unity_event
+PLUGIN_EVENTS[3001] = on_unreal_event
 
 '''
 
@@ -79,6 +99,8 @@ def open_ink3d():
 	tmp = '/tmp/holyblender.plugink'
 	open(tmp, 'w').write(json.dumps(PLUGINK))
 	cmd = ['python3', './inkscape.py', tmp]
+	if '--dev' in sys.argv:
+		cmd += ['--dev', '--rebuild']
 	print(cmd)
 	subprocess.check_call(cmd, cwd='./inkscape2019')
 
