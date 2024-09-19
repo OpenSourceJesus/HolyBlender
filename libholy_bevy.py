@@ -5,6 +5,11 @@ _thisdir = os.path.split(os.path.abspath(__file__))[0]
 if _thisdir not in sys.path: sys.path.append(_thisdir)
 from libholyblender import *
 
+if not os.path.isdir( os.path.join(_thisdir, './Blender_bevy_components_workflow') ):
+	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
+	print(cmd)
+	subprocess.check_call(cmd.split(), cwd=_thisdir)
+
 sys.path.append(os.path.join(_thisdir, 'Blender_bevy_components_workflow/tools'))
 print(sys.path)
 import bevy_components
