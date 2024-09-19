@@ -768,23 +768,7 @@ def Do (attachedScriptsDict = {}):
 	for scripts in attachedScriptsDict.values():
 		for script in scripts:
 			attachedScripts.append(script)
-	toolsPath = os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools')
-	if os.path.isdir(toolsPath):
-		addonsPath = os.path.expanduser('~/.config/blender/4.1/scripts/addons')
-		if not os.path.isdir(addonsPath):
-			MakeFolderForFile (addonsPath + '/')
 
-		os.system('cd ' + toolsPath + '''
-			python3 internal_generate_release_zips.py''')
-		if not os.path.isdir(addonsPath + '/bevy_components'):
-			os.system('unzip ' + toolsPath + '/bevy_components.zip -d ' + addonsPath)
-		if not os.path.isdir(addonsPath + '/gltf_auto_export'):
-			os.system('unzip ' + toolsPath + '/gltf_auto_export.zip -d ' + addonsPath)
-
-		bpy.ops.preferences.addon_enable(module='bevy_components')
-		bpy.ops.preferences.addon_enable(module='gltf_auto_export')
-	# sys.path.append('~/HolyBlender/Blender_bevy_components_workflow/tools/bevy_components')
-	# bpy.ops.preferences.addon_enable(module='io_import_images_as_planes')
 	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 	if fromUnity:
 		codeFilesPaths = GetAllFilePathsOfType(UNITY_PROJECT_PATH, '.cs')
