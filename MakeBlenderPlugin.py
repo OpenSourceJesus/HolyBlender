@@ -6,10 +6,9 @@ for arg in sys.argv:
 	elif type(user_args) is list: user_args.append(arg)
 if user_args: print('user_args:', user_args)
 
-_thisdir = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(_thisdir)
-import libholy_bevy, libholy_godot, libholy_unity, libholy_unreal, libholyblender
-sys.path.append(os.path.join(_thisdir, 'Blender_bevy_components_workflow/tools'))
+__thisdir = os.path.split(os.path.abspath(__file__))[0]
+sys.path.append(__thisdir)
+sys.path.append(os.path.join(__thisdir, 'Blender_bevy_components_workflow/tools'))
 print(sys.path)
 import bevy_components
 print(bevy_components)
@@ -17,14 +16,23 @@ import gltf_auto_export
 print(gltf_auto_export)
 bpy.ops.preferences.addon_enable(module='bevy_components')
 bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+sys.path.append(os.path.join(__thisdir, 'blender-to-unity-fbx-exporter'))
 
-sys.path.append(os.path.join(_thisdir, 'Extensions'))
+try:
+	import blender_to_unity_fbx_exporter as fbxExporter
+	print(fbxExporter)
+except:
+	fbxExporter = None
+if fbxExporter:
+	bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
+
+sys.path.append(os.path.join(__thisdir, 'Extensions'))
 from SystemExtensions import *
 from StringExtensions import *
 from CollectionExtensions import *
 
-if os.path.isdir(os.path.join(_thisdir,'Net-Ghost-SE')):
-	sys.path.append(os.path.join(_thisdir,'Net-Ghost-SE'))
+if os.path.isdir(os.path.join(__thisdir,'Net-Ghost-SE')):
+	sys.path.append(os.path.join(__thisdir,'Net-Ghost-SE'))
 	import ghostblender
 	print(ghostblender)
 else:
@@ -272,10 +280,10 @@ HTTPD_ACTIVE = True
 bpy.ops.httpd.run()'''
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
-UNITY_SCRIPTS_PATH = os.path.join(_thisdir, 'Unity Scripts')
-GODOT_SCRIPTS_PATH = os.path.join(_thisdir, 'Godot Scripts')
-EXTENSIONS_PATH = os.path.join(_thisdir, 'Extensions')
-TEMPLATES_PATH = os.path.join(_thisdir, 'Templates')
+UNITY_SCRIPTS_PATH = os.path.join(__thisdir, 'Unity Scripts')
+GODOT_SCRIPTS_PATH = os.path.join(__thisdir, 'Godot Scripts')
+EXTENSIONS_PATH = os.path.join(__thisdir, 'Extensions')
+TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
 MAX_SCRIPTS_PER_OBJECT = 16
@@ -298,6 +306,115 @@ varaiblesTypesDict = {}
 propertyNames = []
 childrenDict = {}
 gameObjectAndTrsVarsDict = {}
+
+class WorldPanel (bpy.types.Panel):
+	bl_idname = 'WORLD_PT_World_Panel'
+	bl_label = 'HolyBlender Export'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'world'
+
+	def draw (self, context):
+		self.layout.prop(context.world, 'unity_project_import_path')
+		self.layout.prop(context.world, 'unity_project_export_path')
+		self.layout.prop(context.world, 'unrealExportPath')
+		self.layout.prop(context.world, 'godotExportPath')
+		self.layout.prop(context.world, 'bevy_project_path')
+		self.layout.prop(context.world, 'htmlExportPath')
+		self.layout.prop(context.world, 'holyserver')
+		self.layout.prop(context.world, 'html_code')
+		self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(GodotExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(HTMLExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
+
+class ScriptVariablesPanel (bpy.types.Panel):
+	bl_label = "Scripts Public Variables"
+	bl_idname = "OBJECT_PT_Script_Public_Variables"
+	bl_space_type = "PROPERTIES"
+	bl_region_type = "WINDOW"
+	bl_context = "object"
+
+	def draw (self, context):
+		for propertyName in propertyNames:
+			if varaiblesTypesDict[propertyName] == 'Color':
+				if not Equals(getattr(context.active_object, propertyName), NULL_COLOR):
+					self.layout.prop(context.active_object, propertyName)
+			elif varaiblesTypesDict[propertyName] == 'GameObject' or varaiblesTypesDict[propertyName] == 'Transform':
+				if propertyName in gameObjectAndTrsVarsDict[context.active_object]:
+					self.layout.prop(context.active_object, propertyName)
+			else:
+				self.layout.prop(context.active_object, propertyName)
+
+class UnityScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Unity_Scripts_Panel'
+	bl_label = 'HolyBlender Unity Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw (self, context):
+		self.layout.label(text='Attach Unity scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasScript = getattr(context.active_object, 'unity_script' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'unity_script' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasScript
+
+class UnrealScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Unreal_Scripts_Panel'
+	bl_label = 'HolyBlender Unreal Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw (self, context):
+		self.layout.label(text='Attach Unreal scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasScript = getattr(context.active_object, 'unreal_script' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'unreal_script' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasScript
+
+class GodotScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Godot_Scripts_Panel'
+	bl_label = 'HolyBlender Godot Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw (self, context):
+		self.layout.label(text='Attach Godot scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasScript = getattr(context.active_object, 'godotScript' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'godotScript' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasScript
+
+class BevyScriptsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_bevy_Scripts_Panel'
+	bl_label = 'HolyBlender Bevy Scripts'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw (self, context):
+		self.layout.label(text='Attach bevy scripts')
+		foundUnassignedScript = False
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			hasScript = getattr(context.active_object, 'bevy_script' + str(i)) != None
+			if hasScript or not foundUnassignedScript:
+				self.layout.prop(context.active_object, 'bevy_script' + str(i))
+			if not foundUnassignedScript:
+				foundUnassignedScript = not hasScript
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -357,6 +474,1549 @@ class PlayButton (bpy.types.Operator):
 		for textBlock in bpy.data.texts:
 			textBlock.run_cs = True
 
+class HTMLExportButton (bpy.types.Operator):
+	bl_idname = 'html.export'
+	bl_label = 'Export To HTML'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		htmlExportPath = os.path.expanduser(context.scene.world.htmlExportPath)
+		previousVisibleObjects = []
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH' and not obj.hide_get():
+				previousVisibleObjects.append(obj)
+				obj.hide_render = True
+		bpy.context.scene.render.resolution_percentage = 10
+		camera = bpy.data.cameras[0]
+		cameraObj = bpy.data.objects[camera.name]
+		bpy.ops.object.select_all(action='DESELECT')
+		bpy.context.view_layer.objects.active = cameraObj
+		cameraObj.select_set(True)
+		bpy.context.scene.camera = cameraObj
+		for area in bpy.context.screen.areas:
+			if area.type == 'VIEW_3D':
+				area.spaces.active.region_3d.view_perspective = 'CAMERA'
+				break
+		bpy.context.scene.render.film_transparent = True
+		bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+		previousCameraLocation = cameraObj.location
+		previousCameraRotationMode = cameraObj.rotation_mode
+		cameraObj.rotation_mode = 'XYZ'
+		previousCameraRotation = cameraObj.rotation_euler
+		previousCameraType = camera.type
+		camera.type = 'ORTHO'
+		previousCameraOrthoScale = camera.ortho_scale
+		html = [
+			'<!DOCTYPE html>',
+			'<html><head><script>',
+		]
+		js_blocks = {}
+		imgs = []
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH':
+				obj.hide_render = False
+				bpy.context.scene.render.filepath = htmlExportPath + '/' + obj.name
+				cameraObj.rotation_euler = mathutils.Vector((math.radians(90), 0, 0))
+				bounds = GetObjectBounds(obj)
+				cameraObj.location = bounds[0] - mathutils.Vector((0, bounds[1].y, 0))
+				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
+				if os.path.isfile( htmlExportPath + '/' + obj.name ) and '--skip-render' in sys.argv:
+					pass
+				else:
+					bpy.ops.render.render(animation=False, write_still=True)
+				obj.hide_render = True
+				imagePath = bpy.context.scene.render.filepath + '.png'
+				command = [ 'convert', '-delay', '10', '-loop', '0', imagePath, imagePath.replace('.png', '.gif') ]
+				subprocess.check_call(command)
+				imagePath = imagePath.replace('.png', '.gif')
+				cameraSize = mathutils.Vector((camera.sensor_width, camera.sensor_height))
+				imageData = open(imagePath, 'rb').read()
+				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
+				multiplyUnits = 50
+				zIndex = int(bounds[0].y)
+				zIndex += 10
+				if zIndex < 0:
+					zIndex = 0
+				onclick =  ''
+				if obj.html_on_click:
+					fname = '__on_click_' + obj.html_on_click.name.replace('.','_')
+					if obj.html_on_click.name not in js_blocks:
+						js = 'function %s(self){%s}' % (fname, obj.html_on_click.as_string())
+						js_blocks[obj.html_on_click.name] = js
+					onclick = 'javascript:%s(this)' % fname
+				userCss = ''
+				if obj.html_css:
+					userCss = obj.html_css.as_string().replace('\n', ' ').strip()
+				imageText = '<img id="%s" onclick="%s" style="position:fixed; left:%spx; top:%spx; z-index:%s;%s" src="data:image/gif;base64,%s">\n' %(
+					obj.name,
+					onclick,
+					bounds[0].x * multiplyUnits,
+					-bounds[0].z * multiplyUnits,
+					zIndex,
+					userCss,
+					base64EncodedStr
+				)
+				imgs.append(imageText)
+		for obj in previousVisibleObjects:
+			obj.hide_render = False
+		cameraObj.location = previousCameraLocation
+		cameraObj.rotation_mode = previousCameraRotationMode
+		cameraObj.rotation_euler = previousCameraRotation
+		camera.type = previousCameraType
+		camera.ortho_scale = previousCameraOrthoScale
+		for tname in js_blocks:
+			html.append('//' + tname)
+			html.append(js_blocks[tname])
+		html.append('</script>')
+		html.append('</head>')
+		html.append('<body>')
+		html += imgs
+		html.append('</body></html>')
+		htmlText = '\n'.join(html)
+		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
+		if '__index__.html' not in bpy.data.texts:
+			bpy.data.texts.new(name='__index__.html')
+		bpy.data.texts['__index__.html'].from_string(htmlText)
+		if bpy.data.worlds[0].holyserver:
+			scope = globals()
+			exec(bpy.data.worlds[0].holyserver.as_string(), scope, scope)
+			webbrowser.open('http://localhost:8000/')
+		else:
+			webbrowser.open(htmlExportPath + '/index.html')
+		return {'FINISHED'}
+
+class UnrealExportButton (bpy.types.Operator):
+	bl_idname = 'unreal.export'
+	bl_label = 'Export To Unreal'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		global unrealCodePath
+		global childrenDict
+		global unrealCodePathSuffix
+		BuildTool ('UnityToUnreal')
+		unrealExportPath = os.path.expanduser(context.scene.world.unrealExportPath)
+		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		if importPath != '':
+			command = [ 'python3', os.path.expanduser('~/HolyBlender/UnityToUnreal.py'), 'input=' + importPath, 'output=' + unrealExportPath, 'exclude=/Library' ]
+			print(command)
+
+			subprocess.check_call(command)
+
+		else:
+			unrealCodePath = unrealExportPath
+			unrealProjectName = unrealExportPath[unrealExportPath.rfind('/') + 1 :]
+			unrealCodePathSuffix = '/Source/' + unrealProjectName
+			unrealCodePath += unrealCodePathSuffix
+			MakeFolderForFile ('/tmp/HolyBlender (Unreal Scripts)/')
+			data = unrealExportPath + '\n' + bpy.data.filepath + '\n'
+			for collection in bpy.data.collections:
+				for obj in collection.objects:
+					if obj.instance_collection == None:
+						data += self.GetObjectsData(collection.objects) + '\n'
+			data += '\nScenes\n'
+			for scene in bpy.data.scenes:
+				data += self.GetObjectsData(scene.objects) + '\n'
+			data += 'Children\n'
+			data += self.GetObjectsData(childrenDict) + '\n'
+			data += '\nScripts'
+			for obj in attachedUnrealScriptsDict:
+				if len(attachedUnrealScriptsDict[obj]) > 0:
+					data += '\n' + self.GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedUnrealScriptsDict[obj]) + '\n'
+					for property in obj.keys():
+						data += property + '☣️' + str(type(obj[property])) + '☣️' + str(obj[property]) + '☣️'
+					data = data[: len(data) - 2]
+					for script in attachedUnrealScriptsDict[obj]:
+						for textBlock in bpy.data.texts:
+							if textBlock.name == script:
+								if not script.endswith('.h') and not script.endswith('.cpp') and not script.endswith('.cs'):
+									script += '.cs'
+								open('/tmp/HolyBlender (Unreal Scripts)/' + script, 'wb').write(textBlock.as_string().encode('utf-8'))
+								break
+			open('/tmp/HolyBlender Data (BlenderToUnreal)', 'wb').write(data.encode('utf-8'))
+			projectFilePath = unrealExportPath + '/' + unrealProjectName + '.uproject'
+			if not os.path.isdir(unrealExportPath):
+				MakeFolderForFile (unrealExportPath + '/')
+				bareProjectPath = os.path.expanduser('~/HolyBlender/BareUEProject')
+				filesAndFolders = os.listdir(bareProjectPath)
+				for fileOrFolder in filesAndFolders:
+					command = 'cp -r ''' + bareProjectPath + '/' + fileOrFolder + ' ' + unrealExportPath
+					print(command)
+
+					os.system(command)
+
+				os.rename(unrealExportPath + '/Source/BareUEProject', unrealCodePath)
+				os.rename(unrealExportPath + '/BareUEProject.uproject', projectFilePath)
+				command = 'cp -r ' + TEMPLATES_PATH + '/Utils.h' + ' ' + unrealCodePath + '''/Utils.h
+					cp -r ''' + TEMPLATES_PATH + '/Utils.cpp' + ' ' + unrealCodePath + '/Utils.cpp'
+				print(command)
+
+				os.system(command)
+				projectFileText = open(projectFilePath, 'rb').read().decode('utf-8')
+				projectFileText = projectFileText.replace('BareUEProject', unrealProjectName)
+				open(projectFilePath, 'wb').write(projectFileText.encode('utf-8'))
+				defaultActorFilePath = unrealCodePath + '/MyActor.h'
+				defaultActorFileText = open(defaultActorFilePath, 'rb').read().decode('utf-8')
+				defaultActorFileText = defaultActorFileText.replace('BAREUEPROJECT', unrealProjectName.upper())
+				open(defaultActorFilePath, 'wb').write(defaultActorFileText.encode('utf-8'))
+				utilsFilePath = unrealCodePath + '/Utils.h'
+				utilsFileText = open(utilsFilePath, 'rb').read().decode('utf-8')
+				utilsFileText = utilsFileText.replace('BAREUEPROJECT', unrealProjectName.upper())
+				open(utilsFilePath, 'wb').write(utilsFileText.encode('utf-8'))
+				codeFilesPaths = GetAllFilePathsOfType(unrealExportPath, '.cs')
+				codeFilesPaths.append(unrealCodePath + '/BareUEProject.h')
+				codeFilesPaths.append(unrealCodePath + '/BareUEProject.cpp')
+				for codeFilePath in codeFilesPaths:
+					codeFileText = open(codeFilePath, 'rb').read().decode('utf-8')
+					codeFileText = codeFileText.replace('BareUEProject', unrealProjectName)
+					open(codeFilePath, 'wb').write(codeFileText.encode('utf-8'))
+					os.rename(codeFilePath, codeFilePath.replace('BareUEProject', unrealProjectName))
+			command = 'dotnet ' + os.path.expanduser('~/UnrealEngine/Engine/Binaries/DotNET/UnrealBuildTool/UnrealBuildTool.dll ') + unrealProjectName + ' Development Linux -Project="' + projectFilePath + '" -TargetType=Editor -Progress'
+			if os.path.expanduser('~') == '/home/gilead':
+				command = command.replace('dotnet', '/home/gilead/Downloads/dotnet-sdk-6.0.302-linux-x64/dotnet')
+				command = command.replace(os.path.expanduser('~/UnrealEngine'), os.path.expanduser('~/Downloads/Linux_Unreal_Engine_5.4.3'))
+			print(command)
+
+			os.system(command)
+
+			open('/tmp/HolyBlender Data (UnityToUnreal)', 'wb').write(''.encode('utf-8'))
+			unrealEditorPath = os.path.expanduser('~/UnrealEngine/Engine/Binaries/Linux/UnrealEditor-Cmd')
+			if os.path.expanduser('~') == '/home/gilead':
+				unrealEditorPath = '/home/gilead/Downloads/Linux_Unreal_Engine_5.4.3/Engine/Binaries/Linux/UnrealEditor-Cmd'
+			command = unrealEditorPath + ' ' + projectFilePath + ' -nullrhi -ExecutePythonScript=' + os.path.expanduser('~/HolyBlender/MakeUnrealProject.py')
+			print(command)
+
+			os.system(command)
+
+			command = unrealEditorPath + ' ' + projectFilePath + ' -buildlighting'
+			print(command)
+
+			os.system(command)
+
+	def GetObjectsData (self, objectGroup):
+		data = 'Cameras'
+		for camera in bpy.data.cameras:
+			if camera.name in objectGroup.keys():
+				data += '\n' + GetCameraData(camera)
+		data += '\nLights'
+		for light in bpy.data.lights:
+			if light.name in objectGroup.keys():
+				data += '\n' + GetLightData(light)
+		data += '\nMeshes'
+		for obj in objectGroup:
+			if obj.type == 'MESH':
+				ExportObject (obj, '/tmp')
+				data += '\n' + self.GetBasicObjectData(obj)
+				if obj.rigid_body != None:
+					data += '☣️' + str(obj.rigid_body.mass) + '☣️' + str(obj.rigid_body.linear_damping) + '☣️' + str(obj.rigid_body.angular_damping) + '☣️' + str(obj.rigid_body.enabled)
+				for modifier in obj.modifiers:
+					if modifier.type == 'COLLISION':
+						data += '☣️True'
+						break
+		return data
+
+	def GetBasicObjectData (self, obj):
+		global childrenDict
+		for _obj in bpy.data.objects:
+			if _obj.name == obj.name:
+				obj = _obj
+				break
+		previousObjectRotationMode = obj.rotation_mode
+		obj.rotation_mode = 'QUATERNION'
+		output = obj.name + '☣️' + str(obj.location * 100) + '☣️' + str(obj.rotation_quaternion) + '☣️' + str(obj.scale)
+		if len(obj.children) > 0:
+			for child in obj.children:
+				childrenDict[child.name] = child
+		obj.rotation_mode = previousObjectRotationMode
+		return output
+
+	def GetCameraData (self, camera):
+		horizontalFov = False
+		if camera.sensor_fit == 'HORIZONTAL':
+			horizontalFov = True
+		isOrthographic = False
+		if camera.type == 'ORTHO':
+			isOrthographic = True
+		return self.GetBasicObjectData(camera) + '☣️' + str(horizontalFov) + '☣️' + str(camera.angle * (180.0 / PI)) + '☣️' + str(isOrthographic) + '☣️' + str(camera.ortho_scale) + '☣️' + str(camera.clip_start) + '☣️' + str(camera.clip_end)
+
+	def GetLightData (self, light):
+		lightType = 0
+		if light.type == 'POINT':
+			lightType = 1
+		elif light.type == 'SPOT':
+			lightType = 2
+		elif lightObject.type == 'AREA':
+			lightType = 3
+		return self.GetBasicObjectData(light) + '☣️' + str(lightType) + '☣️' + str(light.energy * WATTS_TO_CANDELAS * 100) + '☣️' + str(light.color)
+
+class GodotExportButton (bpy.types.Operator):
+	bl_idname = 'godot.export'
+	bl_label = 'Export To Godot'
+	SCENE_TEMPLATE = '[gd_scene load_steps=3 format=3 uid="uid://lop2cefb4wqg"]'
+	RESOURCE_TEMPLATE = '[ext_resource type="ꗈ0" uid="uid://ꗈ1" path="res://ꗈ2" id="ꗈ3"]'
+	SUB_RESOURCE_TEMPLATE = '[sub_resource type="ꗈ0" id="ꗈ1"]'
+	MODEL_TEMPLATE = '[node name="ꗈ0" parent="ꗈ1" instance=ExtResource("ꗈ2")]'
+	TRANSFORM_TEMPLATE = 'transform = Transform3D(ꗈ0, ꗈ1, ꗈ2, ꗈ3, ꗈ4, ꗈ5, ꗈ6, ꗈ7, ꗈ8, ꗈ9, ꗈ10, ꗈ11)'
+	NODE_TEMPLATE = '[node name="ꗈ0" type="ꗈ1" parent="ꗈ2"]'
+	godotExportPath = ''
+	resources = ''
+	nodes = ''
+	idIndex = 0
+	exportedObjs = []
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		self.godotExportPath = os.path.expanduser(context.scene.world.godotExportPath)
+		if not os.path.isdir(self.godotExportPath):
+			MakeFolderForFile (os.path.join(self.godotExportPath, ''))
+		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
+		self.idIndex = 0
+		if importPath != '':
+			print('Exporting from Unity to Godot doesn\'t work yet')
+		else:
+			
+			os.system('mkdir ' + self.godotExportPath + '\ncd ' + self.godotExportPath + '\ntouch project.godot')
+			
+			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
+			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
+			CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd'), os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd'))
+			CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveServerEvents.gd'), os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveServerEvents.gd'))
+			self.resources = ''
+			self.nodes = ''
+			self.exportedObjs = []
+			for obj in bpy.data.objects:
+				if obj not in self.exportedObjs:
+					self.MakeObject (obj)
+			id = self.GetId(7)
+			resource = self.RESOURCE_TEMPLATE
+			resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'SendAndRecieveServerEvents.gd'))
+			resource = resource.replace(REPLACE_INDICATOR + '3', id)
+			self.resources += resource
+			node3d = self.NODE_TEMPLATE
+			node3d = node3d.replace(REPLACE_INDICATOR + '0', 'Send And Recieve Click Events')
+			node3d = node3d.replace(REPLACE_INDICATOR + '1', 'Node3D')
+			node3d = node3d.replace(REPLACE_INDICATOR + '2', '.')
+			node3d += '\nscript = ExtResource("' + id + '")'
+			self.nodes += node3d
+			sceneText = self.SCENE_TEMPLATE
+			sceneText += '\n' + self.resources + '\n[node name="' + bpy.context.scene.name + '" type="Node3D"]\n' + self.nodes
+			open(os.path.join(self.godotExportPath, 'Scenes', bpy.context.scene.name + '.tscn'), 'wb').write(sceneText.encode('utf-8'))
+			
+			os.system('flatpak run org.godotengine.Godot ' + os.path.join(self.godotExportPath, 'project.godot'))
+
+	def MakeObject (self, obj):
+		global attachedGodotScriptsDict
+		for obj2 in bpy.data.objects:
+			if obj in obj2.children and obj2 not in self.exportedObjs:
+				self.MakeObject (obj2)
+		if obj.type == 'MESH':
+			fileExportFolder = os.path.join(self.godotExportPath, 'Art', 'Models')
+			fileExportPath = os.path.join(fileExportFolder, '')
+			MakeFolderForFile (fileExportPath)
+			fileExportPath = ExportObject(obj, fileExportFolder)
+			id = self.GetId(7)
+			resource = self.RESOURCE_TEMPLATE
+			resource = resource.replace(REPLACE_INDICATOR + '0', 'PackedScene')
+			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+			resource = resource.replace(REPLACE_INDICATOR + '2', fileExportPath.replace(os.path.join(self.godotExportPath, ''), ''))
+			resource = resource.replace(REPLACE_INDICATOR + '3', id)
+			self.resources += resource + '\n'
+			parentPath = self.GetParentPath(obj)
+			if obj.rigid_body != None:
+				rigidBody = self.NODE_TEMPLATE
+				for modifier in obj.modifiers:
+					if modifier.type == 'COLLISION':
+						rigidBody = self.NODE_TEMPLATE[: -1] + 'node_paths=PackedStringArray("meshInstance")]'
+						scriptId = self.GetId(7)
+						resource = self.RESOURCE_TEMPLATE
+						resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+						resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+						resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'AddMeshCollision.gd'))
+						resource = resource.replace(REPLACE_INDICATOR + '3', scriptId)
+						self.resources += resource + '\n'
+						rigidBody += '\nscript = ExtResource("' + scriptId + '")'
+						meshInstancePath = obj.name + '/' + obj.name
+						rigidBody += '\nmeshInstance = NodePath("' + meshInstancePath + '")'
+						break
+				rigidBodyName = obj.name + ' (RigidBody3D)'
+				rigidBodyParentPath = parentPath.replace(rigidBodyName + '/', '')
+				if rigidBodyParentPath == '':
+					rigidBodyParentPath = '.'
+				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '0', rigidBodyName)
+				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '1', 'RigidBody3D')
+				rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', rigidBodyParentPath)
+				rigidBody += '\nmass = ' + str(obj.rigid_body.mass)
+				rigidBody += '\nlinear_damp_mode = 1'
+				rigidBody += '\nlinear_damp = ' + str(obj.rigid_body.linear_damping)
+				rigidBody += '\nangular_damp_mode = 1'
+				rigidBody += '\nangular_damp = ' + str(obj.rigid_body.angular_damping)
+				rigidBody += '\nfreeze = ' + str(int(not obj.rigid_body.enabled))
+				self.nodes += rigidBody + '\n'
+			model = self.MODEL_TEMPLATE
+			model = model.replace(REPLACE_INDICATOR + '0', obj.name)
+			model = model.replace(REPLACE_INDICATOR + '1', parentPath)
+			model = model.replace(REPLACE_INDICATOR + '2', id)
+			model += '\n' + self.GetTransformText(obj)
+			self.nodes += model + '\n'
+			self.MakeClickableChild (obj)
+		elif obj.type == 'LIGHT':
+			light = self.NODE_TEMPLATE
+			light = light.replace(REPLACE_INDICATOR + '0', obj.name)
+			lightObj = None
+			for _light in bpy.data.lights:
+				if _light.name == obj.name:
+					lightObj = _light
+					break
+			if lightObj.type == 'SUN':
+				light = light.replace(REPLACE_INDICATOR + '1', 'DirectionalLight3D')
+			elif lightObj.type == 'POINT':
+				light = light.replace(REPLACE_INDICATOR + '1', 'OmniLight3D')
+			elif lightObj.type == 'SPOT':
+				light = light.replace(REPLACE_INDICATOR + '1', 'SpotLight3D')
+			else:# elif lightObject.type == 'AREA':
+				print('Area lights are not supported in Godot')
+				return
+			light = light.replace(REPLACE_INDICATOR + '2', self.GetParentPath(obj))
+			if lightObj.type == 'POINT':
+				light += '\nomni_range = ' + str(lightObj.cutoff_distance)
+			elif lightObj.type == 'SPOT':
+				light += '\nspot_range = ' + str(lightObj.cutoff_distance)
+				light += '\nspot_angle = ' + str(lightObj.spot_size)
+			light += '\nlight_energy = ' + str(lightObj.energy * WATTS_TO_CANDELAS)
+			light += '\nlight_color = ' + 'Color(' + str(lightObj.color[0]) + ', ' + str(lightObj.color[1]) + ', ' + str(lightObj.color[2]) + ', 1)'
+			light += '\n' + self.GetTransformText(obj)
+			self.nodes += light + '\n'
+		elif obj.type == 'CAMERA':
+			camera = self.NODE_TEMPLATE
+			camera = camera.replace(REPLACE_INDICATOR + '0', obj.name)
+			camera = camera.replace(REPLACE_INDICATOR + '1', 'Camera3D')
+			camera = camera.replace(REPLACE_INDICATOR + '2', self.GetParentPath(obj))
+			cameraObj = None
+			for _camera in bpy.data.cameras:
+				if _camera.name == obj.name:
+					cameraObj = _camera
+					break
+			if cameraObj.type == 'ORTHO':
+				camera += '\nprojection = 1'
+				camera += '\nsize = ' + str(cameraObj.ortho_scale)
+			else:
+				camera += '\nprojection = 0'
+				camera += '\nfov = ' + str(math.degrees(cameraObj.angle))
+			camera += '\nnear = ' + str(cameraObj.clip_start)
+			camera += '\nfar = ' + str(cameraObj.clip_end)
+			camera += '\n' + self.GetTransformText(obj)
+			self.nodes += camera + '\n'
+		attachedScripts = attachedGodotScriptsDict.get(obj, [])
+		for attachedScript in attachedScripts:
+			script = attachedScript
+			if not attachedScript.endswith('.gd'):
+				script += '.gd'
+			for textBlock in bpy.data.texts:
+				if textBlock.name == attachedScript:
+					open(os.path.join(self.godotExportPath, 'Scripts', script), 'wb').write(textBlock.as_string().encode('utf-8'))
+					break
+			id = self.GetId(7)
+			resource = self.RESOURCE_TEMPLATE
+			resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', script))
+			resource = resource.replace(REPLACE_INDICATOR + '3', id)
+			self.resources += resource + '\n'
+			self.nodes += '\nscript = ExtResource("' + id + '")'
+		self.exportedObjs.append(obj)
+	
+	def GetTransformText (self, obj):
+		transform = self.TRANSFORM_TEMPLATE
+		location = obj.location
+		if obj.type == 'MESH':
+			location = mathutils.Vector((0, 0, 0))
+		previousObjectRotationMode = obj.rotation_mode
+		obj.rotation_mode = 'XYZ'
+		size = mathutils.Vector((obj.scale.x, obj.scale.z, obj.scale.y))
+		matrix = mathutils.Matrix.LocRotScale(mathutils.Vector((0, 0, 0)), obj.rotation_euler, size)
+		right = mathutils.Vector((1, 0, 0)) @ matrix
+		up = mathutils.Vector((0, 0, 1)) @ matrix
+		forward = mathutils.Vector((0, 1, 0)) @ matrix
+		obj.rotation_mode = previousObjectRotationMode
+		transform = transform.replace(REPLACE_INDICATOR + '10', str(location.z))
+		transform = transform.replace(REPLACE_INDICATOR + '11', str(-location.y))
+		transform = transform.replace(REPLACE_INDICATOR + '0', str(right.x))
+		transform = transform.replace(REPLACE_INDICATOR + '1', str(right.y))
+		transform = transform.replace(REPLACE_INDICATOR + '2', str(right.z))
+		transform = transform.replace(REPLACE_INDICATOR + '3', str(up.x))
+		transform = transform.replace(REPLACE_INDICATOR + '4', str(up.y))
+		transform = transform.replace(REPLACE_INDICATOR + '5', str(up.z))
+		transform = transform.replace(REPLACE_INDICATOR + '6', str(forward.x))
+		transform = transform.replace(REPLACE_INDICATOR + '7', str(forward.y))
+		transform = transform.replace(REPLACE_INDICATOR + '8', str(forward.z))
+		transform = transform.replace(REPLACE_INDICATOR + '9', str(location.x))
+		return transform
+	
+	def GetParentPath (self, obj):
+		output = ''
+		parent = obj
+		if obj.rigid_body != None:
+			output = obj.name + ' (RigidBody3D)/'
+		for obj2 in bpy.data.objects:
+			if parent in obj2.children:
+				parent = obj2
+				if obj2.rigid_body != None:
+					output += obj2.name + ' (RigidBody3D)/'
+				output += obj2.name + '/'
+		if output == '':
+			output = '.'
+		return output
+
+	def GetId (self, length : int):
+		output = '1'
+		for i in range(1, length):
+			output += '0'
+		output = str(int(output) + self.idIndex)
+		self.idIndex += 1
+		return output
+
+	def MakeClickableChild (self, obj):
+		parentPath = self.GetParentPath(obj)
+		rigidBody = self.NODE_TEMPLATE[: -1] + 'node_paths=PackedStringArray("meshInstance")]'
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '0', obj.name + ' (Clickable)')
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '1', 'RigidBody3D')
+		rigidBody = rigidBody.replace(REPLACE_INDICATOR + '2', parentPath + obj.name)
+		rigidBody += '\nfreeze = true'
+		rigidBody += '\ncollision_layer = 2147483648'
+		rigidBody += '\ncollision_mask = 0'
+		id = self.GetId(7)
+		rigidBody += '\nscript = ExtResource("' + id + '")'
+		meshInstancePath = '../' + obj.name
+		rigidBody += '\nmeshInstance = NodePath("' + meshInstancePath + '")'
+		self.nodes += rigidBody + '\n'
+		resource = self.RESOURCE_TEMPLATE
+		resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+		resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+		resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'AddMeshCollision.gd'))
+		resource = resource.replace(REPLACE_INDICATOR + '3', id)
+		self.resources += resource + '\n'
+
+
+
+class UnityExportButton (bpy.types.Operator):
+	bl_idname = 'unity.export'
+	bl_label = 'Export To Unity'
+	INIT_YAML_TEXT = '''%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:'''
+	MATERIAL_TEMPLATE = '    - {fileID: ꗈ0, guid: ꗈ1, type: 2}'
+	COMPONENT_TEMPLATE = '    - component: {fileID: ꗈ}'
+	CHILD_TRANSFORM_TEMPLATE = '    - {fileID: ꗈ}'
+	SCENE_ROOT_TEMPLATE = CHILD_TRANSFORM_TEMPLATE
+	GAME_OBJECT_TEMPLATE = '''--- !u!1 &ꗈ0
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: ꗈ1}
+ꗈ2
+  m_Layer: ꗈ3
+  m_Name: ꗈ4
+  m_TagString: ꗈ5
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1'''
+	TRANSFORM_TEMPLATE = '''--- !u!4 &ꗈ0
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  serializedVersion: 2
+  m_LocalRotation: {x: ꗈ2, y: ꗈ3, z: ꗈ4, w: ꗈ5}
+  m_LocalPosition: {x: ꗈ6, y: ꗈ7, z: ꗈ8}
+  m_LocalScale: {x: ꗈ9, y: ꗈ10, z: ꗈ11}
+  m_ConstrainProportionsScale: 0
+  m_Children: ꗈ12
+  m_Father: {fileID: ꗈ13}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}'''
+	LIGHT_TEMPLATE = '''--- !u!108 &ꗈ0
+Light:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  serializedVersion: 11
+  m_Type: ꗈ2
+  m_Color: {r: ꗈ3, g: ꗈ4, b: ꗈ5, a: 1}
+  m_Intensity: ꗈ6
+  m_Range: ꗈ7
+  m_SpotAngle: ꗈ8
+  m_InnerSpotAngle: ꗈ9
+  m_CookieSize: 10
+  m_Shadows:
+  m_Type: 0
+  m_Resolution: -1
+  m_CustomResolution: -1
+  m_Strength: 1
+  m_Bias: 0.05
+  m_NormalBias: 0.4
+  m_NearPlane: 0.2
+  m_CullingMatrixOverride:
+    e00: 1
+    e01: 0
+    e02: 0
+    e03: 0
+    e10: 0
+    e11: 1
+    e12: 0
+    e13: 0
+    e20: 0
+    e21: 0
+    e22: 1
+    e23: 0
+    e30: 0
+    e31: 0
+    e32: 0
+    e33: 1
+  m_UseCullingMatrixOverride: 0
+  m_Cookie: {fileID: 0}
+  m_DrawHalo: 0
+  m_Flare: {fileID: 0}
+  m_RenderMode: 0
+  m_CullingMask:
+  serializedVersion: 2
+  m_Bits: 4294967295
+  m_RenderingLayerMask: 1
+  m_Lightmapping: 4
+  m_LightShadowCasterMode: 0
+  m_AreaSize: {x: 1, y: 1}
+  m_BounceIntensity: 1
+  m_ColorTemperature: 6570
+  m_UseColorTemperature: 0
+  m_BoundingSphereOverride: {x: 0, y: 0, z: 0, w: 0}
+  m_UseBoundingSphereOverride: 0
+  m_UseViewFrustumForShadowCasterCull: 1
+  m_ShadowRadius: 0
+  m_ShadowAngle: 0'''
+	SCRIPT_TEMPLATE = '''--- !u!114 &ꗈ0
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ꗈ2, type: 3}'''
+	MESH_FILTER_TEMPLATE = '''--- !u!33 &ꗈ0
+MeshFilter:
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Mesh: {fileID: ꗈ2, guid: ꗈ3, type: 3}'''
+	MESH_RENDERER_TEMPLATE = '''--- !u!23 &ꗈ0
+MeshRenderer:
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Materials:
+ꗈ2'''
+	MESH_COLLIDER_TEMPLATE = '''--- !u!64 &ꗈ0
+MeshCollider:
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Material: {fileID: 0}
+  m_IsTrigger: ꗈ2
+  m_Convex: ꗈ3
+  m_Mesh: {fileID: ꗈ4, guid: ꗈ5, type: 3}'''
+	RIGIDBODY_TEMPLATE = '''--- !u!54 &ꗈ0
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  serializedVersion: 4
+  m_Mass: ꗈ2
+  m_Drag: ꗈ3
+  m_AngularDrag: ꗈ4
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0 w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: ꗈ5
+  m_IsKinematic: ꗈ6
+  m_Interpolate: ꗈ7
+  m_Constraints: ꗈ8
+  m_CollisionDetection: ꗈ9'''
+	CAMERA_TEMPLATE = '''--- !u!20 &ꗈ0
+Camera:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  serializedVersion: 2
+  m_ClearFlags: 1
+  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_projectionMatrixMode: 1
+  m_GateFitMode: 2
+  m_FOVAxisMode: ꗈ2
+  m_Iso: 200
+  m_ShutterSpeed: 0.005
+  m_Aperture: 16
+  m_FocusDistance: 10
+  m_FocalLength: 50
+  m_BladeCount: 5
+  m_Curvature: {x: 2, y: 11}
+  m_BarrelClipping: 0.25
+  m_Anamorphism: 0
+  m_SensorSize: {x: 36, y: 24}
+  m_LensShift: {x: 0, y: 0}
+  m_NormalizedViewPortRect:
+    serializedVersion: 2
+    x: 0
+    y: 0
+    width: 1
+    height: 1
+  near clip plane: ꗈ3
+  far clip plane: ꗈ4
+  field of view: ꗈ5
+  orthographic: ꗈ6
+  orthographic size: ꗈ7
+  m_Depth: 0
+  m_CullingMask:
+  serializedVersion: 2
+  m_Bits: 4294967295
+  m_RenderingPath: -1
+  m_TargetTexture: {fileID: 0}
+  m_TargetDisplay: 0
+  m_TargetEye: 3
+  m_HDR: 1
+  m_AllowMSAA: 1
+  m_AllowDynamicResolution: 0
+  m_ForceIntoRT: 0
+  m_OcclusionCulling: 1
+  m_StereoConvergence: 10
+  m_StereoSeparation: 0.022'''
+	SPRITE_RENDERER_TEMPLATE = '''--- !u!212 &ꗈ0
+SpriteRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  m_CastShadows: 0
+  m_ReceiveShadows: 0
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 0
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 0
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: ꗈ2
+  m_SortingLayer: ꗈ3
+  m_SortingOrder: ꗈ4
+  m_Sprite: {fileID: 0, guid: ꗈ5, type: 3}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_FlipX: 0
+  m_FlipY: 0
+  m_DrawMode: 0
+  m_Size: {x: 0, y: 0}
+  m_AdaptiveModeThreshold: 0.5
+  m_SpriteTileMode: 0
+  m_WasSpriteAssigned: 1
+  m_MaskInteraction: 0
+  m_SpriteSortPoint: 0'''
+	SPRITE_META_TEMPLATE = '''fileFormatVersion: 2
+guid: ꗈ0
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 0
+    second: ꗈ1_0
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 16384
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Win64
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Linux64
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 16384
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ꗈ1_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 0
+        width: 242
+        height: 188
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 85166db83dab01790800000000000000
+      internalID: 0
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      ꗈ1_0: 0
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: '''
+	PREFAB_INSTANCE_TEMPLATE = '''--- !u!1001 &ꗈ0
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: ꗈ1}
+    m_Modifications:
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: ꗈ4, guid: ꗈ3, type: 3}
+      propertyPath: m_Name
+      value: ꗈ5
+      objectReference: {fileID: 0}
+	ꗈ6
+    m_RemovedComponents: ꗈ7
+    m_RemovedGameObjects: ꗈ8
+    m_AddedGameObjects: ꗈ9
+    m_AddedComponents: ꗈ10
+  m_SourcePrefab: {fileID: 100100000, guid: ꗈ3, type: 3}
+--- !u!4 &ꗈ11 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: ꗈ2, guid: ꗈ3, type: 3}
+  m_PrefabInstance: {fileID: ꗈ0}
+  m_PrefabAsset: {fileID: 0}'''
+	gameObjectsAndComponentsText = ''
+	rootTransformsIds = []
+	componentIds = []
+	projectExportPath = ''
+	unityVersionPath = ''
+	lastId = 5
+	prefabGuidsDict = {}
+	isMakingScene = False
+	dataText = ''
+	gameObjectAndTrsVarsDict = {}
+	gameObjectIdsDict = {}
+	trsIdsDict = {}
+	exportedObjs = []
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		self.lastId = 5
+		self.projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
+		if not os.path.isdir(self.projectExportPath):
+			os.mkdir(self.projectExportPath)
+		meshesDict = {}
+		for mesh in bpy.data.meshes:
+			meshesDict[mesh.name] = []
+		scriptsPath = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
+		MakeFolderForFile (os.path.join(scriptsPath, ''))
+		for obj in bpy.context.scene.objects:
+			if obj.type == 'MESH' and obj.data.name in meshesDict:
+				meshesDict[obj.data.name].append(obj.name)
+				fileExportFolder = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Models')
+				fileExportPath = os.path.join(fileExportFolder, '')
+				MakeFolderForFile (fileExportPath)
+				# prevoiusObjectSize = obj.scale
+				# obj.scale *= 100
+				fileExportPath = ExportObject(obj, fileExportFolder)
+				# obj.scale = prevoiusObjectSize
+				for materialSlot in obj.material_slots:
+					fileExportPath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+					MakeFolderForFile (fileExportPath)
+					materialColor = materialSlot.material.diffuse_color
+					material = open(os.path.join(TEMPLATES_PATH, 'Material.mat'), 'rb').read().decode('utf-8')
+					material = material.replace(REPLACE_INDICATOR + '0', materialSlot.material.name)
+					material = material.replace(REPLACE_INDICATOR + '1', str(materialColor[0]))
+					material = material.replace(REPLACE_INDICATOR + '2', str(materialColor[1]))
+					material = material.replace(REPLACE_INDICATOR + '3', str(materialColor[2]))
+					material = material.replace(REPLACE_INDICATOR + '4', str(materialColor[3]))
+					open(fileExportPath, 'wb').write(material.encode('utf-8'))
+			elif obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
+				spritePath = obj.data.filepath
+				spritePath = os.path.expanduser('~') + spritePath[1 :]
+				spriteName = spritePath[spritePath.rfind('/') + 1 :]
+				newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
+				MakeFolderForFile (newSpritePath)
+				sprite = open(spritePath, 'rb').read()
+				open(newSpritePath, 'wb').write(sprite)
+		unityVersionsPath = os.path.expanduser('~/Unity/Hub/Editor')
+		self.unityVersionPath = ''
+		if os.path.isdir(unityVersionsPath):
+			unityVersions = os.listdir(unityVersionsPath)
+			for unityVersion in unityVersions:
+				self.unityVersionPath = unityVersionsPath + '/' + unityVersion + '/Editor/Unity'
+				if os.path.isfile(self.unityVersionPath):
+					self.unityVersionPath = self.unityVersionPath
+					break
+		if self.unityVersionPath != '':
+			MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
+			CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
+			CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
+			CopyFile (os.path.join(EXTENSIONS_PATH, 'StringExtensions.cs'), os.path.join(scriptsPath, 'StringExtensions.cs'))
+			command = self.unityVersionPath + ' -quit -createProject ' + self.projectExportPath + ' -executeMethod GetUnityProjectInfo.Do ' + self.projectExportPath
+			print(command)
+			
+			subprocess.check_call(command.split())
+
+		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources')
+		MakeFolderForFile (os.path.join(prefabsPath, ''))
+		self.isMakingScene = False
+		self.prefabGuidsDict.clear()
+		self.gameObjectAndTrsVarsDict.clear()
+		self.gameObjectIdsDict.clear()
+		self.trsIdsDict.clear()
+		self.exportedObjs.clear()
+		for collection in bpy.data.collections:
+			self.gameObjectsAndComponentsText = ''
+			prefabPath = os.path.join(prefabsPath, collection.name + '.prefab')
+			self.prefabGuidsDict[collection.name] = GetGuid(prefabPath)
+			open(prefabPath + '.meta', 'w').write('guid: ' + self.prefabGuidsDict[collection.name])
+			for obj in collection.objects:
+				if GetObjectId(obj) not in self.exportedObjs:
+					self.MakeObject (obj)
+			prefab = self.INIT_YAML_TEXT
+			prefab += '\n' + self.gameObjectsAndComponentsText
+			open(prefabPath, 'w').write(prefab)
+		self.isMakingScene = True
+		self.gameObjectsAndComponentsText = ''
+		self.rootTransformsIds = []
+		for obj in bpy.context.scene.objects:
+			if obj.parent == None and GetObjectId(obj) not in self.exportedObjs:
+				self.MakeObject (obj)
+		scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
+		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
+		sendAndRecieveServerEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveServerEvents.cs')
+		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveServerEvents.cs'), sendAndRecieveServerEventsScriptPath)
+		gameObjectIdAndTrsId = self.MakeEmptyObject('Send And Recieve Server Events')
+		sendAndRecieveServerEventsScriptMetaPath = sendAndRecieveServerEventsScriptPath + '.meta'
+		scriptGuid = GetGuid(sendAndRecieveServerEventsScriptMetaPath)
+		open(sendAndRecieveServerEventsScriptMetaPath, 'w').write('guid: ' + scriptGuid)
+		script = self.SCRIPT_TEMPLATE
+		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTrsId[0]))
+		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+		self.gameObjectsAndComponentsText += script + '\n'
+		self.componentIds.append(self.lastId)
+		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', self.COMPONENT_TEMPLATE.replace(REPLACE_INDICATOR, str(self.lastId)))
+		for key in self.gameObjectAndTrsVarsDict:
+			if varaiblesTypesDict[key[1]] == 'GameObject':
+				self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR, '{fileID: ' + str(self.gameObjectIdsDict[self.gameObjectAndTrsVarsDict[key]]) + '}')
+			else:# elif varaiblesTypesDict[key[1]] == 'Transform':
+				for obj in self.trsIdsDict:
+					print(obj)
+				self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR, '{fileID: ' + str(self.trsIdsDict[self.gameObjectAndTrsVarsDict[key]]) + '}')
+		sceneRootsText = ''
+		for transformId in self.rootTransformsIds:
+			sceneRoot = self.SCENE_ROOT_TEMPLATE
+			sceneRoot = sceneRoot.replace(REPLACE_INDICATOR, str(transformId))
+			sceneRootsText += sceneRoot + '\n'
+		scenePath = bpy.data.filepath.replace('.blend', '.unity')
+		scenePath = scenePath[scenePath.rfind('/') + 1 :]
+		scenesFolderPath = self.projectExportPath + '/Assets/Scenes'
+		if not os.path.isdir(scenesFolderPath):
+			os.mkdir(scenesFolderPath)
+		if scenePath == '':
+			scenePath = 'Test.unity'
+		scenePath = scenesFolderPath + '/' + scenePath
+		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
+		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', self.gameObjectsAndComponentsText)
+		sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
+		open(scenePath, 'wb').write(sceneText.encode('utf-8'))
+		if self.unityVersionPath != '':
+			command = [ self.unityVersionPath, '-createProject', self.projectExportPath ]
+			
+			subprocess.check_call(command)
+
+	def MakeEmptyObject (self, name : str, layer = 0, parentTransformId = 0) -> (int, int):
+		gameObject = self.GAME_OBJECT_TEMPLATE
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(self.lastId + 1))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', str(layer))
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '4', name)
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '5', 'Untagged')
+		self.gameObjectsAndComponentsText += gameObject + '\n'
+		gameObjectId = self.lastId
+		self.lastId += 1
+		transform = self.TRANSFORM_TEMPLATE
+		transform = transform.replace(REPLACE_INDICATOR + '10', '1')
+		transform = transform.replace(REPLACE_INDICATOR + '11', '1')
+		transform = transform.replace(REPLACE_INDICATOR + '12', '[]')
+		transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
+		transform = transform.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		transform = transform.replace(REPLACE_INDICATOR + '2', '0')
+		transform = transform.replace(REPLACE_INDICATOR + '3', '0')
+		transform = transform.replace(REPLACE_INDICATOR + '4', '0')
+		transform = transform.replace(REPLACE_INDICATOR + '5', '1')
+		transform = transform.replace(REPLACE_INDICATOR + '6', '0')
+		transform = transform.replace(REPLACE_INDICATOR + '7', '0')
+		transform = transform.replace(REPLACE_INDICATOR + '8', '0')
+		transform = transform.replace(REPLACE_INDICATOR + '9', '1')
+		self.gameObjectsAndComponentsText += transform + '\n'
+		if parentTransformId == 0:
+			self.rootTransformsIds.append(self.lastId)
+		self.lastId += 1
+		return (gameObjectId, self.lastId - 1)
+
+	def MakeObject (self, obj, parentTransformId = 0) -> int:
+		self.componentIds = []
+		prefabName = ''
+		# for collection in bpy.data.collections:
+		# 	for obj2 in collection.objects:
+		# 		if obj == obj2:
+		# 			prefabName = collection.name
+		# 			break
+		# 	if prefabName != '':
+		# 		break
+		gameObject = ''
+		meshFileId = '10202'
+		meshGuid = ''
+		gameObjectId = self.lastId
+		myTransformId = self.lastId + 1
+		self.lastId += 2
+		children = ''
+		for childObj in obj.children:
+			if GetObjectId(childObj) not in self.exportedObjs:
+				transformId = self.MakeObject(childObj, myTransformId)
+				children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
+		if obj.type == 'MESH':
+			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx.meta'
+			meshGuid = GetGuid(filePath)
+			open(filePath, 'w').write('guid: ' + meshGuid)
+			if self.unityVersionPath != '':
+				meshDatas = self.dataText.split('\n')[0]
+				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx'
+				indexOfFile = meshDatas.find(fileIdIndicator)
+				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+				indexOfEndOfFileId = meshDatas.find(' ', indexOfFileId)
+				meshFileId = meshDatas[indexOfFileId : indexOfEndOfFileId]
+			gameObjectIdAndTrsId = self.MakeClickableChild(obj.name, meshFileId, meshGuid, myTransformId)
+			children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(gameObjectIdAndTrsId[1]))
+		elif len(obj.children) == 0:
+			children = '[]'
+		if prefabName == '' or not self.isMakingScene:
+			tag = 'Untagged'
+			if obj.type == 'CAMERA':
+				tag = 'MainCamera'
+			gameObject = self.GAME_OBJECT_TEMPLATE
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(gameObjectId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(myTransformId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
+			self.lastId += 1
+			location = obj.matrix_local.translation
+			rotation = obj.matrix_local.to_euler()
+			if obj.type != 'MESH':
+				rotation.x -= PI / 2
+				previousYRot = rotation.y
+				rotation.y = -rotation.z
+				rotation.z = -previousYRot
+			rotation = rotation.to_quaternion()
+			scale = obj.matrix_local.to_scale()
+			transform = self.TRANSFORM_TEMPLATE
+			transform = transform.replace(REPLACE_INDICATOR + '10', str(scale.z))
+			transform = transform.replace(REPLACE_INDICATOR + '11', str(scale.y))
+			transform = transform.replace(REPLACE_INDICATOR + '12', children)
+			transform = transform.replace(REPLACE_INDICATOR + '13', str(parentTransformId))
+			transform = transform.replace(REPLACE_INDICATOR + '0', str(myTransformId))
+			transform = transform.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			transform = transform.replace(REPLACE_INDICATOR + '2', str(rotation.x))
+			transform = transform.replace(REPLACE_INDICATOR + '3', str(rotation.y))
+			transform = transform.replace(REPLACE_INDICATOR + '4', str(rotation.z))
+			transform = transform.replace(REPLACE_INDICATOR + '5', str(rotation.w))
+			transform = transform.replace(REPLACE_INDICATOR + '6', str(location.x))
+			transform = transform.replace(REPLACE_INDICATOR + '7', str(location.z))
+			transform = transform.replace(REPLACE_INDICATOR + '8', str(location.y))
+			transform = transform.replace(REPLACE_INDICATOR + '9', str(scale.x))
+			self.gameObjectsAndComponentsText += transform + '\n'
+		else:
+			gameObject = self.PREFAB_INSTANCE_TEMPLATE
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '10', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '11', str(myTransformId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(gameObjectId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(parentTransformId))
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '2', '6')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', self.prefabGuidsDict[prefabName])
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', '5')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', prefabName)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '6', '')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '7', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '8', '[]')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '9', '[]')
+		if parentTransformId == 0:
+			self.rootTransformsIds.append(myTransformId)
+		self.gameObjectsAndComponentsText += gameObject + '\n'
+		self.lastId += 1
+		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
+			spritePath = obj.data.filepath
+			spritePath = os.path.expanduser('~') + spritePath[1 :]
+			spriteName = spritePath[spritePath.rfind('/') + 1 :]
+			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
+			spriteGuid = GetGuid(newSpritePath)
+			spriteMeta = self.SPRITE_META_TEMPLATE
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', spriteGuid)
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
+			open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
+			spriteRenderer = self.SPRITE_RENDERER_TEMPLATE
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '2', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '3', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '4', '0')
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', spriteGuid)
+			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		elif obj.type == 'LIGHT':
+			lightObject = bpy.data.lights[obj.name]
+			lightType = 2
+			if lightObject.type == 'SUN':
+				lightType = 1
+			elif lightObject.type == 'SPOT':
+				lightType = 0
+			elif lightObject.type == 'AREA':
+				lightType = 3
+			spotSize = 0
+			innerSpotAngle = 0
+			if lightType == 0:
+				spotSize = lightObject.spot_size
+				innerSpotAngle = spotSize * (1.0 - lightObject.spot_blend)
+			light = self.LIGHT_TEMPLATE
+			light = light.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			light = light.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			light = light.replace(REPLACE_INDICATOR + '2', str(lightType))
+			light = light.replace(REPLACE_INDICATOR + '3', str(lightObject.color[0]))
+			light = light.replace(REPLACE_INDICATOR + '4', str(lightObject.color[1]))
+			light = light.replace(REPLACE_INDICATOR + '5', str(lightObject.color[2]))
+			light = light.replace(REPLACE_INDICATOR + '6', str(lightObject.energy * WATTS_TO_CANDELAS))
+			light = light.replace(REPLACE_INDICATOR + '7', str(10))
+			light = light.replace(REPLACE_INDICATOR + '8', str(spotSize))
+			light = light.replace(REPLACE_INDICATOR + '9', str(innerSpotAngle))
+			self.gameObjectsAndComponentsText += light + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		elif obj.type == 'MESH':
+			meshFilter = self.MESH_FILTER_TEMPLATE
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '2', meshFileId)
+			meshFilter = meshFilter.replace(REPLACE_INDICATOR + '3', meshGuid)
+			self.gameObjectsAndComponentsText += meshFilter + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+			for modifier in obj.modifiers:
+				if modifier.type == 'COLLISION':
+					self.AddMeshCollider (gameObjectId, False, False, meshFileId, meshGuid)
+					break
+			if obj.rigid_body != None:
+				rigidbody = self.RIGIDBODY_TEMPLATE
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '2', str(obj.rigid_body.mass))
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '3', str(obj.rigid_body.linear_damping))
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '4', str(obj.rigid_body.angular_damping))
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '5', '1')
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '6', str(int(obj.rigid_body.enabled)))
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '7', '0')
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '8', '0')
+				rigidbody = rigidbody.replace(REPLACE_INDICATOR + '9', '0')
+				self.gameObjectsAndComponentsText += rigidbody + '\n'
+				self.componentIds.append(self.lastId)
+				self.lastId += 1
+			materials = ''
+			for materialSlot in obj.material_slots:
+				filePath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
+				materialGuid = GetGuid(filePath)
+				open(filePath, 'w').write('guid: ' + materialGuid)
+				if self.unityVersionPath != '':
+					fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+					indexOfFile = self.dataText.find(fileIdIndicator)
+					indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
+					indexOfEndOfFileId = self.dataText.find(' ', indexOfFileId)
+					fileId = self.dataText[indexOfFileId : indexOfEndOfFileId]
+				else:
+					fileId = '10303'
+				material = self.MATERIAL_TEMPLATE
+				material = material.replace(REPLACE_INDICATOR + '0', fileId)
+				material = material.replace(REPLACE_INDICATOR + '1', materialGuid)
+				materials += material + '\n'
+			materials = materials[: -1]
+			meshRenderer = self.MESH_RENDERER_TEMPLATE
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			meshRenderer = meshRenderer.replace(REPLACE_INDICATOR + '2', materials)
+			self.gameObjectsAndComponentsText += meshRenderer + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		elif obj.type == 'CAMERA':
+			cameraObj = bpy.data.cameras[obj.name]
+			fovAxisMode = 0
+			if cameraObj.sensor_fit == 'HORIZONTAL':
+				fovAxisMode = 1
+			isOrthographic = 0
+			if cameraObj.type == 'ORTHO':
+				isOrthographic = 1
+			camera = self.CAMERA_TEMPLATE
+			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			camera = camera.replace(REPLACE_INDICATOR + '2', str(fovAxisMode))
+			camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObj.clip_start))
+			camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObj.clip_end))
+			camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObj.angle * (180.0 / PI)))
+			camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
+			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObj.ortho_scale / 2))
+			self.gameObjectsAndComponentsText += camera + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		attachedScripts = attachedUnityScriptsDict.get(obj, [])
+		for scriptName in attachedScripts:
+			filePath = self.projectExportPath + '/Assets/Scripts/' + scriptName
+			MakeFolderForFile (filePath)
+			for textBlock in bpy.data.texts:
+				if textBlock.name == scriptName:
+					if not scriptName.endswith('.cs'):
+						filePath += '.cs'
+					scriptText = textBlock.as_string()
+					open(filePath, 'wb').write(scriptText.encode('utf-8'))
+					break
+			filePath += '.meta'
+			scriptGuid = GetGuid(filePath)
+			open(filePath, 'w').write('guid: ' + scriptGuid)
+			script = self.SCRIPT_TEMPLATE
+			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+			hasPublicVariable = False
+			for propertyName in propertyNames:
+				scriptIndicator = scriptName + '_'
+				if propertyName.startswith(scriptIndicator):
+					propertyValue = getattr(obj, propertyName)
+					variableType = varaiblesTypesDict[propertyName]
+					if variableType == 'Color':
+						if not Equals(propertyValue, NULL_COLOR):
+							color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
+							script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
+					elif variableType == 'GameObject' or variableType == 'Transform':
+						self.gameObjectAndTrsVarsDict[(obj, propertyName)] = propertyValue
+						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
+					else:
+						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
+			self.gameObjectsAndComponentsText += script + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		indexOfComponentsList = self.gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
+		for componentId in self.componentIds:
+			component = self.COMPONENT_TEMPLATE
+			component = component.replace(REPLACE_INDICATOR, str(componentId))
+			self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText[: indexOfComponentsList] + component + '\n' + self.gameObjectsAndComponentsText[indexOfComponentsList :]
+		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
+		self.gameObjectIdsDict[obj] = gameObjectId
+		self.trsIdsDict[obj] = myTransformId
+		self.exportedObjs.append(GetObjectId(obj))
+		return myTransformId
+
+	def AddMeshCollider (self, gameObjectId : int, isTirgger : bool, isConvex : bool, fileId : str, meshGuid : str):
+		meshCollider = self.MESH_COLLIDER_TEMPLATE
+		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '2', str(int(isTirgger)))
+		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '3', str(int(isConvex)))
+		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '4', fileId)
+		meshCollider = meshCollider.replace(REPLACE_INDICATOR + '5', meshGuid)
+		self.gameObjectsAndComponentsText += meshCollider + '\n'
+		self.componentIds.append(self.lastId)
+		self.lastId += 1
+
+	def MakeClickableChild (self, name : str, fileId : str, meshGuid : str, parentTransformId = 0) -> (int, int):
+		gameObjectAndTrsId = self.MakeEmptyObject(name, 31, parentTransformId)
+		self.AddMeshCollider (gameObjectAndTrsId[0], True, True, fileId, meshGuid)
+		return gameObjectAndTrsId
+	
+class UnrealTranslateButton (bpy.types.Operator):
+	bl_idname = 'unreal.translate'
+	bl_label = 'Translate To Unreal'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		global operatorContext
+		global currentTextBlock
+		BuildTool ('UnityToUnreal')
+		operatorContext = context
+		MakeFolderForFile ('/tmp/HolyBlender (Unreal Scripts)/')
+		script = currentTextBlock.name
+		if not currentTextBlock.name.endswith('.cs'):
+			script += '.cs'
+		filePath = '/tmp/HolyBlender (Unreal Scripts)/' + script
+		open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
+		ConvertCSFileToCPP (filePath)
+
+class BevyTranslateButton (bpy.types.Operator):
+	bl_idname = 'bevy.translate'
+	bl_label = 'Translate To Bevy'
+
+	@classmethod
+	def poll (cls, context):
+		return True
+	
+	def execute (self, context):
+		global operatorContext
+		global currentTextBlock
+		BuildTool ('UnityToBevy')
+		operatorContext = context
+		script = currentTextBlock.name
+		if not currentTextBlock.name.endswith('.cs'):
+			script += '.cs'
+		filePath = '/tmp/' + script
+		open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
+		ConvertCSFileToRust (filePath)
+
 timer = None
 class Loop (bpy.types.Operator):
 	bl_idname = 'blender_plugin.start'
@@ -385,11 +2045,24 @@ class Loop (bpy.types.Operator):
 		return self.invoke(context, None)
 
 classes = [
+	UnrealExportButton,
+	BevyExportButton,
+	UnityExportButton,
+	GodotExportButton,
+	HTMLExportButton,
 	PlayButton,
+	UnrealTranslateButton,
+	BevyTranslateButton,
 	ExamplesOperator,
 	ExamplesMenu,
 	AttachedObjectsMenu,
-	Loop
+	Loop,
+	UnityScriptsPanel,
+	UnrealScriptsPanel,
+	GodotScriptsPanel,
+	BevyScriptsPanel,
+	WorldPanel,
+	ScriptVariablesPanel
 ]
 
 def BuildTool (toolName : str):
@@ -653,6 +2326,12 @@ def DrawExamplesMenu (self, context):
 def DrawAttachedObjectsMenu (self, context):
 	self.layout.menu(AttachedObjectsMenu.bl_idname)
 
+def DrawUnrealTranslateButton (self, context):
+	self.layout.operator(UnrealTranslateButton.bl_idname, icon='CONSOLE')
+
+def DrawBevyTranslateButton (self, context):
+	self.layout.operator(BevyTranslateButton.bl_idname, icon='CONSOLE')
+
 def SetupTextEditorFooterContext (self, context):
 	global currentTextBlock
 	global previousRunningScripts
@@ -893,20 +2572,12 @@ def register ():
 		description = '',
 		default = '~/TestGodotProject'
 	)
-	bpy.types.World.bevy_project_path = bpy.props.StringProperty(
-		name = 'Bevy project path',
-		description = '',
-		default = '~/TestBevyProject'
-	)
 	bpy.types.World.htmlExportPath = bpy.props.StringProperty(
 		name = 'HTML project path',
 		description = '',
 		default = '~/TestHtmlProject'
 	)
-	bpy.types.World.holyserver = bpy.props.PointerProperty(name='Python Server', type=bpy.types.Text)
-	bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
-	bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
-	bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
+
 	bpy.types.Text.run_cs = bpy.props.BoolProperty(
 		name = 'Run C# Script',
 		description = ''
@@ -917,6 +2588,8 @@ def register ():
 	)
 	bpy.types.TEXT_HT_header.append(DrawExamplesMenu)
 	bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
+	bpy.types.TEXT_HT_footer.append(DrawUnrealTranslateButton)
+	bpy.types.TEXT_HT_footer.append(DrawBevyTranslateButton)
 	bpy.types.TEXT_HT_footer.append(DrawRunCSToggle)
 	bpy.types.TEXT_HT_footer.append(DrawIsInitScriptToggle)
 	for i in range(MAX_SCRIPTS_PER_OBJECT):
