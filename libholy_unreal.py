@@ -104,6 +104,7 @@ class UnrealExportButton (bpy.types.Operator):
 			data += 'Children\n'
 			data += self.GetObjectsData(childrenDict) + '\n'
 			data += '\nScripts'
+			attachedUnrealScriptsDict = get_user_scripts('unreal')
 			for obj in attachedUnrealScriptsDict:
 				if len(attachedUnrealScriptsDict[obj]) > 0:
 					data += '\n' + self.GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedUnrealScriptsDict[obj]) + '\n'
