@@ -1,9 +1,6 @@
 import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 _thisdir = os.path.split(os.path.abspath(__file__))[0]
 if _thisdir not in sys.path: sys.path.append(_thisdir)
-sys.path.append(os.path.join(_thisdir, 'blender-to-unity-fbx-exporter'))
-import blender_to_unity_fbx_exporter as fbxExporter
-print(fbxExporter)
 
 REPLACE_INDICATOR = 'ꗈ'
 
@@ -27,7 +24,7 @@ mainClassNames = []
 attachedUnityScriptsDict = {}
 attachedUnrealScriptsDict = {}
 attachedGodotScriptsDict = {}
-attachedBevyScriptsDict = {}
+#attachedBevyScriptsDict = {}
 previousRunningScripts = []
 textBlocksTextsDict = {}
 previousTextBlocksTextsDict = {}
@@ -35,6 +32,13 @@ varaiblesTypesDict = {}
 propertyNames = []
 childrenDict = {}
 gameObjectAndTrsVarsDict = {}
+
+
+bpy.types.World.holyserver = bpy.props.PointerProperty(name='Python Server', type=bpy.types.Text)
+bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
+bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
+bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
+
 
 sys.path.append(os.path.join(_thisdir, 'Extensions'))
 from SystemExtensions import *
