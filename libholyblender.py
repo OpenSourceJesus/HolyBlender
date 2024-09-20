@@ -22,7 +22,7 @@ operatorContext = None
 currentTextBlock = None
 mainClassNames = []
 attachedUnityScriptsDict = {}
-attachedUnrealScriptsDict = {}
+#attachedUnrealScriptsDict = {}
 attachedGodotScriptsDict = {}
 #attachedBevyScriptsDict = {}
 previousRunningScripts = []
@@ -39,6 +39,20 @@ bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy
 bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
 bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
 
+def get_user_scripts(mode):
+	assert mode in 'unity unreal bevy godot'.split()
+	scripts_dict = {}
+	for ob in bpy.data.objects:
+		scripts = []
+		for i in range(MAX_SCRIPTS_PER_OBJECT):
+			txt = getattr(ob, '%s_script%s' % (mode,i))
+			if txt:
+				scripts.append(text)
+
+		if scripts:
+			scripts_dict[ob] = scripts
+
+	return scripts_dict
 
 sys.path.append(os.path.join(_thisdir, 'Extensions'))
 from SystemExtensions import *
