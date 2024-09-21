@@ -939,9 +939,9 @@ def Do (attachedScriptsDict = {}):
 	subprocess.check_call(command, cwd=BEVY_PROJECT_PATH)
 
 	if 'fedora' in os.uname().nodename:
-		command = [ os.path.expanduser('~/.cargo/bin/cargo'), 'run' ]
+		command = [ os.path.expanduser('~/.cargo/bin/cargo'), 'build' ]
 	else:
-		command = [ 'cargo', 'run' ]
+		command = [ 'cargo', 'build' ]
 
 	if WEBGL_INDICATOR in sys.argv:
 		command.append('--target')
@@ -958,16 +958,6 @@ def Do (attachedScriptsDict = {}):
 	import time
 	time.sleep(10)
 	MakeFolderForFile (BEVY_PROJECT_PATH + '/api/')
-	waiting = True
-	while waiting:
-		try:
-			print('ping...')
-			subprocess.check_call(['curl', 'http://127.0.0.1:1334/api/wasm.js', '-o', BEVY_PROJECT_PATH+'/api/wasm.js'])
-			subprocess.check_call(['curl', 'http://127.0.0.1:1334/api/wasm.wasm','-o', BEVY_PROJECT_PATH+'/api/wasm.wasm'])
-			waiting = False
-		except subprocess.CalledProcessError:
-			time.sleep(3)
-			print('waiting for http://127.0.0.1:1334')
 	try:
 		process.kill()
 	except:
