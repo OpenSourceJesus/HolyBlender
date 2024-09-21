@@ -40,16 +40,19 @@ public class GetUnityProjectInfo : MonoBehaviour
 		foreach (string filePath in filePaths)
 		{
 			int indexOfAssets = filePath.IndexOf("Assets");
-			string relativeFilePath = filePath.Substring(indexOfAssets);
-			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
-			foreach (Object obj in objects)
+			if (indexOfAssets != -1)
 			{
-				if (obj.GetType() == assetType)
+				string relativeFilePath = filePath.Substring(indexOfAssets);
+				Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
+				foreach (Object obj in objects)
 				{
-					string guid;
-					long fileId;
-					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						output += '-' + filePath + ' ' + fileId + ' ' + guid;
+					if (obj.GetType() == assetType)
+					{
+						string guid;
+						long fileId;
+						if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
+							output += '-' + filePath + ' ' + fileId + ' ' + guid;
+					}
 				}
 			}
 		}

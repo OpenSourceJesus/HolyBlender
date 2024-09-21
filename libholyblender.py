@@ -2,8 +2,16 @@ import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 _thisdir = os.path.split(os.path.abspath(__file__))[0]
 if _thisdir not in sys.path: sys.path.append(_thisdir)
 
-REPLACE_INDICATOR = 'ꗈ'
+sys.path.append(os.path.join(_thisdir, 'blender-to-unity-fbx-exporter'))
+try:
+	import blender_to_unity_fbx_exporter as fbxExporter
+	print(fbxExporter)
+except:
+	fbxExporter = None
+if fbxExporter:
+	bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
 
+REPLACE_INDICATOR = 'ꗈ'
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
 UNITY_SCRIPTS_PATH = os.path.join(_thisdir, 'Unity Scripts')
@@ -33,7 +41,6 @@ propertyNames = []
 childrenDict = {}
 gameObjectAndTrsVarsDict = {}
 
-
 bpy.types.World.holyserver = bpy.props.PointerProperty(name='Python Server', type=bpy.types.Text)
 bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
 bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
@@ -47,11 +54,9 @@ def get_user_scripts(mode):
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
 			txt = getattr(ob, '%s_script%s' % (mode,i))
 			if txt:
-				scripts.append(text)
-
+				scripts.append(txt)
 		if scripts:
 			scripts_dict[ob] = scripts
-
 	return scripts_dict
 
 sys.path.append(os.path.join(_thisdir, 'Extensions'))

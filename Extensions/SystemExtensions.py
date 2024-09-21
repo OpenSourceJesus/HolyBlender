@@ -6,7 +6,7 @@ def GetAllFilePathsOfType (rootFolderPath : str, fileExtension : str) -> list[st
 	while len(foldersRemaining) > 0:
 		folderPath = os.path.expanduser(foldersRemaining[0])
 		for path in os.listdir(folderPath):
-			fullPath = folderPath + '/' + path
+			fullPath = os.path.join(folderPath, path)
 			if os.path.isdir(fullPath):
 				foldersRemaining.append(fullPath)
 			elif os.path.isfile(fullPath) and fullPath.endswith(fileExtension):

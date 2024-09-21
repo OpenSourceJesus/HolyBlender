@@ -5,18 +5,8 @@ _thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(_thisdir)
 from libholyblender import *
 
-sys.path.append(os.path.join(_thisdir, 'blender-to-unity-fbx-exporter'))
-try:
-	import blender_to_unity_fbx_exporter as fbxExporter
-	print(fbxExporter)
-except:
-	fbxExporter = None
-if fbxExporter:
-	bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
-
 for i in range(MAX_SCRIPTS_PER_OBJECT):
-	setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text))
-
+	setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity scriptText', type=bpy.types.Text))
 
 bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
 	name = 'Unity project import path',
@@ -717,7 +707,9 @@ Transform:
 		
 		subprocess.check_call(command.split())
 
-		os.system('cp -r ' + os.path.join(_thisdir, 'UnityGLTF') + ' ' + os.path.join(self.projectExportPath, 'Assets', 'UnityGLTF'))
+		unityGltfPath = os.path.join(self.projectExportPath, 'Assets', 'UnityGLTF')
+		if not os.path.isdir(unityGltfPath):
+			os.system('cp -r ' + os.path.join(_thisdir, 'UnityGLTF') + ' ' + unityGltfPath)
 
 		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources')
@@ -753,11 +745,11 @@ Transform:
 		sendAndRecieveServerEventsScriptMetaPath = sendAndRecieveServerEventsScriptPath + '.meta'
 		scriptGuid = GetGuid(sendAndRecieveServerEventsScriptMetaPath)
 		open(sendAndRecieveServerEventsScriptMetaPath, 'w').write('guid: ' + scriptGuid)
-		script = self.SCRIPT_TEMPLATE
-		script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-		script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTrsId[0]))
-		script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
-		self.gameObjectsAndComponentsText += script + '\n'
+		scriptText = self.SCRIPT_TEMPLATE
+		scriptText = scriptText.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+		scriptText = scriptText.replace(REPLACE_INDICATOR + '1', str(gameObjectIdAndTrsId[0]))
+		scriptText = scriptText.replace(REPLACE_INDICATOR + '2', scriptGuid)
+		self.gameObjectsAndComponentsText += scriptText + '\n'
 		self.componentIds.append(self.lastId)
 		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', self.COMPONENT_TEMPLATE.replace(REPLACE_INDICATOR, str(self.lastId)))
 		for key in self.gameObjectAndTrsVarsDict:
@@ -1033,12 +1025,12 @@ Transform:
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
 		attachedScripts = attachedUnityScriptsDict.get(obj, [])
-		for scriptName in attachedScripts:
-			filePath = self.projectExportPath + '/Assets/Scripts/' + scriptName
+		for script in attachedScripts:
+			filePath = self.projectExportPath + '/Assets/Scripts/' + script.name
 			MakeFolderForFile (filePath)
 			for textBlock in bpy.data.texts:
-				if textBlock.name == scriptName:
-					if not scriptName.endswith('.cs'):
+				if textBlock == script:
+					if not script.name.endswith('.cs'):
 						filePath += '.cs'
 					scriptText = textBlock.as_string()
 					open(filePath, 'wb').write(scriptText.encode('utf-8'))
@@ -1046,26 +1038,26 @@ Transform:
 			filePath += '.meta'
 			scriptGuid = GetGuid(filePath)
 			open(filePath, 'w').write('guid: ' + scriptGuid)
-			script = self.SCRIPT_TEMPLATE
-			script = script.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			script = script.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			script = script.replace(REPLACE_INDICATOR + '2', scriptGuid)
+			scriptText = self.SCRIPT_TEMPLATE
+			scriptText = scriptText.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			scriptText = scriptText.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			scriptText = scriptText.replace(REPLACE_INDICATOR + '2', scriptGuid)
 			hasPublicVariable = False
 			for propertyName in propertyNames:
-				scriptIndicator = scriptName + '_'
+				scriptIndicator = script.name + '_'
 				if propertyName.startswith(scriptIndicator):
 					propertyValue = getattr(obj, propertyName)
 					variableType = varaiblesTypesDict[propertyName]
 					if variableType == 'Color':
 						if not Equals(propertyValue, NULL_COLOR):
 							color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
-							script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
+							scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
 					elif variableType == 'GameObject' or variableType == 'Transform':
 						self.gameObjectAndTrsVarsDict[(obj, propertyName)] = propertyValue
-						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
+						scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
 					else:
-						script += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
-			self.gameObjectsAndComponentsText += script + '\n'
+						scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
+			self.gameObjectsAndComponentsText += scriptText + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
 		indexOfComponentsList = self.gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
@@ -1109,7 +1101,6 @@ class WorldPanel(bpy.types.Panel):
 		self.layout.prop(context.world, 'unity_project_export_path')
 		self.layout.operator('unity.export', icon='CONSOLE')
 		self.layout.operator('unity.play', icon='CONSOLE')
-
 
 @bpy.utils.register_class
 class ScriptVariablesPanel (bpy.types.Panel):
