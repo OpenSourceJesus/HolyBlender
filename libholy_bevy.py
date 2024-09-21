@@ -5,6 +5,11 @@ _thisdir = os.path.split(os.path.abspath(__file__))[0]
 if _thisdir not in sys.path: sys.path.append(_thisdir)
 from libholyblender import *
 
+if not os.path.isdir( os.path.join(_thisdir, './Blender_bevy_components_workflow') ):
+	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
+	print(cmd)
+	subprocess.check_call(cmd.split(), cwd=_thisdir)
+
 sys.path.append(os.path.join(_thisdir, 'Blender_bevy_components_workflow/tools'))
 print(sys.path)
 import bevy_components
@@ -36,10 +41,10 @@ EXAMPLES_DICT = {
 	'Rotate (bevy)'      : 'trs.rotate_y(5.0 * time.delta_seconds());)'
 }
 
-
-@bpy.utils.register_class
-class BevyExportButton(bpy.types.Operator):
-	bl_idname = 'bevy.export'
+## TODO
+#@bpy.utils.register_class
+class Unity2BevyImportButton(bpy.types.Operator):
+	bl_idname = 'bevy.import_from_unity'
 	bl_label = 'Export To Bevy'
 	@classmethod
 	def poll (cls, context):
@@ -55,14 +60,37 @@ class BevyExportButton(bpy.types.Operator):
 			print(command)
 			subprocess.check_call(command)
 
-		else:
-			data = bevyExportPath
-			for obj in attachedBevyScriptsDict:
-				data += '\n' + obj.name + '☢️' + '☣️'.join(attachedBevyScriptsDict[obj])
-			open('/tmp/HolyBlender Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
-			import MakeBevyBlenderApp as makeBevyBlenderApp
-			makeBevyBlenderApp.Do (attachedBevyScriptsDict)
-			# webbrowser.open('http://localhost:1334')
+
+@bpy.utils.register_class
+class BevyExportButton(bpy.types.Operator):
+	bl_idname = 'bevy.export'
+	bl_label = 'Export To Bevy'
+	@classmethod
+	def poll (cls, context):
+		return True
+	def execute (self, context):
+		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
+		if not os.path.isdir(bevyExportPath):
+			MakeFolderForFile (bevyExportPath + '/')
+		data = bevyExportPath
+		scripts_dict = {}
+		for ob in bpy.data.objects:
+			scripts = []
+			for i in range(MAX_SCRIPTS_PER_OBJECT):
+				txt = getattr(ob, 'bevy_script%s' % i)
+				if txt:
+					scripts.append(text)
+
+			if scripts:
+				scripts_dict[ob] = scripts
+				data += '\n' + obj.name + '☢️' + '☣️'.join(scripts)
+
+		#for obj in attachedBevyScriptsDict:
+		#	data += '\n' + obj.name + '☢️' + '☣️'.join(attachedBevyScriptsDict[obj])
+		open('/tmp/HolyBlender Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
+		import MakeBevyBlenderApp as makeBevyBlenderApp
+		makeBevyBlenderApp.Do (scripts_dict)
+		# webbrowser.open('http://localhost:1334')
 
 @bpy.utils.register_class
 class BevyTranslateButton (bpy.types.Operator):

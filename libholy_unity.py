@@ -668,8 +668,8 @@ Transform:
 					break
 		if self.unityVersionPath == '':
 			print('No Unity version installed')
-			return
-		__thisdir = os.path.split(os.path.abspath(__file__))[0]
+			return {"FINISHED"}
+
 		self.lastId = 5
 		self.projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
 		if not os.path.isdir(self.projectExportPath):
@@ -717,7 +717,7 @@ Transform:
 		
 		subprocess.check_call(command.split())
 
-		os.system('cp -r ' + os.path.join(__thisdir, 'UnityGLTF') + ' ' + os.path.join(self.projectExportPath, 'Assets', 'UnityGLTF'))
+		os.system('cp -r ' + os.path.join(_thisdir, 'UnityGLTF') + ' ' + os.path.join(self.projectExportPath, 'Assets', 'UnityGLTF'))
 
 		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources')
@@ -786,8 +786,8 @@ Transform:
 		open(scenePath, 'wb').write(sceneText.encode('utf-8'))
 		if self.unityVersionPath != '':
 			command = [ self.unityVersionPath, '-createProject', self.projectExportPath ]
-			
 			subprocess.check_call(command)
+		return {"FINISHED"}
 
 	def MakeEmptyObject (self, name : str, layer = 0, parentTransformId = 0) -> (int, int):
 		gameObject = self.GAME_OBJECT_TEMPLATE
@@ -821,6 +821,7 @@ Transform:
 		return (gameObjectId, self.lastId - 1)
 
 	def MakeObject (self, obj, parentTransformId = 0) -> int:
+		attachedUnityScriptsDict = get_user_scripts('unity')
 		self.componentIds = []
 		prefabName = ''
 		# for collection in bpy.data.collections:

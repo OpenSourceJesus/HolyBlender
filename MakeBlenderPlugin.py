@@ -7,21 +7,13 @@ for arg in sys.argv:
 if user_args: print('user_args:', user_args)
 
 _thisdir = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(_thisdir)
-import libholy_bevy, libholy_godot, libholy_unity, libholy_unreal, libholyblender
-sys.path.append(os.path.join(_thisdir, 'Blender_bevy_components_workflow/tools'))
-print(sys.path)
-import bevy_components
-print(bevy_components)
-import gltf_auto_export
-print(gltf_auto_export)
-bpy.ops.preferences.addon_enable(module='bevy_components')
-bpy.ops.preferences.addon_enable(module='gltf_auto_export')
+if _thisdir not in sys.path: sys.path.append(_thisdir)
 
-sys.path.append(os.path.join(_thisdir, 'Extensions'))
-from SystemExtensions import *
-from StringExtensions import *
-from CollectionExtensions import *
+import libholy_unity
+import libholy_unreal
+import libholy_bevy
+import libholy_godot
+
 
 if os.path.isdir(os.path.join(_thisdir,'Net-Ghost-SE')):
 	sys.path.append(os.path.join(_thisdir,'Net-Ghost-SE'))
@@ -270,34 +262,50 @@ class HttpServerOperator (bpy.types.Operator):
 
 HTTPD_ACTIVE = True
 bpy.ops.httpd.run()'''
-WATTS_TO_CANDELAS = 0.001341022
-PI = 3.141592653589793
-UNITY_SCRIPTS_PATH = os.path.join(_thisdir, 'Unity Scripts')
-GODOT_SCRIPTS_PATH = os.path.join(_thisdir, 'Godot Scripts')
-EXTENSIONS_PATH = os.path.join(_thisdir, 'Extensions')
-TEMPLATES_PATH = os.path.join(_thisdir, 'Templates')
-TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
-REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
-MAX_SCRIPTS_PER_OBJECT = 16
-NULL_INT = 1234567936
-NULL_COLOR = [NULL_INT, NULL_INT, NULL_INT, NULL_INT]
-unrealCodePath = ''
-unrealCodePathSuffix = os.path.join('', 'Source', '')
-excludeItems = [ os.path.join('', 'Library') ]
-operatorContext = None
-currentTextBlock = None
-mainClassNames = []
-attachedUnityScriptsDict = {}
-attachedUnrealScriptsDict = {}
-attachedGodotScriptsDict = {}
-attachedBevyScriptsDict = {}
-previousRunningScripts = []
-textBlocksTextsDict = {}
-previousTextBlocksTextsDict = {}
-varaiblesTypesDict = {}
-propertyNames = []
-childrenDict = {}
-gameObjectAndTrsVarsDict = {}
+
+
+class WorldPanel (bpy.types.Panel):
+	bl_idname = 'WORLD_PT_World_Panel'
+	bl_label = 'HolyBlender Export'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'world'
+
+	def draw (self, context):
+		self.layout.prop(context.world, 'unity_project_import_path')
+		self.layout.prop(context.world, 'unity_project_export_path')
+		self.layout.prop(context.world, 'unrealExportPath')
+		self.layout.prop(context.world, 'godotExportPath')
+		self.layout.prop(context.world, 'bevy_project_path')
+		self.layout.prop(context.world, 'htmlExportPath')
+		self.layout.prop(context.world, 'holyserver')
+		self.layout.prop(context.world, 'html_code')
+		self.layout.operator(UnityExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(UnrealExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(GodotExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(BevyExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(HTMLExportButton.bl_idname, icon='CONSOLE')
+		self.layout.operator(PlayButton.bl_idname, icon='CONSOLE')
+
+class ScriptVariablesPanel (bpy.types.Panel):
+	bl_label = "Scripts Public Variables"
+	bl_idname = "OBJECT_PT_Script_Public_Variables"
+	bl_space_type = "PROPERTIES"
+	bl_region_type = "WINDOW"
+	bl_context = "object"
+
+	def draw (self, context):
+		for propertyName in propertyNames:
+			if varaiblesTypesDict[propertyName] == 'Color':
+				if not Equals(getattr(context.active_object, propertyName), NULL_COLOR):
+					self.layout.prop(context.active_object, propertyName)
+			elif varaiblesTypesDict[propertyName] == 'GameObject' or varaiblesTypesDict[propertyName] == 'Transform':
+				if propertyName in gameObjectAndTrsVarsDict[context.active_object]:
+					self.layout.prop(context.active_object, propertyName)
+			else:
+				self.layout.prop(context.active_object, propertyName)
+
+
 
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
@@ -319,339 +327,121 @@ class ExamplesMenu (bpy.types.Menu):
 			op = layout.operator('u2m.show_template', text=name)
 			op.template = name
 
-class AttachedObjectsMenu (bpy.types.Menu):
-	bl_idname = 'TEXT_MT_u2m_menu_obj'
-	bl_label = 'HolyBlender Attached Objects'
-
-	def draw (self, context):
-		layout = self.layout
-		if not context.edit_text:
-			layout.label(text='No text block')
-			return
-		objs = []
-		for obj in bpy.data.objects:
-			attachedScripts = attachedUnityScriptsDict.get(obj, [])
-			if context.edit_text.name in attachedScripts:
-				objs.append(obj)
-			attachedScripts = attachedBevyScriptsDict.get(obj, [])
-			if context.edit_text.name in attachedScripts:
-				objs.append(obj)
-			attachedScripts = attachedUnrealScriptsDict.get(obj, [])
-			if context.edit_text.name in attachedScripts:
-				objs.append(obj)
-		if objs:
-			for obj in objs:
-				layout.label(text=obj.name)
-		else:
-			layout.label(text='Script not attached to any objects')
-
-class PlayButton (bpy.types.Operator):
-	bl_idname = 'blender.play'
-	bl_label = 'Start Playing (Unfinished)'
+class HTMLExportButton (bpy.types.Operator):
+	bl_idname = 'html.export'
+	bl_label = 'Export To HTML'
 
 	@classmethod
 	def poll (cls, context):
 		return True
 	
 	def execute (self, context):
-		for textBlock in bpy.data.texts:
-			textBlock.run_cs = True
-
-timer = None
-class Loop (bpy.types.Operator):
-	bl_idname = 'blender_plugin.start'
-	bl_label = 'blender_plugin_start'
-	bl_options = { 'REGISTER' }
-
-	def modal (self, context, event):
-		for area in bpy.data.screens['Layout'].areas:
+		htmlExportPath = os.path.expanduser(context.scene.world.htmlExportPath)
+		previousVisibleObjects = []
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH' and not obj.hide_get():
+				previousVisibleObjects.append(obj)
+				obj.hide_render = True
+		bpy.context.scene.render.resolution_percentage = 10
+		camera = bpy.data.cameras[0]
+		cameraObj = bpy.data.objects[camera.name]
+		bpy.ops.object.select_all(action='DESELECT')
+		bpy.context.view_layer.objects.active = cameraObj
+		cameraObj.select_set(True)
+		bpy.context.scene.camera = cameraObj
+		for area in bpy.context.screen.areas:
 			if area.type == 'VIEW_3D':
-				for region in area.regions:
-					if region.type == 'WINDOW':
-						region.tag_redraw()
-		return {'PASS_THROUGH'} # Won't supress event bubbles
-
-	def invoke (self, context, event):
-		global timer
-		if timer is None:
-			timer = self._timer = context.window_manager.event_timer_add(
-				time_step=0.016666667,
-				window=context.window)
-			context.window_manager.modal_handler_add(self)
-			return {'RUNNING_MODAL'}
+				area.spaces.active.region_3d.view_perspective = 'CAMERA'
+				break
+		bpy.context.scene.render.film_transparent = True
+		bpy.context.scene.render.image_settings.color_mode = 'RGBA'
+		previousCameraLocation = cameraObj.location
+		previousCameraRotationMode = cameraObj.rotation_mode
+		cameraObj.rotation_mode = 'XYZ'
+		previousCameraRotation = cameraObj.rotation_euler
+		previousCameraType = camera.type
+		camera.type = 'ORTHO'
+		previousCameraOrthoScale = camera.ortho_scale
+		html = [
+			'<!DOCTYPE html>',
+			'<html><head><script>',
+		]
+		js_blocks = {}
+		imgs = []
+		for obj in bpy.data.objects:
+			if obj.type == 'MESH':
+				obj.hide_render = False
+				bpy.context.scene.render.filepath = htmlExportPath + '/' + obj.name
+				cameraObj.rotation_euler = mathutils.Vector((math.radians(90), 0, 0))
+				bounds = GetObjectBounds(obj)
+				cameraObj.location = bounds[0] - mathutils.Vector((0, bounds[1].y, 0))
+				camera.ortho_scale = max(bounds[1].x, bounds[1].z) * 2
+				if os.path.isfile( htmlExportPath + '/' + obj.name ) and '--skip-render' in sys.argv:
+					pass
+				else:
+					bpy.ops.render.render(animation=False, write_still=True)
+				obj.hide_render = True
+				imagePath = bpy.context.scene.render.filepath + '.png'
+				command = [ 'convert', '-delay', '10', '-loop', '0', imagePath, imagePath.replace('.png', '.gif') ]
+				subprocess.check_call(command)
+				imagePath = imagePath.replace('.png', '.gif')
+				cameraSize = mathutils.Vector((camera.sensor_width, camera.sensor_height))
+				imageData = open(imagePath, 'rb').read()
+				base64EncodedStr = base64.b64encode(imageData).decode('utf-8')
+				multiplyUnits = 50
+				zIndex = int(bounds[0].y)
+				zIndex += 10
+				if zIndex < 0:
+					zIndex = 0
+				onclick =  ''
+				if obj.html_on_click:
+					fname = '__on_click_' + obj.html_on_click.name.replace('.','_')
+					if obj.html_on_click.name not in js_blocks:
+						js = 'function %s(self){%s}' % (fname, obj.html_on_click.as_string())
+						js_blocks[obj.html_on_click.name] = js
+					onclick = 'javascript:%s(this)' % fname
+				userCss = ''
+				if obj.html_css:
+					userCss = obj.html_css.as_string().replace('\n', ' ').strip()
+				imageText = '<img id="%s" onclick="%s" style="position:fixed; left:%spx; top:%spx; z-index:%s;%s" src="data:image/gif;base64,%s">\n' %(
+					obj.name,
+					onclick,
+					bounds[0].x * multiplyUnits,
+					-bounds[0].z * multiplyUnits,
+					zIndex,
+					userCss,
+					base64EncodedStr
+				)
+				imgs.append(imageText)
+		for obj in previousVisibleObjects:
+			obj.hide_render = False
+		cameraObj.location = previousCameraLocation
+		cameraObj.rotation_mode = previousCameraRotationMode
+		cameraObj.rotation_euler = previousCameraRotation
+		camera.type = previousCameraType
+		camera.ortho_scale = previousCameraOrthoScale
+		for tname in js_blocks:
+			html.append('//' + tname)
+			html.append(js_blocks[tname])
+		html.append('</script>')
+		html.append('</head>')
+		html.append('<body>')
+		html += imgs
+		html.append('</body></html>')
+		htmlText = '\n'.join(html)
+		open(htmlExportPath + '/index.html', 'wb').write(htmlText.encode('utf-8'))
+		if '__index__.html' not in bpy.data.texts:
+			bpy.data.texts.new(name='__index__.html')
+		bpy.data.texts['__index__.html'].from_string(htmlText)
+		if bpy.data.worlds[0].holyserver:
+			scope = globals()
+			exec(bpy.data.worlds[0].holyserver.as_string(), scope, scope)
+			webbrowser.open('http://localhost:8000/')
+		else:
+			webbrowser.open(htmlExportPath + '/index.html')
 		return {'FINISHED'}
 
-	def execute (self, context):
-		return self.invoke(context, None)
 
-classes = [
-	PlayButton,
-	ExamplesOperator,
-	ExamplesMenu,
-	AttachedObjectsMenu,
-	Loop
-]
-
-def BuildTool (toolName : str):
-	command = [ 'make', 'build_' + toolName ]
-	print(command)
-
-	subprocess.check_call(command)
-
-def ExportObject (obj, folder : str) -> str:
-	filePath = os.path.join(folder, obj.name + '.fbx')
-	filePath = filePath.replace(' ', '_')
-	bpy.ops.object.select_all(action='DESELECT')
-	bpy.context.view_layer.objects.active = obj
-	obj.select_set(True)
-	if obj.parent == None:
-		fbxExporter.fix_object(obj)
-	bpy.ops.export_scene.fbx(filepath=filePath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
-	return filePath
-
-def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
-	_min = mathutils.Vector((float('inf'), float('inf'), float('inf')))
-	_max = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
-	if obj.type == 'MESH':
-		for vertex in obj.data.vertices:
-			vertex = obj.matrix_world @ vertex.co
-			_min.x = min(vertex.x, _min.x)
-			_min.y = min(vertex.y, _min.y)
-			_min.z = min(vertex.z, _min.z)
-			_max.x = max(vertex.x, _max.x)
-			_max.y = max(vertex.y, _max.y)
-			_max.z = max(vertex.z, _max.z)
-	else:
-		print('GetObjectBounds is not implemented for object types besides meshes')
-	return ((_min + _max) / 2, _max - _min)
-
-def GetObjectId (obj):
-	id = str(obj)
-	idIndicator = 'at '
-	id = id[id.rfind(idIndicator) + len(idIndicator) :]
-	print('YAY' + id)
-	return id
-
-def GetGuid (filePath : str):
-	return hashlib.md5(filePath.encode('utf-8')).hexdigest()
-
-def ConvertCSFileToCPP (filePath):
-	global mainClassNames
-	global unrealCodePath
-	global unrealCodePathSuffix
-	assert os.path.isfile(filePath)
-	unrealCodePath = os.path.expanduser(operatorContext.scene.world.unrealExportPath)
-	unrealProjectName = unrealCodePath[unrealCodePath.rfind('/') + 1 :]
-	unrealCodePathSuffix = '/Source/' + unrealProjectName
-	unrealCodePath += unrealCodePathSuffix
-	mainClassNames = [ os.path.split(filePath)[-1].split('.')[0] ]
-	command = [
-		'dotnet',
-		os.path.expanduser('~/HolyBlender/UnityToUnreal/HolyBlender.dll'),
-		'includeFile=' + filePath,
-		'unreal=true',
-		'output=' + unrealCodePath,
-	]
-	# for arg in sys.argv:
-	# 	command.append(arg)
-	command.append(os.path.expanduser(operatorContext.scene.world.unity_project_import_path))
-	print(command)
-
-	subprocess.check_call(command)
-
-	outputFilePath = unrealCodePath + filePath[filePath.rfind('/') :]
-	outputFilePath = outputFilePath.replace('.cs', '.py')
-	print(outputFilePath)
-	assert os.path.isfile(outputFilePath)
-
-	os.system('cat ' + outputFilePath)
-
-	ConvertPythonFileToCPP (outputFilePath)
-
-def ConvertPythonFileToCPP (filePath):
-	global mainClassNames
-	lines = []
-	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
-		if line.startswith('import ') or line.startswith('from '):
-			print('Skipping line:', line)
-			continue
-		lines.append(line)
-	text = '\n'.join(lines)
-	open(filePath, 'wb').write(text.encode('utf-8'))
-	hasCorrectTextBlock = False
-	textBlockName = filePath[filePath.rfind('/') + 1 :]
-	for textBlock in bpy.data.texts:
-		if textBlock.name == textBlockName:
-			hasCorrectTextBlock = True
-			break
-	if not hasCorrectTextBlock:
-		bpy.data.texts.new(textBlockName)
-	textBlock = bpy.data.texts[textBlockName]
-	textBlock.clear()
-	textBlock.write(text)
-	outputFilePath = unrealCodePath + '/' + textBlockName
-	command = [ 'python3', os.path.expanduser('~/HolyBlender') + '/py2many/py2many.py', '--cpp=1', outputFilePath, '--unreal=1', '--outdir=' + unrealCodePath ]
-	# for arg in sys.argv:
-	# 	command.append(arg)
-	command.append(os.path.expanduser(operatorContext.scene.world.unrealExportPath))
-	print(command)
-	
-	subprocess.check_call(command)
-
-	outputFileText = open(outputFilePath.replace('.py', '.cpp'), 'rb').read().decode('utf-8')
-	for mainClassName in mainClassNames:
-		indexOfMainClassName = 0
-		while indexOfMainClassName != -1:
-			indexOfMainClassName = outputFileText.find(mainClassName, indexOfMainClassName + len(mainClassName))
-			if indexOfMainClassName != -1 and outputFileText[indexOfMainClassName - 1 : indexOfMainClassName] != 'A' and not IsInString_CS(outputFileText, indexOfMainClassName):
-				outputFileText = outputFileText[: indexOfMainClassName] + 'A' + outputFileText[indexOfMainClassName :]
-		equalsNullIndicator = '= nullptr'
-		indexOfEqualsNull = 0
-		while indexOfEqualsNull != -1:
-			indexOfEqualsNull = outputFileText.find(equalsNullIndicator, indexOfEqualsNull + len(equalsNullIndicator))
-			if indexOfEqualsNull != -1:
-				indexOfSpace = outputFileText.rfind(' ', 0, indexOfEqualsNull - 1)
-				indexOfMainClassName = outputFileText.rfind(mainClassName, 0, indexOfSpace)
-				if indexOfMainClassName == indexOfSpace - len(mainClassName):
-					outputFileText = Remove(outputFileText, indexOfEqualsNull, len(equalsNullIndicator))
-	pythonFileText = open(outputFilePath, 'rb').read().decode('utf-8')
-	pythonFileLines = pythonFileText.split('\n')
-	headerFileText = open(outputFilePath.replace('.py', '.h'), 'rb').read().decode('utf-8')
-	for i in range(len(pythonFileLines) - 1, -1, -1):
-		line = pythonFileLines[i]
-		if not line.startswith(' '):
-			line = line.replace(' ', '')
-			indexOfColon = line.find(':')
-			variableName = line[: indexOfColon]
-			mainClassName = os.path.split(outputFilePath)[-1].split('.')[0]
-			outputFileText = outputFileText.replace(variableName, variableName + '_' + mainClassName)
-			headerFileText = headerFileText.replace(variableName, variableName + '_' + mainClassName)
-			indexOfVariableName = headerFileText.find(variableName)
-			indexOfNewLine = headerFileText.rfind('\n', 0, indexOfVariableName)
-			headerFileText = headerFileText[: indexOfNewLine] + '\n\tUPROPERTY(EditAnywhere)' + headerFileText[indexOfNewLine :]
-			indexOfEquals = line.find('=', indexOfColon + 1)
-			variableName += '_' + mainClassName
-			mainConstructor = '::A' + mainClassName + '() {'
-			indexOfMainConstructor = outputFileText.find(mainConstructor)
-			if indexOfEquals != -1:
-				value = line[indexOfEquals + 1 :]
-				outputFileText = outputFileText[: indexOfMainConstructor + len(mainConstructor) + 1] + '\t' + variableName + ' = ' + value + ';\n' + outputFileText[indexOfMainConstructor + len(mainConstructor) + 1 :]
-		else:
-			break
-	outputFileLines = outputFileText.split('\n')
-	for i in range(len(outputFileLines)):
-		line = outputFileLines[i]
-		line = line.replace(' ', '')
-		indexOfX = 0
-		while indexOfX != -1:
-			indexOfX = line.find('.X', indexOfX + 1)
-			if indexOfX != -1:
-				indexOfEquals = line.find('=', indexOfX)
-				if indexOfEquals != -1 and indexOfEquals <= indexOfX + 3:
-					outputFileLines[i] = line[: indexOfEquals + 1] + '-' + line[indexOfEquals + 1 :]
-	outputFileText = '\n'.join(outputFileLines)
-	cppFilePath = outputFilePath.replace('.py', '.cpp')
-	open(cppFilePath, 'wb').write(outputFileText.encode('utf-8'))
-	open(outputFilePath.replace('.py', '.h'), 'wb').write(headerFileText.encode('utf-8'))
-	command = [ 'cat', cppFilePath ]
-	print(command)
-
-	subprocess.check_call(command)
-	
-	for textBlock in bpy.data.texts:
-		textBlockName = cppFilePath[cppFilePath.rfind('/') + 1 :].replace('.cpp', '')
-		if textBlock.name == textBlockName:
-			textBlockName += '.cpp+.h'
-			hasCorrectTextBlock = False
-			for textBlock in bpy.data.texts:
-				if textBlock.name == textBlockName:
-					hasCorrectTextBlock = True
-					break
-			if not hasCorrectTextBlock:
-				bpy.data.texts.new(textBlockName)
-			textBlock = bpy.data.texts[textBlockName]
-			textBlock.clear()
-			textBlock.write(outputFileText)
-			textBlock.write(headerFileText)
-
-def ConvertCSFileToRust (filePath):
-	global mainClassName
-	mainClassName = filePath[filePath.rfind('/') + 1 : filePath.rfind('.')]
-	assert os.path.isfile(filePath)
-	MakeFolderForFile ('/tmp/src/main.rs')
-	MakeFolderForFile ('/tmp/assets/registry.json')
-	data = 'output=/tmp\n' + filePath
-	open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
-	command = [
-		'dotnet',
-		os.path.expanduser('~/HolyBlender/UnityToBevy/HolyBlender.dll'), 
-		'includeFile=' + filePath,
-		'bevy=true',
-		'output=/tmp'
-	]
-	# for arg in sys.argv:
-	# 	command.append(arg)
-	print(command)
-
-	subprocess.check_call(command)
-
-	outputFilePath = '/tmp/main.py'
-	print(outputFilePath)
-	assert os.path.isfile(outputFilePath)
-
-	os.system('cat ' + outputFilePath)
-
-	ConvertPythonFileToRust (outputFilePath)
-
-def ConvertPythonFileToRust (filePath):
-	global mainClassName
-	lines = []
-	for line in open(filePath, 'rb').read().decode('utf-8').splitlines():
-		if line.startswith('import ') or line.startswith('from '):
-			print('Skipping line:', line)
-			continue
-		lines.append(line)
-	text = '\n'.join(lines)
-	open(filePath, 'wb').write(text.encode('utf-8'))
-	hasCorrectTextBlock = False
-	textBlockName = filePath[filePath.rfind('/') + 1 :]
-	for textBlock in bpy.data.texts:
-		if textBlock.name == textBlockName:
-			hasCorrectTextBlock = True
-			break
-	if not hasCorrectTextBlock:
-		bpy.data.texts.new(textBlockName)
-	textBlock = bpy.data.texts[textBlockName]
-	textBlock.clear()
-	textBlock.write(text)
-	command = [ 'python3', 'py2many/py2many.py', '--rust=1', '--force', filePath, '--outdir=/tmp/src' ]
-	# for arg in sys.argv:
-	# 	command.append(arg)
-	command.append(os.path.expanduser(operatorContext.scene.world.unity_project_import_path))
-	print(command)
-	
-	subprocess.check_call(command)
-
-	outputFilePath = '/tmp/src/main.rs'
-	assert os.path.isfile(outputFilePath)
-	print(outputFilePath)
-
-	os.system('cat ' + outputFilePath)
-	
-	data = open('/tmp/HolyBlender Data (UnityToBevy)', 'rb').read().decode('utf-8')
-	filePath = data[data.find('\n') + 1 :]
-	for textBlock in bpy.data.texts:
-		if textBlock.name == filePath[filePath.rfind('/') + 1 :].replace('.rs', '.cs'):
-			textBlock.name = textBlock.name.replace('.cs', '.rs')
-			textBlock.clear()
-			outputFileText = open('/tmp/src/main.rs', 'rb').read().decode('utf-8')
-			textBlock.write(outputFileText)
-
-def DrawExamplesMenu (self, context):
-	self.layout.menu(ExamplesMenu.bl_idname)
-
-def DrawAttachedObjectsMenu (self, context):
-	self.layout.menu(AttachedObjectsMenu.bl_idname)
 
 def SetupTextEditorFooterContext (self, context):
 	global currentTextBlock
@@ -668,45 +458,6 @@ def DrawRunCSToggle (self, context):
 def DrawIsInitScriptToggle (self, context):
 	self.layout.prop(context.edit_text, 'is_init_script')
 
-def OnUpdateUnityScripts (self, context):
-	global attachedUnityScriptsDict
-	attachedScripts = []
-	for i in range(MAX_SCRIPTS_PER_OBJECT):
-		script = getattr(self, 'unity_script' + str(i))
-		if script != None:
-			attachedScripts.append(script.name)
-			UpdateScriptVariables (script)
-	attachedUnityScriptsDict[self] = attachedScripts
-
-def OnUpdateUnrealScripts (self, context):
-	global attachedUnrealScriptsDict
-	attachedScripts = []
-	for i in range(MAX_SCRIPTS_PER_OBJECT):
-		script = getattr(self, 'unreal_script' + str(i))
-		if script != None:
-			attachedScripts.append(script.name)
-			UpdateScriptVariables (script)
-	attachedUnrealScriptsDict[self] = attachedScripts
-
-def OnUpdateGodotScripts (self, context):
-	global attachedGodotScriptsDict
-	attachedScripts = []
-	for i in range(MAX_SCRIPTS_PER_OBJECT):
-		script = getattr(self, 'godotScript' + str(i))
-		if script != None:
-			attachedScripts.append(script.name)
-			UpdateScriptVariables (script)
-	attachedGodotScriptsDict[self] = attachedScripts
-
-def OnUpdateBevyScripts (self, context):
-	global attachedBevyScriptsDict
-	attachedScripts = []
-	for i in range(MAX_SCRIPTS_PER_OBJECT):
-		script = getattr(self, 'bevy_script' + str(i))
-		if script != None:
-			attachedScripts.append(script.name)
-			UpdateScriptVariables (script)
-	attachedBevyScriptsDict[self] = attachedScripts
 
 def UpdateScriptVariables (textBlock):
 	global attachedUnityScriptsDict
@@ -817,166 +568,8 @@ def UpdateScriptVariables (textBlock):
 				break
 		indexOfPublicIndicator = text.find(publicIndicator, indexOfType)
 
-def OnRedrawView ():
-	global currentTextBlock
-	global textBlocksTextsDict
-	global attachedUnityScriptsDict
-	global previousRunningScripts
-	global previousTextBlocksTextsDict
-	textBlocksTextsDict = {}
-	for textBlock in bpy.data.texts:
-		if textBlock.name == '.gltf_auto_export_gltf_settings':
-			continue
-		textBlocksTextsDict[textBlock.name] = textBlock.as_string()
-		if textBlock.name not in previousTextBlocksTextsDict or previousTextBlocksTextsDict[textBlock.name] != textBlock.as_string():
-			UpdateScriptVariables (textBlock)
-	previousTextBlocksTextsDict = textBlocksTextsDict.copy()
-	bpy.types.TEXT_HT_footer.remove(SetupTextEditorFooterContext)
-	bpy.types.TEXT_HT_footer.append(SetupTextEditorFooterContext)
-	if currentTextBlock != None:
-		if currentTextBlock.run_cs:
-			import RunCSInBlender as runCSInBlender
-			for obj in attachedUnityScriptsDict:
-				if currentTextBlock.name in attachedUnityScriptsDict[obj]:
-					filePath = os.path.expanduser('/tmp/HolyBlender Data (UnityInBlender)/' + currentTextBlock.name)
-					filePath = filePath.replace('.cs', '.py')
-					if not filePath.endswith('.py'):
-						filePath += '.py'
-					if currentTextBlock.name not in previousRunningScripts:
-						MakeFolderForFile (filePath)
-						open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
-						BuildTool ('UnityInBlender')
-						command = [
-							'dotnet',
-							os.path.expanduser('~/HolyBlender/UnityInBlender/HolyBlender.dll'), 
-							'includeFile=' + filePath,
-							'output=/tmp/HolyBlender Data (UnityInBlender)'
-						]
-						print(command)
-
-						subprocess.check_call(command)
-
-					runCSInBlender.Run (filePath, obj)
-
-def register ():
-	MakeFolderForFile ('/tmp/')
-	registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
-	registryText = registryText.replace('ꗈ', '')
-	open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
-	registry = bpy.context.window_manager.components_registry
-	registry.schemaPath = REGISTRY_PATH
-	bpy.ops.object.reload_registry()
-	for cls in classes:
-		bpy.utils.register_class(cls)
-	bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
-		name = 'Unity project import path',
-		description = '',
-		default = ''
-	)
-	bpy.types.World.unity_project_export_path = bpy.props.StringProperty(
-		name = 'Unity project export path',
-		description = '',
-		default = '~/TestUnityProject'
-	)
-	# bpy.types.World.unity_export_version = bpy.props.StringProperty(
-	# 	name = 'Unity export version',
-	# 	description = '',
-	# 	default = ''
-	# )
-	bpy.types.World.unrealExportPath = bpy.props.StringProperty(
-		name = 'Unreal project path',
-		description = '',
-		default = '~/TestUnrealProject'
-	)
-	bpy.types.World.godotExportPath = bpy.props.StringProperty(
-		name = 'Godot project path',
-		description = '',
-		default = '~/TestGodotProject'
-	)
-	bpy.types.World.bevy_project_path = bpy.props.StringProperty(
-		name = 'Bevy project path',
-		description = '',
-		default = '~/TestBevyProject'
-	)
-	bpy.types.World.htmlExportPath = bpy.props.StringProperty(
-		name = 'HTML project path',
-		description = '',
-		default = '~/TestHtmlProject'
-	)
-	bpy.types.World.holyserver = bpy.props.PointerProperty(name='Python Server', type=bpy.types.Text)
-	bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
-	bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
-	bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
-	bpy.types.Text.run_cs = bpy.props.BoolProperty(
-		name = 'Run C# Script',
-		description = ''
-	)
-	bpy.types.Text.is_init_script = bpy.props.BoolProperty(
-		name = 'Is Initialization Script',
-		description = ''
-	)
-	bpy.types.TEXT_HT_header.append(DrawExamplesMenu)
-	bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
-	bpy.types.TEXT_HT_footer.append(DrawRunCSToggle)
-	bpy.types.TEXT_HT_footer.append(DrawIsInitScriptToggle)
-	for i in range(MAX_SCRIPTS_PER_OBJECT):
-		setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text, update=OnUpdateUnityScripts))
-		setattr(bpy.types.Object, 'unreal_script' + str(i), bpy.props.PointerProperty(name='Attach Unreal script', type=bpy.types.Text, update=OnUpdateUnrealScripts))
-		setattr(bpy.types.Object, 'godotScript' + str(i), bpy.props.PointerProperty(name='Attach Godot script', type=bpy.types.Text, update=OnUpdateGodotScripts))
-		setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text, update=OnUpdateBevyScripts))
-	for obj in bpy.context.scene.objects:
-		attachedScripts = []
-		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			script = getattr(obj, 'unity_script' + str(i))
-			if script != None:
-				attachedScripts.append(script.name)
-		attachedUnityScriptsDict[obj] = attachedScripts
-		attachedScripts = []
-		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			script = getattr(obj, 'unreal_script' + str(i))
-			if script != None:
-				attachedScripts.append(script.name)
-		attachedUnrealScriptsDict[obj] = attachedScripts
-		attachedScripts = []
-		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			script = getattr(obj, 'godotScript' + str(i))
-			if script != None:
-				attachedScripts.append(script.name)
-		attachedGodotScriptsDict[obj] = attachedScripts
-		attachedScripts = []
-		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			script = getattr(obj, 'bevy_script' + str(i))
-			if script != None:
-				attachedScripts.append(script.name)
-		attachedBevyScriptsDict[obj] = attachedScripts
-	bpy.types.SpaceView3D.draw_handler_add(OnRedrawView, tuple([]), 'WINDOW', 'POST_PIXEL')
-	bpy.ops.blender_plugin.start()
-
-def unregister ():
-	bpy.types.TEXT_HT_header.remove(DrawExamplesMenu)
-	bpy.types.TEXT_HT_header.append(DrawAttachedObjectsMenu)
-	bpy.types.TEXT_HT_footer.remove(DrawUnrealTranslateButton)
-	bpy.types.TEXT_HT_footer.remove(DrawBevyTranslateButton)
-	bpy.types.TEXT_HT_footer.remove(DrawRunCSToggle)
-	bpy.types.TEXT_HT_footer.remove(DrawIsInitScriptToggle)
-	for cls in classes:
-		bpy.utils.unregister_class(cls)
-
-def InitTexts ():
-	if '__Html__.html' not in bpy.data.texts:
-		textBlock = bpy.data.texts.new(name='__Html__.html')
-		textBlock.from_string(INIT_HTML)
-		if bpy.data.worlds[0].html_code == None:
-			bpy.data.worlds[0].html_code = textBlock
-	if '__Server__.py' not in bpy.data.texts:
-		textBlock = bpy.data.texts.new(name='__Server__.py')
-		textBlock.from_string(BLENDER_SERVER)
-		if bpy.data.worlds[0].holyserver == None:
-			bpy.data.worlds[0].holyserver = textBlock
 
 if __name__ == '__main__':
-	register ()
-	InitTexts ()
 	if user_args:
 		for arg in user_args:
 			if arg.endswith('.py'):

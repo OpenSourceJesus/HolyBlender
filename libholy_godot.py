@@ -71,45 +71,42 @@ class GodotExportButton(bpy.types.Operator):
 		self.godotExportPath = os.path.expanduser(context.scene.world.godotExportPath)
 		if not os.path.isdir(self.godotExportPath):
 			MakeFolderForFile (os.path.join(self.godotExportPath, ''))
-		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
-		self.idIndex = 0
-		if importPath != '':
-			print('Exporting from Unity to Godot doesn\'t work yet')
-		else:
-			
-			os.system('mkdir ' + self.godotExportPath + '\ncd ' + self.godotExportPath + '\ntouch project.godot')
-			
-			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
-			MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
-			CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd'), os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd'))
-			CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveServerEvents.gd'), os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveServerEvents.gd'))
-			self.resources = ''
-			self.nodes = ''
-			self.exportedObjs = []
-			for obj in bpy.data.objects:
-				if obj not in self.exportedObjs:
-					self.MakeObject (obj)
-			id = self.GetId(7)
-			resource = self.RESOURCE_TEMPLATE
-			resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
-			resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
-			resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'SendAndRecieveServerEvents.gd'))
-			resource = resource.replace(REPLACE_INDICATOR + '3', id)
-			self.resources += resource
-			node3d = self.NODE_TEMPLATE
-			node3d = node3d.replace(REPLACE_INDICATOR + '0', 'Send And Recieve Click Events')
-			node3d = node3d.replace(REPLACE_INDICATOR + '1', 'Node3D')
-			node3d = node3d.replace(REPLACE_INDICATOR + '2', '.')
-			node3d += '\nscript = ExtResource("' + id + '")'
-			self.nodes += node3d
-			sceneText = self.SCENE_TEMPLATE
-			sceneText += '\n' + self.resources + '\n[node name="' + bpy.context.scene.name + '" type="Node3D"]\n' + self.nodes
-			open(os.path.join(self.godotExportPath, 'Scenes', bpy.context.scene.name + '.tscn'), 'wb').write(sceneText.encode('utf-8'))
-			
-			os.system('flatpak run org.godotengine.Godot ' + os.path.join(self.godotExportPath, 'project.godot'))
+
+		self.idIndex = 0			
+		os.system('mkdir ' + self.godotExportPath + '\ncd ' + self.godotExportPath + '\ntouch project.godot')
+		
+		MakeFolderForFile (os.path.join(self.godotExportPath, 'Scenes', ''))
+		MakeFolderForFile (os.path.join(self.godotExportPath, 'Scripts', ''))
+		CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'AddMeshCollision.gd'), os.path.join(self.godotExportPath, 'Scripts', 'AddMeshCollision.gd'))
+		CopyFile (os.path.join(GODOT_SCRIPTS_PATH, 'SendAndRecieveServerEvents.gd'), os.path.join(self.godotExportPath, 'Scripts', 'SendAndRecieveServerEvents.gd'))
+		self.resources = ''
+		self.nodes = ''
+		self.exportedObjs = []
+		for obj in bpy.data.objects:
+			if obj not in self.exportedObjs:
+				self.MakeObject (obj)
+		id = self.GetId(7)
+		resource = self.RESOURCE_TEMPLATE
+		resource = resource.replace(REPLACE_INDICATOR + '0', 'Script')
+		resource = resource.replace(REPLACE_INDICATOR + '1', self.GetId(13))
+		resource = resource.replace(REPLACE_INDICATOR + '2', os.path.join('Scripts', 'SendAndRecieveServerEvents.gd'))
+		resource = resource.replace(REPLACE_INDICATOR + '3', id)
+		self.resources += resource
+		node3d = self.NODE_TEMPLATE
+		node3d = node3d.replace(REPLACE_INDICATOR + '0', 'Send And Recieve Click Events')
+		node3d = node3d.replace(REPLACE_INDICATOR + '1', 'Node3D')
+		node3d = node3d.replace(REPLACE_INDICATOR + '2', '.')
+		node3d += '\nscript = ExtResource("' + id + '")'
+		self.nodes += node3d
+		sceneText = self.SCENE_TEMPLATE
+		sceneText += '\n' + self.resources + '\n[node name="' + bpy.context.scene.name + '" type="Node3D"]\n' + self.nodes
+		open(os.path.join(self.godotExportPath, 'Scenes', bpy.context.scene.name + '.tscn'), 'wb').write(sceneText.encode('utf-8'))
+		
+		os.system('flatpak run org.godotengine.Godot ' + os.path.join(self.godotExportPath, 'project.godot'))
 
 	def MakeObject (self, obj):
-		global attachedGodotScriptsDict
+		#global attachedGodotScriptsDict
+		attachedGodotScriptsDict = get_user_scripts('godot')
 		for obj2 in bpy.data.objects:
 			if obj in obj2.children and obj2 not in self.exportedObjs:
 				self.MakeObject (obj2)
