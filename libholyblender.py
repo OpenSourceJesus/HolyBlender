@@ -29,10 +29,6 @@ excludeItems = [ os.path.join('', 'Library') ]
 operatorContext = None
 currentTextBlock = None
 mainClassNames = []
-#attachedUnityScriptsDict = {}
-#attachedUnrealScriptsDict = {}
-#attachedGodotScriptsDict = {}
-#attachedBevyScriptsDict = {}
 previousRunningScripts = []
 textBlocksTextsDict = {}
 previousTextBlocksTextsDict = {}
@@ -46,7 +42,7 @@ bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy
 bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
 bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
 
-def get_user_scripts(mode):
+def get_user_scripts (mode):
 	assert mode in 'unity unreal bevy godot'.split()
 	scripts_dict = {}
 	for ob in bpy.data.objects:
@@ -71,14 +67,15 @@ def BuildTool (toolName : str):
 	subprocess.check_call(command)
 
 def ExportObject (obj, folder : str) -> str:
-	filePath = os.path.join(folder, obj.name + '.fbx')
+	filePath = os.path.join(folder, obj.name)
 	filePath = filePath.replace(' ', '_')
 	bpy.ops.object.select_all(action='DESELECT')
 	bpy.context.view_layer.objects.active = obj
 	obj.select_set(True)
 	if obj.parent == None:
 		fbxExporter.fix_object(obj)
-	bpy.ops.export_scene.fbx(filepath=filePath, use_selection=True, use_custom_props=True, mesh_smooth_type='FACE')
+	bpy.ops.export_scene.gltf(filepath=filePath, use_selection=True)
+	filePath += '.glb'
 	return filePath
 
 def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):

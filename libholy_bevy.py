@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 _thisdir = os.path.split(os.path.abspath(__file__))[0]
