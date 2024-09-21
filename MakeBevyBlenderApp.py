@@ -11,18 +11,21 @@ INSTALL NOTES:
 '''
 
 __thisdir = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append('/usr/lib/python3/dist-packages')
-sys.path.append('/usr/local/lib/python3.12/dist-packages')
-sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
+#sys.path.append('/usr/lib/python3/dist-packages')
+#sys.path.append('/usr/local/lib/python3.12/dist-packages')
+#sys.path.append(os.path.expanduser('~/.local/lib/python3.12/site-packages'))
 #sys.path.append(os.path.expanduser('~/HolyBlender'))
 try:
 	from PIL import Image
 except:
-	from wand.image import Image
+	try:
+		from wand.image import Image
+	except:
+		Image = None
 
 from GetUnityProjectInfo import *
 from SystemExtensions import *
-from MakeBlenderPlugin import MAX_SCRIPTS_PER_OBJECT
+from libholyblender import MAX_SCRIPTS_PER_OBJECT
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
