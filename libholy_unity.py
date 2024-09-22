@@ -837,12 +837,12 @@ Transform:
 				transformId = self.MakeObject(childObj, myTransformId)
 				children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
 		if obj.type == 'MESH':
-			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx.meta'
+			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.glb.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'w').write('guid: ' + meshGuid)
 			if self.unityVersionPath != '':
 				meshDatas = self.dataText.split('\n')[0]
-				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.fbx'
+				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.glb'
 				indexOfFile = meshDatas.find(fileIdIndicator)
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = meshDatas.find(' ', indexOfFileId)
@@ -987,7 +987,7 @@ Transform:
 				materialGuid = GetGuid(filePath)
 				open(filePath, 'w').write('guid: ' + materialGuid)
 				if self.unityVersionPath != '':
-					fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+					fileIdIndicator = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
 					indexOfFile = self.dataText.find(fileIdIndicator)
 					indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 					indexOfEndOfFileId = self.dataText.find(' ', indexOfFileId)

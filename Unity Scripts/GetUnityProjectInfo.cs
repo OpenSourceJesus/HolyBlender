@@ -10,14 +10,10 @@ public class GetUnityProjectInfo : MonoBehaviour
 {
 	public static void Do ()
 	{
-		string filePath = "/tmp/HolyBlender Data (BlenderToUnity)";
-		string[] lines = File.ReadAllLines(filePath);
 		string outputText = "";
-		foreach (string line in lines)
-			outputText += GetAssetsInfo(line, typeof(Object));
-		outputText += GetAssetsInfoWithFileExtension(".fbx", typeof(Mesh));
-		outputText += GetAssetsInfoWithFileExtension(".mat", typeof(Material));
-		File.WriteAllText(filePath, outputText);
+		outputText += GetAssetsInfo(".glb", typeof(Mesh));
+		outputText += GetAssetsInfo(".mat", typeof(Material));
+		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
 		AddPackage ("com.unity.mathematics");
 		AddPackage ("com.unity.nuget.newtonsoft-json");
 		AddPackage ("com.unity.shadergraph");
@@ -36,32 +32,31 @@ public class GetUnityProjectInfo : MonoBehaviour
 			print(addRequest.Error);
 	}
 
-	static string GetAssetsInfoWithFileExtension (string fileExtension, Type assetType)
+	static string GetAssetsInfo (string fileExtension, Type assetType)
 	{
 		string output = "";
 		string[] args = Environment.GetCommandLineArgs();
 		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], fileExtension);
 		foreach (string filePath in filePaths)
-			output += GetAssetsInfo(filePath, assetType);;
-		return output;
-	}
-
-	static string GetAssetsInfo (string filePath, Type assetType)
-	{
-		string output = "";
-		int indexOfAssets = filePath.IndexOf("Assets");
-		if (indexOfAssets != -1)
 		{
-			string relativeFilePath = filePath.Substring(indexOfAssets);
-			Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
-			foreach (Object obj in objects)
+			int indexOfAssets = filePath.IndexOf("Assets");
+			if (indexOfAssets != -1)
 			{
-				if (obj.GetType() == assetType)
+				string relativeFilePath = filePath.Substring(indexOfAssets);
+				Object[] objects = AssetDatabase.LoadAllAssetsAtPath(relativeFilePath);
+				foreach (Object obj in objects)
 				{
-					string guid;
-					long fileId;
-					if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
-						output += '-' + filePath + ' ' + fileId + ' ' + guid;
+					if (obj != null)
+					{
+						Type objType = obj.GetType();
+						if (objType == assetType || objType.IsSubclassOf(assetType))
+						{
+							string guid;
+							long fileId;
+							if (AssetDatabase.TryGetGUIDAndLocalFileIdentifier(obj, out guid, out fileId))
+								output += '-' + filePath + ' ' + fileId + ' ' + guid;
+						}
+					}
 				}
 			}
 		}
