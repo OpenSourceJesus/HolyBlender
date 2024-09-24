@@ -10,14 +10,14 @@ public class GetUnityProjectInfo : MonoBehaviour
 {
 	public static void Do ()
 	{
-		string outputText = "";
-		outputText += GetAssetsInfo(".glb", typeof(Mesh));
-		outputText += GetAssetsInfo(".mat", typeof(Material));
-		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
 		AddPackage ("com.unity.mathematics");
 		AddPackage ("com.unity.nuget.newtonsoft-json");
 		AddPackage ("com.unity.shadergraph");
 		AddPackage ("com.unity.test-framework");
+		string outputText = "";
+		outputText += GetAssetsInfo(".glb", typeof(Mesh));
+		outputText += GetAssetsInfo(".mat", typeof(Material));
+		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
 	}
 
 	static void AddPackage (string name)

@@ -9,6 +9,30 @@ bpy.data.objects["Cube"].bevy_script0 = txt
 bpy.ops.bevy.export()
 '''
 
+TEST_UNITY = '''
+PI = 3.141592653589793
+
+bpy.ops.object.select_all(action='DESELECT')
+bpy.data.objects['Cube'].select_set(True)
+bpy.ops.object.delete()
+camera = bpy.data.objects['Camera']
+camera.location = mathutils.Vector((0, 4, 0))
+camera.rotation_mode = 'XYZ'
+camera.rotation_euler = mathutils.Euler((PI / 2, 0, PI))
+bpy.ops.mesh.primitive_monkey_add()
+txtBlock = bpy.data.texts.new(name='Rotate')
+txtBlock.from_string(EXAMPLES_DICT['Rotate (Unity)'])
+setattr(bpy.data.objects['Suzanne'], 'unity_script0', txtBlock)
+bpy.ops.object.select_all(action='DESELECT')
+mat = bpy.data.materials.get("Material")
+if mat is None:
+	mat = bpy.data.materials.new(name="Material")
+monkey = bpy.data.objects['Suzanne']
+monkey.select_set(True)
+monkey.data.materials.append(mat)
+bpy.ops.unity.export()
+'''
+
 TEST_HTML = '''
 from random import random
 
@@ -77,6 +101,9 @@ for i,arg in enumerate(sys.argv):
 	elif arg == '--test-html':
 		user_script = '/tmp/__test_html__.py'
 		open(user_script, 'w').write(TEST_HTML)
+	elif arg == '--test-unity':
+		user_script = '/tmp/__test_unity__.py'
+		open(user_script, 'w').write(TEST_UNITY)
 	elif arg == '--ghost':
 		netghost = True
 	elif arg == '--monogame' in sys.argv:

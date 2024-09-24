@@ -657,7 +657,7 @@ Transform:
 					break
 		if self.unityVersionPath == '':
 			print('No Unity version installed')
-			return {"FINISHED"}
+			return { "FINISHED" }
 
 		self.lastId = 5
 		self.projectExportPath = os.path.expanduser(context.scene.world.unity_project_export_path)
@@ -668,7 +668,6 @@ Transform:
 			meshesDict[mesh.name] = []
 		scriptsPath = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(scriptsPath, ''))
-		data = ''
 		for obj in bpy.context.scene.objects:
 			if obj.type == 'MESH' and obj.data.name in meshesDict:
 				meshesDict[obj.data.name].append(obj.name)
@@ -690,7 +689,6 @@ Transform:
 					material = material.replace(REPLACE_INDICATOR + '3', str(materialColor[2]))
 					material = material.replace(REPLACE_INDICATOR + '4', str(materialColor[3]))
 					open(fileExportPath, 'wb').write(material.encode('utf-8'))
-				data += os.path.join(fileExportFolder, obj.name + '.glb') + '\n'
 			elif obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
 				spritePath = obj.data.filepath
 				spritePath = os.path.expanduser('~') + spritePath[1 :]
@@ -699,7 +697,6 @@ Transform:
 				MakeFolderForFile (newSpritePath)
 				sprite = open(spritePath, 'rb').read()
 				open(newSpritePath, 'wb').write(sprite)
-		open('/tmp/HolyBlender Data (BlenderToUnity)', 'wb').write(data.encode('utf-8'))
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
 		CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
@@ -722,6 +719,7 @@ Transform:
 		self.gameObjectIdsDict.clear()
 		self.trsIdsDict.clear()
 		self.exportedObjs.clear()
+		prefabs = ''
 		for collection in bpy.data.collections:
 			self.gameObjectsAndComponentsText = ''
 			prefabPath = os.path.join(prefabsPath, collection.name + '.prefab')
@@ -732,9 +730,10 @@ Transform:
 					self.MakeObject (obj)
 			prefab = self.INIT_YAML_TEXT
 			prefab += '\n' + self.gameObjectsAndComponentsText
+			prefabs += prefab + '\n'
 			open(prefabPath, 'w').write(prefab)
 		self.isMakingScene = True
-		self.gameObjectsAndComponentsText = ''
+		self.gameObjectsAndComponentsText = prefabs
 		self.rootTransformsIds = []
 		for obj in bpy.context.scene.objects:
 			if obj.parent == None and GetObjectId(obj) not in self.exportedObjs:
