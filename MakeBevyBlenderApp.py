@@ -29,7 +29,7 @@ from libholyblender import MAX_SCRIPTS_PER_OBJECT
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
-TEMPLATES_PATH = os.path.join( __thisdir,'Templates')
+TEMPLATES_PATH = os.path.join(__thisdir, 'Templates')
 TEMPLATE_APP_PATH = TEMPLATES_PATH + '/BevyBlenderApp.rs'
 TEMPLATE_REGISTRY_PATH = TEMPLATES_PATH + '/registry.json'
 ASSETS_PATH = BEVY_PROJECT_PATH + '/assets'
@@ -931,8 +931,9 @@ def Do (attachedScriptsDict = {}):
 	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
 
 	# os.system('cp ' + TEMPLATES_PATH + '/wasm.js' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.js')
-	subprocess.check_call(['cp', '-v', os.path.join(__thisdir, 'Server.py'), os.path.join(BEVY_PROJECT_PATH,'Server.py')])
-	subprocess.check_call(['chmod', '+x', os.path.join(BEVY_PROJECT_PATH,'Server.py')])
+	subprocess.check_call(['cp', '-v', os.path.join(__thisdir, 'Server.py'), os.path.join(BEVY_PROJECT_PATH, 'Server.py')])
+	subprocess.check_call(['chmod', '+x', os.path.join(BEVY_PROJECT_PATH, 'Server.py')])
+	CopyFile (os.path.join(TEMPLATES_PATH, 'wasm.js'), os.path.join(BEVY_PROJECT_PATH, 'api', 'wasm.js'))
 
 	os.environ['WGPU_BACKEND'] = 'gl'
 	os.environ['CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER'] = 'wasm-server-runner'

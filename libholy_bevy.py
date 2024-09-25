@@ -42,7 +42,7 @@ EXAMPLES_DICT = {
 
 ## TODO
 #@bpy.utils.register_class
-class Unity2BevyImportButton(bpy.types.Operator):
+class Unity2BevyImportButton (bpy.types.Operator):
 	bl_idname = 'bevy.import_from_unity'
 	bl_label = 'Export To Bevy'
 	@classmethod
@@ -59,9 +59,8 @@ class Unity2BevyImportButton(bpy.types.Operator):
 			print(command)
 			subprocess.check_call(command)
 
-
 @bpy.utils.register_class
-class BevyExportButton(bpy.types.Operator):
+class BevyExportButton (bpy.types.Operator):
 	bl_idname = 'bevy.export'
 	bl_label = 'Export To Bevy'
 	@classmethod
@@ -109,9 +108,8 @@ class BevyTranslateButton (bpy.types.Operator):
 		open(filePath, 'wb').write(currentTextBlock.as_string().encode('utf-8'))
 		ConvertCSFileToRust (filePath)
 
-
 @bpy.utils.register_class
-class WorldPanel(bpy.types.Panel):
+class WorldPanel (bpy.types.Panel):
 	bl_idname = 'WORLD_PT_WorldBevy_Panel'
 	bl_label = 'HolyBevy'
 	bl_space_type = 'PROPERTIES'
@@ -140,8 +138,6 @@ class BevyScriptsPanel (bpy.types.Panel):
 				self.layout.prop(context.active_object, 'bevy_script' + str(i))
 			if not foundUnassignedScript:
 				foundUnassignedScript = not hasScript
-
-
 
 def ConvertCSFileToRust (filePath):
 	global mainClassName
