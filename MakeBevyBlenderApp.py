@@ -514,12 +514,12 @@ def MakeScript (localPosition : list, localRotation : list, localSize : list, ob
 		elif mainClassName+'.rs' in bpy.data.texts: mainClassName += '.rs'
 		elif mainClassName+'.cs' in bpy.data.texts: mainClassName += '.cs'
 	textBlock = bpy.data.texts[mainClassName]
-	methodNamePrefix = 'Start'
-	if textBlock.is_init_script:
-		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(OnEnter(MyStates::Next), Start' + mainClassName + ')'
-	else:
-		outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
-		methodNamePrefix = 'Update'
+	# methodNamePrefix = 'Start'
+	# if textBlock.is_init_script:
+	# 	outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(OnEnter(MyStates::Next), Start' + mainClassName + ')'
+	# else:
+	outputFileTextReplaceClauses[1] += '\n\t\t.add_systems(Update, Update' + mainClassName + ')'
+	methodNamePrefix = 'Update'
 	addToOutputFileText += SYSTEM_TEMPLATE.replace('ꗈ0', methodNamePrefix + mainClassName).replace('ꗈ1', scriptText).replace('ꗈ', mainClassName)
 	outputFileTextReplaceClauses[0] += '\n\t\t.register_type::<' + mainClassName + '>()'
 	# addToOutputFileText += '\n\n' + outputFileText
@@ -807,7 +807,7 @@ def Do (attachedScriptsDict = {}):
 		MakeFolderForFile (CODE_PATH + '/')
 		open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(('output=' + BEVY_PROJECT_PATH).encode('utf-8'))
 		for script in attachedScripts:
-			mainClassName = script.replace('.rs', '')
+			mainClassName = script.name.replace('.rs', '')
 			indexOfAddRegistryTextIndicator = registryText.find('ꗈ')
 			componentText = ',\n' + COMPONENT_TEMPLATE
 			componentText = componentText.replace('ꗈ', mainClassName)
@@ -890,8 +890,8 @@ def Do (attachedScriptsDict = {}):
 				outputFileTextReplaceClauses[2] = sceneName
 	else:
 		for script in attachedScripts:
-			textBlock = bpy.data.texts[script]
-			mainClassName = script.replace('.rs', '')
+			textBlock = bpy.data.texts[script.name]
+			mainClassName = script.name.replace('.rs', '')
 			codeFilePath = '/tmp/' + mainClassName + '.rs'
 			open(codeFilePath, 'wb').write(textBlock.as_string().encode('utf-8'))
 			MakeScript ([], [], [1, 1, 1], '', codeFilePath)
@@ -903,8 +903,10 @@ def Do (attachedScriptsDict = {}):
 				scripts = line[indexOfEndOfObjectName + 1 :].split('☣️')
 				print(scripts)
 				for script in scripts:
-					if not script.strip(): continue
-					if '.' in script: script = script.split('.')[0]
+					if not script.strip():
+						continue
+					if '.' in script:
+						script = script.split('.')[0]
 					MakeComponent (objectName, 'HolyBlender::' + script)
 		sceneName = bpy.data.filepath.replace('.blend', '.glb')
 		sceneName = sceneName[sceneName.rfind('/') + 1 :]

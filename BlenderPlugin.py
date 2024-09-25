@@ -71,7 +71,7 @@ for i in range(0):
 	ob.rotation_euler = [random(), random(), random()]
 	ob.html_on_click = onclick
 	ob.html_css = css
-bpy.ops.html.export()'''
+bpy.ops.bevy.export()'''
 
 blender = 'blender'
 if sys.platform == 'win32': # Windows

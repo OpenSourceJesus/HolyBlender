@@ -78,14 +78,11 @@ class BevyExportButton(bpy.types.Operator):
 			for i in range(MAX_SCRIPTS_PER_OBJECT):
 				txt = getattr(ob, 'bevy_script%s' % i)
 				if txt:
-					scripts.append(text)
-
+					scripts.append(txt)
 			if scripts:
 				scripts_dict[ob] = scripts
-				data += '\n' + obj.name + '☢️' + '☣️'.join(scripts)
-
-		#for obj in attachedBevyScriptsDict:
-		#	data += '\n' + obj.name + '☢️' + '☣️'.join(attachedBevyScriptsDict[obj])
+				for script in scripts:
+					data += '\n' + ob.name + '☢️' + '☣️'.join(script.name)
 		open('/tmp/HolyBlender Data (BlenderToBevy)', 'wb').write(data.encode('utf-8'))
 		import MakeBevyBlenderApp as makeBevyBlenderApp
 		makeBevyBlenderApp.Do (scripts_dict)
