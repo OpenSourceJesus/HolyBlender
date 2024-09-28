@@ -782,7 +782,6 @@ BoxCollider2D:
 		self.gameObjectIdsDict.clear()
 		self.trsIdsDict.clear()
 		self.exportedObjs.clear()
-		prefabs = ''
 		for collection in bpy.data.collections:
 			self.gameObjectsAndComponentsText = ''
 			prefabPath = os.path.join(prefabsPath, collection.name + '.prefab')
@@ -793,10 +792,9 @@ BoxCollider2D:
 					self.MakeObject (obj)
 			prefab = self.INIT_YAML_TEXT
 			prefab += '\n' + self.gameObjectsAndComponentsText
-			prefabs += prefab + '\n'
 			open(prefabPath, 'w').write(prefab)
 		self.isMakingScene = True
-		self.gameObjectsAndComponentsText = prefabs
+		self.gameObjectsAndComponentsText = ''
 		self.rootTransformsIds = []
 		for obj in bpy.context.scene.objects:
 			if obj.parent == None and GetObjectId(obj) not in self.exportedObjs:
@@ -1116,38 +1114,42 @@ BoxCollider2D:
 		for script in attachedScripts:
 			filePath = self.projectExportPath + '/Assets/Scripts/' + script.name
 			MakeFolderForFile (filePath)
+			isMonoBehaviour = False
 			for textBlock in bpy.data.texts:
 				if textBlock == script:
 					if not script.name.endswith('.cs'):
 						filePath += '.cs'
 					scriptText = textBlock.as_string()
+					if ' : MonoBehaviour' in scriptText:
+						isMonoBehaviour = True
 					open(filePath, 'wb').write(scriptText.encode('utf-8'))
 					break
-			filePath += '.meta'
-			scriptGuid = GetGuid(filePath)
-			open(filePath, 'w').write('guid: ' + scriptGuid)
-			scriptText = self.SCRIPT_TEMPLATE
-			scriptText = scriptText.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			scriptText = scriptText.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			scriptText = scriptText.replace(REPLACE_INDICATOR + '2', scriptGuid)
-			hasPublicVariable = False
-			for propertyName in propertyNames:
-				scriptIndicator = script.name + '_'
-				if propertyName.startswith(scriptIndicator):
-					propertyValue = getattr(obj, propertyName)
-					variableType = varaiblesTypesDict[propertyName]
-					if variableType == 'Color':
-						if not Equals(propertyValue, NULL_COLOR):
-							color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
-							scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
-					elif variableType == 'GameObject' or variableType == 'Transform':
-						self.gameObjectAndTrsVarsDict[(obj, propertyName)] = propertyValue
-						scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
-					else:
-						scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
-			self.gameObjectsAndComponentsText += scriptText + '\n'
-			self.componentIds.append(self.lastId)
-			self.lastId += 1
+			if isMonoBehaviour:
+				filePath += '.meta'
+				scriptGuid = GetGuid(filePath)
+				open(filePath, 'w').write('guid: ' + scriptGuid)
+				scriptText = self.SCRIPT_TEMPLATE
+				scriptText = scriptText.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+				scriptText = scriptText.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				scriptText = scriptText.replace(REPLACE_INDICATOR + '2', scriptGuid)
+				hasPublicVariable = False
+				for propertyName in propertyNames:
+					scriptIndicator = script.name + '_'
+					if propertyName.startswith(scriptIndicator):
+						propertyValue = getattr(obj, propertyName)
+						variableType = varaiblesTypesDict[propertyName]
+						if variableType == 'Color':
+							if not Equals(propertyValue, NULL_COLOR):
+								color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
+								scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
+						elif variableType == 'GameObject' or variableType == 'Transform':
+							self.gameObjectAndTrsVarsDict[(obj, propertyName)] = propertyValue
+							scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
+						else:
+							scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
+				self.gameObjectsAndComponentsText += scriptText + '\n'
+				self.componentIds.append(self.lastId)
+				self.lastId += 1
 		indexOfComponentsList = self.gameObjectsAndComponentsText.find(REPLACE_INDICATOR + '2')
 		for componentId in self.componentIds:
 			component = self.COMPONENT_TEMPLATE
