@@ -1000,8 +1000,8 @@ BoxCollider2D:
 				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '2', '0')
 				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isTrigger)))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '4', str(obj.empty_image_offset[0]))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '5', str(obj.empty_image_offset[1]))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '4', str(obj.empty_image_offset[0] + 0.5))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '5', str(obj.empty_image_offset[1] + 0.5))
 				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '6', str(obj.empty_display_size))
 				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '7', str(obj.empty_display_size))
 				self.gameObjectsAndComponentsText += boxCollider2D + '\n'
