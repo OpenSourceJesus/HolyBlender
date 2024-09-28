@@ -8,12 +8,27 @@ using Object = UnityEngine.Object;
 
 public class GetUnityProjectInfo : MonoBehaviour
 {
+	static string projectPath;
+
 	public static void Do ()
 	{
 		AddPackage ("com.unity.mathematics");
 		AddPackage ("com.unity.nuget.newtonsoft-json");
 		AddPackage ("com.unity.shadergraph");
 		AddPackage ("com.unity.test-framework");
+		AddPackage ("com.unity.inputsystem");
+		string[] args = Environment.GetCommandLineArgs();
+		projectPath = args[args.Length - 1];
+		string projectSettingsPath = projectPath + "/ProjectSettings/ProjectSettings.asset";
+		string[] fileLines = File.ReadAllLines(projectSettingsPath);
+		for (int i = 0; i < fileLines.Length; i ++)
+		{
+			string fileLine = fileLines[i];
+			string inputModeIndicator = "activeInputHandler: ";
+			if (fileLine.StartsWith(inputModeIndicator))
+				fileLines[i] = inputModeIndicator + '2';
+		}
+		File.WriteAllLines(projectSettingsPath, fileLines);
 		string outputText = "";
 		outputText += GetAssetsInfo(".glb", typeof(Mesh));
 		outputText += GetAssetsInfo(".mat", typeof(Material));
@@ -35,8 +50,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 	static string GetAssetsInfo (string fileExtension, Type assetType)
 	{
 		string output = "";
-		string[] args = Environment.GetCommandLineArgs();
-		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(args[args.Length - 1], fileExtension);
+		string[] filePaths = SystemExtensions.GetAllFilePathsInFolder(projectPath, fileExtension);
 		foreach (string filePath in filePaths)
 		{
 			int indexOfAssets = filePath.IndexOf("Assets");

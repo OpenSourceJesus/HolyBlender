@@ -4,8 +4,17 @@ _thisdir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(_thisdir)
 from libholyblender import *
 
+sys.path.append(os.path.expanduser(os.path.join('~', '.local', 'lib', 'python3.10', 'site-packages')))
+try:
+	from PIL import Image
+except:
+	try:
+		from wand.image import Image
+	except:
+		Image = None
+
 for i in range(MAX_SCRIPTS_PER_OBJECT):
-	setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity scriptText', type=bpy.types.Text))
+	setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text))
 
 bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
 	name = 'Unity project import path',
@@ -17,12 +26,21 @@ bpy.types.World.unity_project_export_path = bpy.props.StringProperty(
 	description = '',
 	default = '~/TestUnityProject'
 )
-
 bpy.types.Text.run_cs = bpy.props.BoolProperty(
 	name = 'Run C# Script',
 	description = ''
 )
-
+COLLISION_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
+	('Box', 'Box', '') ]
+bpy.types.Object.collisionType = bpy.props.EnumProperty(
+	name = 'Collision type',
+	description = '',
+	items = COLLISION_TYPES_ENUM_ITEMS
+)
+bpy.types.Object.isTrigger = bpy.props.BoolProperty(
+	name = 'Is trigger',
+	description = ''
+)
 EXAMPLES_DICT = {
 	'Hello World (Unity)' : '''using UnityEngine;
 
@@ -108,7 +126,6 @@ public class FirstPersonControls : MonoBehaviour
 		previousMousePosition = mousePosition;
 	}
 }''',
-
 }
 
 @bpy.utils.register_class
@@ -286,10 +303,10 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: ꗈ2, g: ꗈ3, b: ꗈ4, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
-  m_FOVAxisMode: ꗈ2
+  m_FOVAxisMode: ꗈ5
   m_Iso: 200
   m_ShutterSpeed: 0.005
   m_Aperture: 16
@@ -307,11 +324,11 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: ꗈ3
-  far clip plane: ꗈ4
-  field of view: ꗈ5
-  orthographic: ꗈ6
-  orthographic size: ꗈ7
+  near clip plane: ꗈ6
+  far clip plane: ꗈ7
+  field of view: ꗈ8
+  orthographic: ꗈ9
+  orthographic size: ꗈ10
   m_Depth: 0
   m_CullingMask:
   serializedVersion: 2
@@ -376,7 +393,7 @@ SpriteRenderer:
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
-  m_Size: {x: 0, y: 0}
+  m_Size: {x: 1, y: 1}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
@@ -435,7 +452,7 @@ TextureImporter:
   spriteMeshType: 1
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
-  spritePixelsToUnits: 100
+  spritePixelsToUnits: ꗈ2
   spriteBorder: {x: 0, y: 0, z: 0, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
@@ -528,8 +545,8 @@ TextureImporter:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 242
-        height: 188
+        width: ꗈ3
+        height: ꗈ4
       alignment: 0
       pivot: {x: 0, y: 0}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -627,6 +644,52 @@ Transform:
   m_CorrespondingSourceObject: {fileID: ꗈ2, guid: ꗈ3, type: 3}
   m_PrefabInstance: {fileID: ꗈ0}
   m_PrefabAsset: {fileID: 0}'''
+	BOX_COLLIDER_2D_TEMPLATE = '''--- !u!61 &ꗈ0
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: ꗈ2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: ꗈ3
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: ꗈ4, y: ꗈ5}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: ꗈ6, y: ꗈ7}
+  m_EdgeRadius: 0'''
 	gameObjectsAndComponentsText = ''
 	rootTransformsIds = []
 	componentIds = []
@@ -910,9 +973,16 @@ Transform:
 			spriteName = spritePath[spritePath.rfind('/') + 1 :]
 			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
 			spriteGuid = GetGuid(newSpritePath)
+			try:
+				image = Image.open(spritePath)
+			except:
+				image = Image(filename=spritePath)
 			spriteMeta = self.SPRITE_META_TEMPLATE
 			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', spriteGuid)
 			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '2', str(max(image.width, image.height)))
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '3', str(image.width))
+			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '4', str(image.height))
 			open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
 			spriteRenderer = self.SPRITE_RENDERER_TEMPLATE
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
@@ -924,6 +994,19 @@ Transform:
 			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
+			if str(obj.collisionType) == 'Box':
+				boxCollider2D = self.BOX_COLLIDER_2D_TEMPLATE
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '2', '0')
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isTrigger)))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '4', str(obj.empty_image_offset[0]))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '5', str(obj.empty_image_offset[1]))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '6', str(obj.empty_display_size))
+				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '7', str(obj.empty_display_size))
+				self.gameObjectsAndComponentsText += boxCollider2D + '\n'
+				self.componentIds.append(self.lastId)
+				self.lastId += 1
 		elif obj.type == 'LIGHT':
 			lightObject = bpy.data.lights[obj.name]
 			lightType = 2
@@ -1014,14 +1097,18 @@ Transform:
 			if cameraObj.type == 'ORTHO':
 				isOrthographic = 1
 			camera = self.CAMERA_TEMPLATE
+			camera = camera.replace(REPLACE_INDICATOR + '10', str(cameraObj.ortho_scale / 2))
 			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			camera = camera.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-			camera = camera.replace(REPLACE_INDICATOR + '2', str(fovAxisMode))
-			camera = camera.replace(REPLACE_INDICATOR + '3', str(cameraObj.clip_start))
-			camera = camera.replace(REPLACE_INDICATOR + '4', str(cameraObj.clip_end))
-			camera = camera.replace(REPLACE_INDICATOR + '5', str(cameraObj.angle * (180.0 / PI)))
-			camera = camera.replace(REPLACE_INDICATOR + '6', str(isOrthographic))
-			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObj.ortho_scale / 2))
+			backgroundColor = bpy.context.world.color
+			camera = camera.replace(REPLACE_INDICATOR + '1', str(backgroundColor.r))
+			camera = camera.replace(REPLACE_INDICATOR + '2', str(backgroundColor.g))
+			camera = camera.replace(REPLACE_INDICATOR + '3', str(backgroundColor.b))
+			camera = camera.replace(REPLACE_INDICATOR + '4', str(gameObjectId))
+			camera = camera.replace(REPLACE_INDICATOR + '5', str(fovAxisMode))
+			camera = camera.replace(REPLACE_INDICATOR + '6', str(cameraObj.clip_start))
+			camera = camera.replace(REPLACE_INDICATOR + '7', str(cameraObj.clip_end))
+			camera = camera.replace(REPLACE_INDICATOR + '8', str(cameraObj.angle * (180.0 / PI)))
+			camera = camera.replace(REPLACE_INDICATOR + '9', str(isOrthographic))
 			self.gameObjectsAndComponentsText += camera + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
@@ -1090,7 +1177,19 @@ Transform:
 		return gameObjectAndTrsId
 
 @bpy.utils.register_class
-class WorldPanel(bpy.types.Panel):
+class CollisionPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Collision_Panel'
+	bl_label = 'Collision'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw (self, context):
+		self.layout.prop(context.active_object, 'collisionType')
+		self.layout.prop(context.active_object, 'isTrigger')
+
+@bpy.utils.register_class
+class WorldPanel (bpy.types.Panel):
 	bl_idname = 'WORLD_PT_WorldUnity_Panel'
 	bl_label = 'HolyUnity'
 	bl_space_type = 'PROPERTIES'

@@ -308,3 +308,4 @@ if __name__ == '__main__':
 				exec(open(arg).read())
 			elif arg == '--test-unity':
 				bpy.ops.unity.export()
+	bpy.context.world.use_nodes = False
