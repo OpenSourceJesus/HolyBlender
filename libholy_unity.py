@@ -30,6 +30,10 @@ bpy.types.Text.run_cs = bpy.props.BoolProperty(
 	name = 'Run C# Script',
 	description = ''
 )
+bpy.types.Text.isMonoBehaviour = bpy.props.BoolProperty(
+	name = 'Is MonoBehaviour',
+	description = ''
+)
 COLLISION_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
 	('Box', 'Box', '') ]
 bpy.types.Object.collisionType = bpy.props.EnumProperty(
@@ -201,6 +205,20 @@ public class FirstPersonControls : MonoBehaviour
 	}
 }''',
 }
+
+def DrawIsMonoBehaviourToggle (self, context):
+	self.layout.prop(context.edit_text, 'isMonoBehaviour')
+
+def GetEnumItemIndex (value, enumItems = []):
+	i = 0
+	for item in enumItems:
+		if item[0] == value:
+			return i
+		i += 1
+	return -1
+
+bpy.types.TEXT_HT_header.remove(DrawIsMonoBehaviourToggle)
+bpy.types.TEXT_HT_header.append(DrawIsMonoBehaviourToggle)
 
 @bpy.utils.register_class
 class UnityExportButton (bpy.types.Operator):
@@ -1247,17 +1265,14 @@ BoxCollider2D:
 		for script in attachedScripts:
 			filePath = self.projectExportPath + '/Assets/Scripts/' + script.name
 			MakeFolderForFile (filePath)
-			isMonoBehaviour = False
 			for textBlock in bpy.data.texts:
 				if textBlock == script:
 					if not script.name.endswith('.cs'):
 						filePath += '.cs'
 					scriptText = textBlock.as_string()
-					if ' : MonoBehaviour' in scriptText:
-						isMonoBehaviour = True
-					open(filePath, 'wb').write(scriptText.encode('utf-8'))
+					open(filePath, 'w').write(scriptText)
 					break
-			if isMonoBehaviour:
+			if script.isMonoBehaviour:
 				filePath += '.meta'
 				scriptGuid = GetGuid(filePath)
 				open(filePath, 'w').write('guid: ' + scriptGuid)
@@ -1310,14 +1325,6 @@ BoxCollider2D:
 		gameObjectAndTrsId = self.MakeEmptyObject(name, 31, parentTransformId)
 		self.AddMeshCollider (gameObjectAndTrsId[0], True, True, fileId, meshGuid)
 		return gameObjectAndTrsId
-
-def GetEnumItemIndex (value, enumItems = []):
-	i = 0
-	for item in enumItems:
-		if item[0] == value:
-			return i
-		i += 1
-	return -1
 
 @bpy.utils.register_class
 class PhysicsPanel (bpy.types.Panel):
