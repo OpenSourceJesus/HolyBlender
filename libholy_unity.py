@@ -33,12 +33,86 @@ bpy.types.Text.run_cs = bpy.props.BoolProperty(
 COLLISION_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
 	('Box', 'Box', '') ]
 bpy.types.Object.collisionType = bpy.props.EnumProperty(
-	name = 'Collision type',
+	name = 'Type',
 	description = '',
 	items = COLLISION_TYPES_ENUM_ITEMS
 )
 bpy.types.Object.isTrigger = bpy.props.BoolProperty(
 	name = 'Is trigger',
+	description = ''
+)
+RIGIDBODY_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
+	('Dynamic', 'Dynamic', ''),
+	('Kinematic', 'Kinematic', ''),
+	('Static', 'Static', '') ]
+bpy.types.Object.rigidbodyType = bpy.props.EnumProperty(
+	name = 'Type',
+	description = '',
+	items = RIGIDBODY_TYPES_ENUM_ITEMS
+)
+bpy.types.Object.isSimulated = bpy.props.BoolProperty(
+	name = 'Is simulated',
+	description = '',
+	default = True
+)
+bpy.types.Object.useFullKinematicContacts = bpy.props.BoolProperty(
+	name = 'Use full kinematic contacts',
+	description = ''
+)
+bpy.types.Object.useAutoMass = bpy.props.BoolProperty(
+	name = 'Use auto mass',
+	description = ''
+)
+bpy.types.Object.mass = bpy.props.FloatProperty(
+	name = 'Mass',
+	description = '',
+	default = 1
+)
+bpy.types.Object.linearDrag = bpy.props.FloatProperty(
+	name = 'Linear drag',
+	description = ''
+)
+bpy.types.Object.angularDrag = bpy.props.FloatProperty(
+	name = 'Angular drag',
+	description = '',
+	default = 0.05
+)
+bpy.types.Object.gravityScale = bpy.props.FloatProperty(
+	name = 'Gravity scale',
+	description = '',
+	default = 1
+)
+INTERPOLATE_ENUM_ITEMS = [ ('None', 'None', ''),
+	('Interpolate', 'Interpolate', ''),
+	('Extrapolate', 'Extrapolate', '') ]
+bpy.types.Object.interpolate = bpy.props.EnumProperty(
+	name = 'Interpolate',
+	description = '',
+	items = INTERPOLATE_ENUM_ITEMS
+)
+SLEEPING_MODE_ENUM_ITEMS = [ ('Never sleep', 'Never sleep', ''),
+	('Start awake', 'Start awake', ''),
+	('Start asleep', 'Never asleep', '') ]
+bpy.types.Object.sleepingMode = bpy.props.EnumProperty(
+	name = 'Sleeping mode',
+	description = '',
+	items = SLEEPING_MODE_ENUM_ITEMS,
+	default = 1
+)
+bpy.types.Object.continuousCollisionDetection = bpy.props.BoolProperty(
+	name = 'Continuous collision detection',
+	description = ''
+)
+bpy.types.Object.freezePositionX = bpy.props.BoolProperty(
+	name = 'Freeze position x',
+	description = ''
+)
+bpy.types.Object.freezePositionY = bpy.props.BoolProperty(
+	name = 'Freeze position y',
+	description = ''
+)
+bpy.types.Object.freezeRotation = bpy.props.BoolProperty(
+	name = 'Freeze rotation',
 	description = ''
 )
 EXAMPLES_DICT = {
@@ -293,6 +367,33 @@ Rigidbody:
   m_Interpolate: ꗈ7
   m_Constraints: ꗈ8
   m_CollisionDetection: ꗈ9'''
+	RIGIDBODY_2D_TEMPLATE = '''--- !u!50 &ꗈ0
+Rigidbody2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  serializedVersion: 5
+  m_BodyType: ꗈ2
+  m_Simulated: ꗈ3
+  m_UseFullKinematicContacts: ꗈ4
+  m_UseAutoMass: ꗈ5
+  m_Mass: ꗈ6
+  m_LinearDamping: ꗈ7
+  m_AngularDamping: ꗈ8
+  m_GravityScale: ꗈ9
+  m_Material: {fileID: ꗈ10}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_Interpolate: ꗈ11
+  m_SleepingMode: ꗈ12
+  m_CollisionDetection: ꗈ13
+  m_Constraints: ꗈ14'''
 	CAMERA_TEMPLATE = '''--- !u!20 &ꗈ0
 Camera:
   m_ObjectHideFlags: 0
@@ -1005,6 +1106,38 @@ BoxCollider2D:
 				self.gameObjectsAndComponentsText += boxCollider2D + '\n'
 				self.componentIds.append(self.lastId)
 				self.lastId += 1
+			if str(obj.rigidbodyType) != 'None':
+				rigidbodyType = 0
+				if str(obj.rigidbodyType) == 'Kinematic':
+					rigidbodyType = 1
+				elif str(obj.rigidbodyType) == 'Static':
+					rigidbodyType = 2
+				constraints = 0
+				if obj.freezePositionX:
+					constraints |= (1 << 0)
+				elif obj.freezePositionY:
+					constraints |= (1 << 1)
+				elif obj.freezeRotation:
+					constraints |= (1 << 2)
+				rigidbody2D = self.RIGIDBODY_2D_TEMPLATE
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '10', '0')
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '11', str(GetEnumItemIndex(obj.interpolate, INTERPOLATE_ENUM_ITEMS)))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '12', str(GetEnumItemIndex(obj.sleepingMode, SLEEPING_MODE_ENUM_ITEMS)))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '13', str(int(obj.continuousCollisionDetection)))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '14', str(constraints))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '2', str(rigidbodyType))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isSimulated)))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '4', str(int(obj.useFullKinematicContacts)))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '5', str(int(obj.useAutoMass)))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '6', str(obj.mass))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '7', str(obj.linearDrag))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '8', str(obj.angularDrag))
+				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '9', str(obj.gravityScale))
+				self.gameObjectsAndComponentsText += rigidbody2D + '\n'
+				self.componentIds.append(self.lastId)
+				self.lastId += 1
 		elif obj.type == 'LIGHT':
 			lightObject = bpy.data.lights[obj.name]
 			lightType = 2
@@ -1178,17 +1311,41 @@ BoxCollider2D:
 		self.AddMeshCollider (gameObjectAndTrsId[0], True, True, fileId, meshGuid)
 		return gameObjectAndTrsId
 
+def GetEnumItemIndex (value, enumItems = []):
+	i = 0
+	for item in enumItems:
+		if item[0] == value:
+			return i
+		i += 1
+	return -1
+
 @bpy.utils.register_class
-class CollisionPanel (bpy.types.Panel):
-	bl_idname = 'OBJECT_PT_Collision_Panel'
-	bl_label = 'Collision'
+class PhysicsPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_Physics_Panel'
+	bl_label = 'Physics'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
 	bl_context = 'object'
 
 	def draw (self, context):
+		self.layout.label(text='Collider')
 		self.layout.prop(context.active_object, 'collisionType')
 		self.layout.prop(context.active_object, 'isTrigger')
+		self.layout.label(text='Rigidbody')
+		self.layout.prop(context.active_object, 'rigidbodyType')
+		self.layout.prop(context.active_object, 'isSimulated')
+		self.layout.prop(context.active_object, 'useFullKinematicContacts')
+		self.layout.prop(context.active_object, 'useAutoMass')
+		self.layout.prop(context.active_object, 'mass')
+		self.layout.prop(context.active_object, 'linearDrag')
+		self.layout.prop(context.active_object, 'angularDrag')
+		self.layout.prop(context.active_object, 'gravityScale')
+		self.layout.prop(context.active_object, 'interpolate')
+		self.layout.prop(context.active_object, 'sleepingMode')
+		self.layout.prop(context.active_object, 'continuousCollisionDetection')
+		self.layout.prop(context.active_object, 'freezePositionX')
+		self.layout.prop(context.active_object, 'freezePositionY')
+		self.layout.prop(context.active_object, 'freezeRotation')
 
 @bpy.utils.register_class
 class WorldPanel (bpy.types.Panel):
