@@ -46,7 +46,8 @@ bpy.types.Object.layer = bpy.props.IntProperty(
 	max = 31
 )
 COLLISION_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
-	('Box', 'Box', '') ]
+	('Box', 'Box', ''),
+	('Polygon', 'Polygon', '') ]
 bpy.types.Object.collisionType = bpy.props.EnumProperty(
 	name = 'Type',
 	description = '',
@@ -66,6 +67,11 @@ bpy.types.Object.size = bpy.props.FloatVectorProperty(
 	description = '',
 	size = 2,
 	default = [1, 1]
+)
+bpy.types.Object.edgeRadius = bpy.props.FloatProperty(
+	name = 'Edge radius',
+	description = '',
+	min = 0
 )
 RIGIDBODY_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
 	('Dynamic', 'Dynamic', ''),
@@ -830,7 +836,54 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   m_Size: {x: ꗈ6, y: ꗈ7}
-  m_EdgeRadius: 0'''
+  m_EdgeRadius: ꗈ8'''
+	POLYGON_COLLIDER_2D_TEMPLATE = '''--- !u!60 &ꗈ0
+PolygonCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: ꗈ1}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: ꗈ2}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: ꗈ3
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: ꗈ4, y: ꗈ5}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Points:
+    m_Paths: ꗈ6
+  m_UseDelaunayMesh: 0'''
 	gameObjectsAndComponentsText = ''
 	rootTransformsIds = []
 	componentIds = []
@@ -1110,6 +1163,7 @@ BoxCollider2D:
 			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '5', str(obj.offset[1]))
 			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '6', str(obj.size[0]))
 			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '7', str(obj.size[1]))
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '8', str(obj.edgeRadius))
 			self.gameObjectsAndComponentsText += boxCollider2D + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
@@ -1387,8 +1441,8 @@ class PhysicsPanel (bpy.types.Panel):
 		self.layout.prop(context.active_object, 'collisionType')
 		self.layout.prop(context.active_object, 'isTrigger')
 		self.layout.prop(context.active_object, 'offset')
-		self.layout.label(text='BoxCollider2D')
 		self.layout.prop(context.active_object, 'size')
+		self.layout.prop(context.active_object, 'edgeRadius')
 		self.layout.label(text='Rigidbody2D')
 		self.layout.prop(context.active_object, 'rigidbodyType')
 		self.layout.prop(context.active_object, 'isSimulated')
