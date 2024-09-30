@@ -45,6 +45,17 @@ bpy.types.Object.isTrigger = bpy.props.BoolProperty(
 	name = 'Is trigger',
 	description = ''
 )
+bpy.types.Object.offset = bpy.props.FloatVectorProperty(
+	name = 'Offset',
+	description = '',
+	size = 2
+)
+bpy.types.Object.size = bpy.props.FloatVectorProperty(
+	name = 'Size',
+	description = '',
+	size = 2,
+	default = [1, 1]
+)
 RIGIDBODY_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
 	('Dynamic', 'Dynamic', ''),
 	('Kinematic', 'Kinematic', ''),
@@ -1084,6 +1095,51 @@ BoxCollider2D:
 			self.rootTransformsIds.append(myTransformId)
 		self.gameObjectsAndComponentsText += gameObject + '\n'
 		self.lastId += 1
+		if str(obj.collisionType) == 'Box':
+			boxCollider2D = self.BOX_COLLIDER_2D_TEMPLATE
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '2', '0')
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isTrigger)))
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '4', str(obj.offset[0]))
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '5', str(obj.offset[1]))
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '6', str(obj.size[0]))
+			boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '7', str(obj.size[1]))
+			self.gameObjectsAndComponentsText += boxCollider2D + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+		if str(obj.rigidbodyType) != 'None':
+			rigidbodyType = 0
+			if str(obj.rigidbodyType) == 'Kinematic':
+				rigidbodyType = 1
+			elif str(obj.rigidbodyType) == 'Static':
+				rigidbodyType = 2
+			constraints = 0
+			if obj.freezePositionX:
+				constraints |= (1 << 0)
+			elif obj.freezePositionY:
+				constraints |= (1 << 1)
+			elif obj.freezeRotation:
+				constraints |= (1 << 2)
+			rigidbody2D = self.RIGIDBODY_2D_TEMPLATE
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '10', '0')
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '11', str(GetEnumItemIndex(obj.interpolate, INTERPOLATE_ENUM_ITEMS)))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '12', str(GetEnumItemIndex(obj.sleepingMode, SLEEPING_MODE_ENUM_ITEMS)))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '13', str(int(obj.continuousCollisionDetection)))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '14', str(constraints))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '2', str(rigidbodyType))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isSimulated)))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '4', str(int(obj.useFullKinematicContacts)))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '5', str(int(obj.useAutoMass)))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '6', str(obj.mass))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '7', str(obj.linearDrag))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '8', str(obj.angularDrag))
+			rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '9', str(obj.gravityScale))
+			self.gameObjectsAndComponentsText += rigidbody2D + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
 		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
 			spritePath = obj.data.filepath
 			spritePath = os.path.expanduser('~') + spritePath[1 :]
@@ -1111,51 +1167,6 @@ BoxCollider2D:
 			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
-			if str(obj.collisionType) == 'Box':
-				boxCollider2D = self.BOX_COLLIDER_2D_TEMPLATE
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '2', '0')
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isTrigger)))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '4', str(obj.empty_image_offset[0] + 0.5))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '5', str(obj.empty_image_offset[1] + 0.5))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '6', str(obj.empty_display_size))
-				boxCollider2D = boxCollider2D.replace(REPLACE_INDICATOR + '7', str(obj.empty_display_size))
-				self.gameObjectsAndComponentsText += boxCollider2D + '\n'
-				self.componentIds.append(self.lastId)
-				self.lastId += 1
-			if str(obj.rigidbodyType) != 'None':
-				rigidbodyType = 0
-				if str(obj.rigidbodyType) == 'Kinematic':
-					rigidbodyType = 1
-				elif str(obj.rigidbodyType) == 'Static':
-					rigidbodyType = 2
-				constraints = 0
-				if obj.freezePositionX:
-					constraints |= (1 << 0)
-				elif obj.freezePositionY:
-					constraints |= (1 << 1)
-				elif obj.freezeRotation:
-					constraints |= (1 << 2)
-				rigidbody2D = self.RIGIDBODY_2D_TEMPLATE
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '10', '0')
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '11', str(GetEnumItemIndex(obj.interpolate, INTERPOLATE_ENUM_ITEMS)))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '12', str(GetEnumItemIndex(obj.sleepingMode, SLEEPING_MODE_ENUM_ITEMS)))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '13', str(int(obj.continuousCollisionDetection)))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '14', str(constraints))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '2', str(rigidbodyType))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isSimulated)))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '4', str(int(obj.useFullKinematicContacts)))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '5', str(int(obj.useAutoMass)))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '6', str(obj.mass))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '7', str(obj.linearDrag))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '8', str(obj.angularDrag))
-				rigidbody2D = rigidbody2D.replace(REPLACE_INDICATOR + '9', str(obj.gravityScale))
-				self.gameObjectsAndComponentsText += rigidbody2D + '\n'
-				self.componentIds.append(self.lastId)
-				self.lastId += 1
 		elif obj.type == 'LIGHT':
 			lightObject = bpy.data.lights[obj.name]
 			lightType = 2
@@ -1335,10 +1346,13 @@ class PhysicsPanel (bpy.types.Panel):
 	bl_context = 'object'
 
 	def draw (self, context):
-		self.layout.label(text='Collider')
+		self.layout.label(text='Collider2D')
 		self.layout.prop(context.active_object, 'collisionType')
 		self.layout.prop(context.active_object, 'isTrigger')
-		self.layout.label(text='Rigidbody')
+		self.layout.prop(context.active_object, 'offset')
+		self.layout.label(text='BoxCollider2D')
+		self.layout.prop(context.active_object, 'size')
+		self.layout.label(text='Rigidbody2D')
 		self.layout.prop(context.active_object, 'rigidbodyType')
 		self.layout.prop(context.active_object, 'isSimulated')
 		self.layout.prop(context.active_object, 'useFullKinematicContacts')
