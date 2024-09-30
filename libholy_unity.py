@@ -34,6 +34,17 @@ bpy.types.Text.isMonoBehaviour = bpy.props.BoolProperty(
 	name = 'Is MonoBehaviour',
 	description = ''
 )
+bpy.types.Object.isActive = bpy.props.BoolProperty(
+	name = 'Is active',
+	description = '',
+	default = True
+)
+bpy.types.Object.layer = bpy.props.IntProperty(
+	name = 'Layer',
+	description = '',
+	min = 0,
+	max = 31
+)
 COLLISION_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
 	('Box', 'Box', '') ]
 bpy.types.Object.collisionType = bpy.props.EnumProperty(
@@ -257,7 +268,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1'''
+  m_IsActive: ꗈ6'''
 	TRANSFORM_TEMPLATE = '''--- !u!4 &ꗈ0
 Transform:
   m_ObjectHideFlags: 0
@@ -980,6 +991,7 @@ BoxCollider2D:
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '3', str(layer))
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '4', name)
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '5', 'Untagged')
+		gameObject = gameObject.replace(REPLACE_INDICATOR + '6', '1')
 		self.gameObjectsAndComponentsText += gameObject + '\n'
 		gameObjectId = self.lastId
 		self.lastId += 1
@@ -1048,9 +1060,10 @@ BoxCollider2D:
 			gameObject = self.GAME_OBJECT_TEMPLATE
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(gameObjectId))
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '1', str(myTransformId))
-			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', '0')
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '3', str(obj.layer))
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '4', obj.name)
 			gameObject = gameObject.replace(REPLACE_INDICATOR + '5', tag)
+			gameObject = gameObject.replace(REPLACE_INDICATOR + '6', str(int(obj.isActive)))
 			self.lastId += 1
 			location = obj.matrix_local.translation
 			rotation = obj.matrix_local.to_euler()
@@ -1336,6 +1349,18 @@ BoxCollider2D:
 		gameObjectAndTrsId = self.MakeEmptyObject(name, 31, parentTransformId)
 		self.AddMeshCollider (gameObjectAndTrsId[0], True, True, fileId, meshGuid)
 		return gameObjectAndTrsId
+
+@bpy.utils.register_class
+class GameObjectPanel (bpy.types.Panel):
+	bl_idname = 'OBJECT_PT_GameObject_Panel'
+	bl_label = 'GameObject'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
+
+	def draw (self, context):
+		self.layout.prop(context.active_object, 'isActive')
+		self.layout.prop(context.active_object, 'layer')
 
 @bpy.utils.register_class
 class PhysicsPanel (bpy.types.Panel):
