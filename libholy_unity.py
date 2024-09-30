@@ -893,14 +893,6 @@ BoxCollider2D:
 					material = material.replace(REPLACE_INDICATOR + '3', str(materialColor[2]))
 					material = material.replace(REPLACE_INDICATOR + '4', str(materialColor[3]))
 					open(fileExportPath, 'wb').write(material.encode('utf-8'))
-			elif obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
-				spritePath = obj.data.filepath
-				spritePath = os.path.expanduser('~') + spritePath[1 :]
-				spriteName = spritePath[spritePath.rfind('/') + 1 :]
-				newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
-				MakeFolderForFile (newSpritePath)
-				sprite = open(spritePath, 'rb').read()
-				open(newSpritePath, 'wb').write(sprite)
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
 		CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
@@ -915,7 +907,7 @@ BoxCollider2D:
 			os.system('cp -r ' + os.path.join(_thisdir, 'UnityGLTF') + ' ' + unityGltfPath)
 
 		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
-		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources')
+		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Prefabs')
 		MakeFolderForFile (os.path.join(prefabsPath, ''))
 		self.isMakingScene = False
 		self.prefabGuidsDict.clear()
@@ -941,7 +933,7 @@ BoxCollider2D:
 			if obj.parent == None and GetObjectId(obj) not in self.exportedObjs:
 				self.MakeObject (obj)
 		scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
-		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Scripts', ''))
+		MakeFolderForFile (os.path.join(scriptsFolder, ''))
 		sendAndRecieveServerEventsScriptPath = os.path.join(scriptsFolder, 'SendAndRecieveServerEvents.cs')
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'SendAndRecieveServerEvents.cs'), sendAndRecieveServerEventsScriptPath)
 		gameObjectIdAndTrsId = self.MakeEmptyObject('Send And Recieve Server Events')
@@ -1157,7 +1149,9 @@ BoxCollider2D:
 			spritePath = obj.data.filepath
 			spritePath = os.path.expanduser('~') + spritePath[1 :]
 			spriteName = spritePath[spritePath.rfind('/') + 1 :]
-			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Textures', spriteName)
+			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Sprites', spriteName)
+			MakeFolderForFile (newSpritePath)
+			CopyFile (spritePath, newSpritePath)
 			spriteGuid = GetGuid(newSpritePath)
 			try:
 				image = Image.open(spritePath)
@@ -1178,6 +1172,24 @@ BoxCollider2D:
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '4', '0')
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', spriteGuid)
 			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
+			scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
+			MakeFolderForFile (os.path.join(scriptsFolder, ''))
+			loadSpritePath = os.path.join(scriptsFolder, 'LoadSprite.cs')
+			CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'LoadSprite.cs'), loadSpritePath)
+			loadSpritePath += '.meta'
+			scriptGuid = GetGuid(loadSpritePath)
+			open(loadSpritePath, 'w').write('guid: ' + scriptGuid)
+			scriptText = self.SCRIPT_TEMPLATE
+			scriptText = scriptText.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			scriptText = scriptText.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			scriptText = scriptText.replace(REPLACE_INDICATOR + '2', scriptGuid)
+			resourcesIndicator = os.path.join('Resources', '')
+			newSpritePath = newSpritePath[newSpritePath.find(resourcesIndicator) + len(resourcesIndicator) :]
+			newSpritePath = newSpritePath[: newSpritePath.rfind('.')]
+			scriptText += '\n  spritePath: "' + newSpritePath + '"'
+			self.gameObjectsAndComponentsText += scriptText + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
 		elif obj.type == 'LIGHT':
