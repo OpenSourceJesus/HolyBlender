@@ -68,6 +68,9 @@ bpy.types.Object.size = bpy.props.FloatVectorProperty(
 	size = 2,
 	default = [1, 1]
 )
+MAX_COLLIDER_2D_POINT_COUNT = 30
+for i in range(MAX_COLLIDER_2D_POINT_COUNT):
+	setattr(bpy.types.Object, 'point' + str(i), bpy.props.FloatVectorProperty(name = 'Point' + str(i), description = '', size = 2))
 bpy.types.Object.edgeRadius = bpy.props.FloatProperty(
 	name = 'Edge radius',
 	description = '',
@@ -1167,6 +1170,33 @@ PolygonCollider2D:
 			self.gameObjectsAndComponentsText += boxCollider2D + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
+		if str(obj.collisionType) == 'Polygon':
+			hasPoint = True
+			path = '\n    - '
+			for i in range(MAX_COLLIDER_2D_POINT_COUNT):
+				point = getattr(obj, 'point' + str(i))
+				if Equals(point, [ 0, 0 ]):
+					if i == 0:
+						hasPoint = False
+					else:
+						path = path[: path.rfind('\n')]
+					break
+				if i > 0:
+					path += '      '
+				path += '- {x: ' + str(point[0]) + ', y: ' + str(point[1]) + '}\n'
+			if not hasPoint:
+				path = '[]'
+			polygonCollider2D = self.POLYGON_COLLIDER_2D_TEMPLATE
+			polygonCollider2D = polygonCollider2D.replace(REPLACE_INDICATOR + '0', str(self.lastId))
+			polygonCollider2D = polygonCollider2D.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
+			polygonCollider2D = polygonCollider2D.replace(REPLACE_INDICATOR + '2', '0')
+			polygonCollider2D = polygonCollider2D.replace(REPLACE_INDICATOR + '3', str(int(obj.isTrigger)))
+			polygonCollider2D = polygonCollider2D.replace(REPLACE_INDICATOR + '4', str(obj.offset[0]))
+			polygonCollider2D = polygonCollider2D.replace(REPLACE_INDICATOR + '5', str(obj.offset[1]))
+			polygonCollider2D = polygonCollider2D.replace(REPLACE_INDICATOR + '6', path)
+			self.gameObjectsAndComponentsText += polygonCollider2D + '\n'
+			self.componentIds.append(self.lastId)
+			self.lastId += 1
 		if str(obj.rigidbodyType) != 'None':
 			rigidbodyType = 0
 			if str(obj.rigidbodyType) == 'Kinematic':
@@ -1201,7 +1231,8 @@ PolygonCollider2D:
 			self.lastId += 1
 		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
 			spritePath = obj.data.filepath
-			spritePath = os.path.expanduser('~') + spritePath[1 :]
+			if not spritePath.startswith(os.path.expanduser('~')):
+				spritePath = os.path.expanduser('~') + spritePath[1 :]
 			spriteName = spritePath[spritePath.rfind('/') + 1 :]
 			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Sprites', spriteName)
 			MakeFolderForFile (newSpritePath)
@@ -1443,6 +1474,8 @@ class PhysicsPanel (bpy.types.Panel):
 		self.layout.prop(context.active_object, 'offset')
 		self.layout.prop(context.active_object, 'size')
 		self.layout.prop(context.active_object, 'edgeRadius')
+		for i in range(MAX_COLLIDER_2D_POINT_COUNT):
+			self.layout.prop(context.active_object, 'point' + str(i))
 		self.layout.label(text='Rigidbody2D')
 		self.layout.prop(context.active_object, 'rigidbodyType')
 		self.layout.prop(context.active_object, 'isSimulated')
