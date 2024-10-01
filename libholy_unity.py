@@ -1233,6 +1233,7 @@ PolygonCollider2D:
 			spritePath = obj.data.filepath
 			if not spritePath.startswith(os.path.expanduser('~')):
 				spritePath = os.path.expanduser('~') + spritePath[1 :]
+			spritePath = spritePath.replace('../', '')
 			spriteName = spritePath[spritePath.rfind('/') + 1 :]
 			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Sprites', spriteName)
 			MakeFolderForFile (newSpritePath)
@@ -1465,7 +1466,7 @@ class PhysicsPanel (bpy.types.Panel):
 	bl_label = 'Physics'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
-	bl_context = 'object'
+	bl_context = 'physics'
 
 	def draw (self, context):
 		self.layout.label(text='Collider2D')
