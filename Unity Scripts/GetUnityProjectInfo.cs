@@ -17,6 +17,7 @@ public class GetUnityProjectInfo : MonoBehaviour
 		AddPackage ("com.unity.shadergraph");
 		AddPackage ("com.unity.test-framework");
 		AddPackage ("com.unity.inputsystem");
+		AddPackage ("com.unity.2d.tilemap");
 		string[] args = Environment.GetCommandLineArgs();
 		projectPath = args[args.Length - 1];
 		string projectSettingsPath = projectPath + "/ProjectSettings/ProjectSettings.asset";
