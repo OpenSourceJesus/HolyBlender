@@ -930,12 +930,15 @@ PolygonCollider2D:
 		meshesDict = {}
 		for mesh in bpy.data.meshes:
 			meshesDict[mesh.name] = []
+		for img in bpy.data.images:
+			if img.filepath != '':
+				self.MakeSprite (img.filepath)
 		scriptsPath = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(scriptsPath, ''))
 		for obj in bpy.context.scene.objects:
 			if obj.type == 'MESH' and obj.data.name in meshesDict:
 				meshesDict[obj.data.name].append(obj.name)
-				fileExportFolder = os.path.join(self.projectExportPath, 'Assets', 'Art', 'Models')
+				fileExportFolder = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Models')
 				fileExportPath = os.path.join(fileExportFolder, '')
 				MakeFolderForFile (fileExportPath)
 				# prevoiusObjectSize = obj.scale
@@ -943,7 +946,7 @@ PolygonCollider2D:
 				fileExportPath = ExportObject(obj, fileExportFolder)
 				# obj.scale = prevoiusObjectSize
 				for materialSlot in obj.material_slots:
-					fileExportPath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+					fileExportPath = self.projectExportPath + '/Assets/Resources/Materials/' + materialSlot.material.name + '.mat'
 					MakeFolderForFile (fileExportPath)
 					materialColor = materialSlot.material.diffuse_color
 					material = open(os.path.join(TEMPLATES_PATH, 'Material.mat'), 'rb').read().decode('utf-8')
@@ -1036,6 +1039,28 @@ PolygonCollider2D:
 			subprocess.check_call(command)
 		return {"FINISHED"}
 
+	def MakeSprite (self, spritePath : str):
+		if not spritePath.startswith(os.path.expanduser('~')):
+			spritePath = os.path.expanduser('~') + spritePath[1 :]
+		spritePath = spritePath.replace('../', '')
+		spriteName = spritePath[spritePath.rfind('/') + 1 :]
+		newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Sprites', spriteName)
+		MakeFolderForFile (newSpritePath)
+		CopyFile (spritePath, newSpritePath)
+		spriteGuid = GetGuid(newSpritePath)
+		try:
+			image = Image.open(spritePath)
+		except:
+			image = Image(filename=spritePath)
+		spriteMeta = self.SPRITE_META_TEMPLATE
+		spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', spriteGuid)
+		spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
+		spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '2', str(max(image.width, image.height)))
+		spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '3', str(image.width))
+		spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '4', str(image.height))
+		open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
+		return (newSpritePath, spriteGuid)
+
 	def MakeEmptyObject (self, name : str, layer = 0, parentTransformId = 0) -> (int, int):
 		gameObject = self.GAME_OBJECT_TEMPLATE
 		gameObject = gameObject.replace(REPLACE_INDICATOR + '0', str(self.lastId))
@@ -1091,12 +1116,12 @@ PolygonCollider2D:
 				transformId = self.MakeObject(childObj, myTransformId)
 				children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
 		if obj.type == 'MESH':
-			filePath = self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.glb.meta'
+			filePath = self.projectExportPath + '/Assets/Resources/Models/' + obj.name + '.glb.meta'
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'w').write('guid: ' + meshGuid)
 			if self.unityVersionPath != '':
 				meshDatas = self.dataText.split('\n')[0]
-				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Art/Models/' + obj.name + '.glb'
+				fileIdIndicator = '-' + self.projectExportPath + '/Assets/Resources/Models/' + obj.name + '.glb'
 				indexOfFile = meshDatas.find(fileIdIndicator)
 				indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 				indexOfEndOfFileId = meshDatas.find(' ', indexOfFileId)
@@ -1234,33 +1259,14 @@ PolygonCollider2D:
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
 		if obj.type == 'EMPTY' and obj.empty_display_type == 'IMAGE':
-			spritePath = obj.data.filepath
-			if not spritePath.startswith(os.path.expanduser('~')):
-				spritePath = os.path.expanduser('~') + spritePath[1 :]
-			spritePath = spritePath.replace('../', '')
-			spriteName = spritePath[spritePath.rfind('/') + 1 :]
-			newSpritePath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Sprites', spriteName)
-			MakeFolderForFile (newSpritePath)
-			CopyFile (spritePath, newSpritePath)
-			spriteGuid = GetGuid(newSpritePath)
-			try:
-				image = Image.open(spritePath)
-			except:
-				image = Image(filename=spritePath)
-			spriteMeta = self.SPRITE_META_TEMPLATE
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '0', spriteGuid)
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '1', spriteName)
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '2', str(max(image.width, image.height)))
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '3', str(image.width))
-			spriteMeta = spriteMeta.replace(REPLACE_INDICATOR + '4', str(image.height))
-			open(newSpritePath + '.meta', 'wb').write(spriteMeta.encode('utf-8'))
+			newSpritePathAndGuid = self.MakeSprite(obj.data.filepath)
 			spriteRenderer = self.SPRITE_RENDERER_TEMPLATE
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '2', '0')
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '3', '0')
 			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '4', '0')
-			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', spriteGuid)
+			spriteRenderer = spriteRenderer.replace(REPLACE_INDICATOR + '5', newSpritePathAndGuid[0])
 			self.gameObjectsAndComponentsText += spriteRenderer + '\n'
 			self.componentIds.append(self.lastId)
 			self.lastId += 1
@@ -1276,6 +1282,7 @@ PolygonCollider2D:
 			scriptText = scriptText.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 			scriptText = scriptText.replace(REPLACE_INDICATOR + '2', scriptGuid)
 			resourcesIndicator = os.path.join('Resources', '')
+			newSpritePath = newSpritePathAndGuid[0]
 			newSpritePath = newSpritePath[newSpritePath.find(resourcesIndicator) + len(resourcesIndicator) :]
 			newSpritePath = newSpritePath[: newSpritePath.rfind('.')]
 			scriptText += '\n  spritePath: "' + newSpritePath + '"'
@@ -1340,11 +1347,11 @@ PolygonCollider2D:
 				self.lastId += 1
 			materials = ''
 			for materialSlot in obj.material_slots:
-				filePath = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat.meta'
+				filePath = self.projectExportPath + '/Assets/Resources/Materials/' + materialSlot.material.name + '.mat.meta'
 				materialGuid = GetGuid(filePath)
 				open(filePath, 'w').write('guid: ' + materialGuid)
 				if self.unityVersionPath != '':
-					fileIdIndicator = self.projectExportPath + '/Assets/Art/Materials/' + materialSlot.material.name + '.mat'
+					fileIdIndicator = self.projectExportPath + '/Assets/Resources/Materials/' + materialSlot.material.name + '.mat'
 					indexOfFile = self.dataText.find(fileIdIndicator)
 					indexOfFileId = indexOfFile + len(fileIdIndicator) + 1
 					indexOfEndOfFileId = self.dataText.find(' ', indexOfFileId)
