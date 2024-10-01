@@ -49,6 +49,15 @@ bpy.types.Object.depth = bpy.props.FloatProperty(
 	name = 'Depth',
 	description = ''
 )
+defaultVisibleLayers = []
+for i in range(32):
+	defaultVisibleLayers.append(True)
+bpy.types.Object.visibleLayers = bpy.props.BoolVectorProperty(
+	name = 'Visible layers',
+	description = '',
+	size = 32,
+	default = defaultVisibleLayers
+)
 COLLISION_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
 	('Box', 'Box', ''),
 	('Polygon', 'Polygon', '') ]
@@ -485,8 +494,8 @@ Camera:
   orthographic size: ꗈ10
   m_Depth: ꗈ11
   m_CullingMask:
-  serializedVersion: 2
-  m_Bits: 4294967295
+    serializedVersion: 2
+    m_Bits: ꗈ12
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -1379,9 +1388,14 @@ PolygonCollider2D:
 			if cameraObj.type == 'ORTHO':
 				isOrthographic = 1
 			backgroundColor = bpy.context.world.color
+			visibleLayers = 0
+			for i in range(32):
+				if obj.visibleLayers[i]:
+					visibleLayers |= (1 << i)
 			camera = self.CAMERA_TEMPLATE
 			camera = camera.replace(REPLACE_INDICATOR + '10', str(cameraObj.ortho_scale / 2))
 			camera = camera.replace(REPLACE_INDICATOR + '11', str(obj.depth))
+			camera = camera.replace(REPLACE_INDICATOR + '12', str(visibleLayers))
 			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 			camera = camera.replace(REPLACE_INDICATOR + '1', str(backgroundColor.r))
 			camera = camera.replace(REPLACE_INDICATOR + '2', str(backgroundColor.g))
@@ -1480,8 +1494,13 @@ class CameraPanel (bpy.types.Panel):
 	bl_region_type = 'WINDOW'
 	bl_context = 'data'
 
+	@classmethod
+	def poll (cls, context):
+		return context.active_object.type == 'CAMERA'
+
 	def draw (self, context):
 		self.layout.prop(context.active_object, 'depth')
+		self.layout.prop(context.active_object, 'visibleLayers')
 
 @bpy.utils.register_class
 class PhysicsPanel (bpy.types.Panel):
