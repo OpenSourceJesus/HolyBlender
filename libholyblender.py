@@ -94,12 +94,5 @@ def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
 		print('GetObjectBounds is not implemented for object types besides meshes')
 	return ((_min + _max) / 2, _max - _min)
 
-def GetObjectId (obj):
-	id = str(obj)
-	idIndicator = 'at '
-	id = id[id.rfind(idIndicator) + len(idIndicator) :]
-	print('YAY' + id)
-	return id
-
 def GetGuid (filePath : str):
 	return hashlib.md5(filePath.encode('utf-8')).hexdigest()

@@ -45,6 +45,10 @@ bpy.types.Object.layer = bpy.props.IntProperty(
 	min = 0,
 	max = 31
 )
+bpy.types.Object.depth = bpy.props.FloatProperty(
+	name = 'Depth',
+	description = ''
+)
 COLLISION_TYPES_ENUM_ITEMS = [ ('None', 'None', ''),
 	('Box', 'Box', ''),
 	('Polygon', 'Polygon', '') ]
@@ -479,7 +483,7 @@ Camera:
   field of view: ꗈ8
   orthographic: ꗈ9
   orthographic size: ꗈ10
-  m_Depth: 0
+  m_Depth: ꗈ11
   m_CullingMask:
   serializedVersion: 2
   m_Bits: 4294967295
@@ -977,7 +981,7 @@ PolygonCollider2D:
 			self.prefabGuidsDict[collection.name] = GetGuid(prefabPath)
 			open(prefabPath + '.meta', 'w').write('guid: ' + self.prefabGuidsDict[collection.name])
 			for obj in collection.objects:
-				if GetObjectId(obj) not in self.exportedObjs:
+				if obj not in self.exportedObjs:
 					self.MakeObject (obj)
 			prefab = self.INIT_YAML_TEXT
 			prefab += '\n' + self.gameObjectsAndComponentsText
@@ -986,7 +990,7 @@ PolygonCollider2D:
 		self.gameObjectsAndComponentsText = ''
 		self.rootTransformsIds = []
 		for obj in bpy.context.scene.objects:
-			if obj.parent == None and GetObjectId(obj) not in self.exportedObjs:
+			if obj.parent == None and obj not in self.exportedObjs:
 				self.MakeObject (obj)
 		scriptsFolder = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(scriptsFolder, ''))
@@ -1083,7 +1087,7 @@ PolygonCollider2D:
 		self.lastId += 2
 		children = ''
 		for childObj in obj.children:
-			if GetObjectId(childObj) not in self.exportedObjs:
+			if childObj not in self.exportedObjs:
 				transformId = self.MakeObject(childObj, myTransformId)
 				children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
 		if obj.type == 'MESH':
@@ -1367,10 +1371,11 @@ PolygonCollider2D:
 			isOrthographic = 0
 			if cameraObj.type == 'ORTHO':
 				isOrthographic = 1
+			backgroundColor = bpy.context.world.color
 			camera = self.CAMERA_TEMPLATE
 			camera = camera.replace(REPLACE_INDICATOR + '10', str(cameraObj.ortho_scale / 2))
+			camera = camera.replace(REPLACE_INDICATOR + '11', str(obj.depth))
 			camera = camera.replace(REPLACE_INDICATOR + '0', str(self.lastId))
-			backgroundColor = bpy.context.world.color
 			camera = camera.replace(REPLACE_INDICATOR + '1', str(backgroundColor.r))
 			camera = camera.replace(REPLACE_INDICATOR + '2', str(backgroundColor.g))
 			camera = camera.replace(REPLACE_INDICATOR + '3', str(backgroundColor.b))
@@ -1428,7 +1433,7 @@ PolygonCollider2D:
 		self.gameObjectsAndComponentsText = self.gameObjectsAndComponentsText.replace(REPLACE_INDICATOR + '2', '')
 		self.gameObjectIdsDict[obj] = gameObjectId
 		self.trsIdsDict[obj] = myTransformId
-		self.exportedObjs.append(GetObjectId(obj))
+		self.exportedObjs.append(obj)
 		return myTransformId
 
 	def AddMeshCollider (self, gameObjectId : int, isTirgger : bool, isConvex : bool, fileId : str, meshGuid : str):
@@ -1461,8 +1466,19 @@ class GameObjectPanel (bpy.types.Panel):
 		self.layout.prop(context.active_object, 'layer')
 
 @bpy.utils.register_class
+class CameraPanel (bpy.types.Panel):
+	bl_idname = 'CAMERA_PT_Camera_Panel'
+	bl_label = 'Camera'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'data'
+
+	def draw (self, context):
+		self.layout.prop(context.active_object, 'depth')
+
+@bpy.utils.register_class
 class PhysicsPanel (bpy.types.Panel):
-	bl_idname = 'OBJECT_PT_Physics_Panel'
+	bl_idname = 'PHYSICS_PT_Physics_Panel'
 	bl_label = 'Physics'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
@@ -1509,8 +1525,8 @@ class WorldPanel (bpy.types.Panel):
 
 @bpy.utils.register_class
 class ScriptVariablesPanel (bpy.types.Panel):
-	bl_label = "Scripts Public Variables"
 	bl_idname = "OBJECT_PT_Script_Public_Variables"
+	bl_label = "Scripts Public Variables"
 	bl_space_type = "PROPERTIES"
 	bl_region_type = "WINDOW"
 	bl_context = "object"
