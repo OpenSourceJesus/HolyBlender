@@ -1428,21 +1428,31 @@ PolygonCollider2D:
 				scriptText = scriptText.replace(REPLACE_INDICATOR + '0', str(self.lastId))
 				scriptText = scriptText.replace(REPLACE_INDICATOR + '1', str(gameObjectId))
 				scriptText = scriptText.replace(REPLACE_INDICATOR + '2', scriptGuid)
-				hasPublicVariable = False
-				for propertyName in propertyNames:
+				# for propertyName in propertyNames:
+				# 	scriptIndicator = script.name + '_'
+				# 	if propertyName.startswith(scriptIndicator):
+				# 		propertyValue = getattr(obj, propertyName)
+				# 		variableType = varaiblesTypesDict[propertyName]
+				# 		if variableType == 'Color':
+				# 			if not Equals(propertyValue, NULL_COLOR):
+				# 				color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
+				# 				scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
+				# 		elif variableType == 'GameObject' or variableType == 'Transform':
+				# 			self.gameObjectAndTrsVarsDict[(obj, propertyName)] = propertyValue
+				# 			scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
+				# 		else:
+				# 			scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
+				for propertyName in obj.keys():
 					scriptIndicator = script.name + '_'
 					if propertyName.startswith(scriptIndicator):
-						propertyValue = getattr(obj, propertyName)
-						variableType = varaiblesTypesDict[propertyName]
-						if variableType == 'Color':
-							if not Equals(propertyValue, NULL_COLOR):
-								color = '{r: ' + str(propertyValue[0]) + ', g: ' + str(propertyValue[1]) + ', b: ' + str(propertyValue[2]) + ', a: ' + str(propertyValue[3]) + '}'
-								scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + color
-						elif variableType == 'GameObject' or variableType == 'Transform':
-							self.gameObjectAndTrsVarsDict[(obj, propertyName)] = propertyValue
-							scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + REPLACE_INDICATOR
-						else:
-							scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
+						propertyValue = obj[propertyName]
+						if propertyValue == False:
+							propertyValue = 0
+						elif propertyValue == True:
+							propertyValue = 1
+						elif propertyValue is str:
+							propertyValue = '"' + propertyValue + '"'
+						scriptText += '\n  ' + propertyName[len(scriptIndicator) :] + ': ' + str(propertyValue)
 				self.gameObjectsAndComponentsText += scriptText + '\n'
 				self.componentIds.append(self.lastId)
 				self.lastId += 1
