@@ -16,6 +16,16 @@ except:
 for i in range(MAX_SCRIPTS_PER_OBJECT):
 	setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text))
 
+defaultCollisionMask = []
+for i in range(32):
+	defaultCollisionMask.append(True)
+for i in range(32):
+	setattr(bpy.types.World, 'collisionMask' + str(i), bpy.props.BoolVectorProperty(
+		name = 'Colliding layers for layer ' + str(i),
+		description = '',
+		size = 32,
+		default = defaultCollisionMask
+	))
 bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
 	name = 'Unity project import path',
 	description = '',
@@ -950,10 +960,7 @@ PolygonCollider2D:
 				fileExportFolder = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Models')
 				fileExportPath = os.path.join(fileExportFolder, '')
 				MakeFolderForFile (fileExportPath)
-				# prevoiusObjectSize = obj.scale
-				# obj.scale *= 100
 				fileExportPath = ExportObject(obj, fileExportFolder)
-				# obj.scale = prevoiusObjectSize
 				for materialSlot in obj.material_slots:
 					fileExportPath = self.projectExportPath + '/Assets/Resources/Materials/' + materialSlot.material.name + '.mat'
 					MakeFolderForFile (fileExportPath)
@@ -965,6 +972,12 @@ PolygonCollider2D:
 					material = material.replace(REPLACE_INDICATOR + '3', str(materialColor[2]))
 					material = material.replace(REPLACE_INDICATOR + '4', str(materialColor[3]))
 					open(fileExportPath, 'wb').write(material.encode('utf-8'))
+		fileText = ''
+		for i in range(32):
+			collidingLayers = getattr(bpy.context.world, 'collisionMask' + str(i))
+			for i2 in range(32):
+				fileText += str(collidingLayers[i2]) + '\n'
+		open('/tmp/HolyBlender Data (BlenderToUnity)', 'w').write(fileText)
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
 		CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
@@ -1554,6 +1567,8 @@ class WorldPanel (bpy.types.Panel):
 	bl_context = 'world'
 
 	def draw (self, context):
+		for i in range(32):
+			self.layout.prop(context.world, 'collisionMask' + str(i))
 		self.layout.prop(context.world, 'unity_project_import_path')
 		self.layout.prop(context.world, 'unity_project_export_path')
 		self.layout.operator('unity.export', icon='CONSOLE')

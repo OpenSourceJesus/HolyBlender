@@ -30,10 +30,18 @@ public class GetUnityProjectInfo : MonoBehaviour
 				fileLines[i] = inputModeIndicator + '2';
 		}
 		File.WriteAllLines(projectSettingsPath, fileLines);
+		string outputPath = "/tmp/HolyBlender Data (BlenderToUnity)";
+		fileLines = File.ReadAllLines(outputPath);
+		for (int i = 0; i < 32; i ++)
+		{
+			string fileLine = fileLines[i];
+			for (int i2 = 0; i2 < 32; i2 ++)
+				Physics2D.IgnoreLayerCollision(i, i2, fileLine != "True");
+		}
 		string outputText = "";
 		outputText += GetAssetsInfo(".glb", typeof(Mesh));
 		outputText += GetAssetsInfo(".mat", typeof(Material));
-		File.WriteAllText("/tmp/HolyBlender Data (BlenderToUnity)", outputText);
+		File.WriteAllText(outputPath, outputText);
 	}
 
 	static void AddPackage (string name)
