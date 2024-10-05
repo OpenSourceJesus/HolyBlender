@@ -21,7 +21,7 @@ Now, run 'cd HolyBlender' to change directory to HolyBlender.
 Next, run 'make install_BlenderPlugin' to install the required parts to use BlenderPlugin. To install the parts for any of the other tools like UnityToUnreal UnityToBevy, or KritaToBlender, run 'make install_' and then add the name of the tool to run as one command.
 
 ## Requirements
-Currently, only Linux operating systems are supported. Testing has only been done on Ubuntu 23.10 and Ubuntu 24.04.
+Currently, only Linux operating systems are supported. Testing has only been done on Ubuntu 23.10, Ubuntu 24.04, and Pop!_OS 22.04.
 
 # Basic Usage
 
@@ -50,17 +50,15 @@ python3 BlenderPlugin.py --test-bevy
 
 ## Notes
 
-If you want to want to run BlenderPlugin in a specific blender file then in the terminal run 'blender {path to your Blender file} --python MakeBlenderPlugin.py'. If you want to run BlenderPlugin with a specific Blender executable, then replace 'blender' at the start of the previous terminal command with the path to the Blender executable. You can also leave '{path to your Blender file}' empty to start BlenderPlugin without a Blender file.
+For Unity exports, only scripts attached to objects get exported.
 
-In BlenderPlugin, running a C# script won't work if you attach the script to object(s) after checking the 'Run C# Script' checkbox in Blender's Text Editor. It will work if you attach the script to object(s) and then check the checkbox. The dropdowns for attaching and detaching scripts will appear only if the 3D Viewport is visible. Sometimes the attach script dropdown will only appear once you mouse over the object name in Object Properties.
-
-Each script needs to be have the same name as the MonoBehaviour class contained within it in BlenderPlugin.
+For Unity exports, mark classes derived from MonoBehaviour with the 'Is MonoBehaviour' checkbox for them to get attacehd to the corresponding GameObjects.
 
 Some comments are treated as code in the output of translations (not desired behvaior).
 
 In UnityToBevy, when float variables in C# scripts are declared they need to be set to a value that contains a decimal and has an 'f' at the end for proper translation.
 
-Currently, there isn't a way to have prefabs when exporting from Blender to Unity.
+Currently, there isn't a way to have nested prefabs when exporting from Blender to Unity.
 
 Currently, exporting mesh objects from Blender won't work properly unless a version of Unity is installed.
 
