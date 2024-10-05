@@ -12,16 +12,23 @@ bpy.ops.bevy.export()
 TEST_UNITY = '''
 PI = 3.141592653589793
 
-bpy.ops.object.select_all(action='DESELECT')
-bpy.data.objects['Cube'].select_set(True)
-bpy.ops.object.delete()
-camera = bpy.data.objects['Camera']
-camera.location = mathutils.Vector((0, 4, 0))
-camera.rotation_mode = 'XYZ'
-camera.rotation_euler = mathutils.Euler((PI / 2, 0, PI))
+collection = bpy.data.collections[0]
+bpy.data.collections.remove(collection)
+cameraData = bpy.data.cameras.new(name='Camera')
+cameraObj = bpy.data.objects.new('Camera', cameraData)
+bpy.context.scene.collection.objects.link(cameraObj)
+cameraObj.location = mathutils.Vector((0, 4, 0))
+cameraObj.rotation_mode = 'XYZ'
+cameraObj.rotation_euler = mathutils.Euler((PI / 2, 0, PI))
+lightData = bpy.data.lights.new(name="Light", type='POINT')
+lightData.energy = 1000
+lightObj = bpy.data.objects.new(name="Light", object_data=lightData)
+lightObj.location = mathutils.Vector((4.07625, 1.00545, 5.90386))
+bpy.context.scene.collection.objects.link(lightObj)
 bpy.ops.mesh.primitive_monkey_add()
 txtBlock = bpy.data.texts.new(name='Rotate')
 txtBlock.from_string(EXAMPLES_DICT['Rotate (Unity)'])
+txtBlock.isMonoBehaviour = True
 setattr(bpy.data.objects['Suzanne'], 'unity_script0', txtBlock)
 bpy.ops.object.select_all(action='DESELECT')
 mat = bpy.data.materials.get("Material")

@@ -974,7 +974,7 @@ PolygonCollider2D:
 					open(fileExportPath, 'wb').write(material.encode('utf-8'))
 		fileText = ''
 		for i in range(32):
-			collidingLayers = getattr(bpy.context.world, 'collisionMask' + str(i))
+			collidingLayers = getattr(bpy.data.worlds[0], 'collisionMask' + str(i))
 			for i2 in range(32):
 				fileText += str(collidingLayers[i2]) + '\n'
 		open('/tmp/HolyBlender Data (BlenderToUnity)', 'w').write(fileText)
@@ -1400,7 +1400,7 @@ PolygonCollider2D:
 			isOrthographic = 0
 			if cameraObj.type == 'ORTHO':
 				isOrthographic = 1
-			backgroundColor = bpy.context.world.color
+			backgroundColor = bpy.data.worlds[0].color
 			visibleLayers = 0
 			for i in range(32):
 				if obj.visibleLayers[i]:
@@ -1574,13 +1574,13 @@ class WorldPanel (bpy.types.Panel):
 		self.layout.operator('unity.export', icon='CONSOLE')
 		self.layout.operator('unity.play', icon='CONSOLE')
 
-@bpy.utils.register_class
+# @bpy.utils.register_class
 class ScriptVariablesPanel (bpy.types.Panel):
-	bl_idname = "OBJECT_PT_Script_Public_Variables"
-	bl_label = "Scripts Public Variables"
-	bl_space_type = "PROPERTIES"
-	bl_region_type = "WINDOW"
-	bl_context = "object"
+	bl_idname = 'OBJECT_PT_Script_Public_Variables'
+	bl_label = 'Scripts Public Variables'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
 
 	def draw (self, context):
 		for propertyName in propertyNames:
