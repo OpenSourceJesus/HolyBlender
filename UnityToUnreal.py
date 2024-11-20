@@ -51,7 +51,8 @@ for metaFilePath in metaFilesPaths:
 command = 'rm -r ' + UNREAL_PROJECT_PATH + '''
 	cp -r ''' + os.path.expanduser('~/HolyBlender/BareUEProject') + ' ' + UNREAL_PROJECT_PATH + '''
 	mv ''' + UNREAL_PROJECT_PATH + '/Source/BareUEProject ' + CODE_PATH + '''
-	make build_UnityToUnreal'''
+	rm obj -r -f
+	dotnet build HolyBlender.csproj -p:TargetFramwork=net6.0 -p:StartupObject=UnityToUnreal -o=UnityToUnreal'''
 print(command)
 
 os.system(command)

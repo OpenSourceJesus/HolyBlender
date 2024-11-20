@@ -40,10 +40,10 @@ public class UnityToGodot : Translator
 		if (intersection != "")
 			path = path.Replace(intersection, "");
 		output += '/' + path;
-		int lastIndexOfCurrentFolderPath = output.LastIndexOf(UNITY_2_MANY_PATH);
-		int indexOfCurrentFolderPath = output.IndexOf(UNITY_2_MANY_PATH);
+		int lastIndexOfCurrentFolderPath = output.LastIndexOf(HOLY_BLENDER_PATH);
+		int indexOfCurrentFolderPath = output.IndexOf(HOLY_BLENDER_PATH);
 		if (indexOfCurrentFolderPath != lastIndexOfCurrentFolderPath)
-			output = output.Remove(lastIndexOfCurrentFolderPath, UNITY_2_MANY_PATH.Length);
+			output = output.Remove(lastIndexOfCurrentFolderPath, HOLY_BLENDER_PATH.Length);
 		return output.Replace(".cs", ".gd");
 	}
 

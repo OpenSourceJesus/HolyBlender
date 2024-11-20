@@ -35,7 +35,7 @@ public class UnityToBevy : Translator
 		Translator.typeConversionsDict = typeConversionsDict;
 		Translator.memberConversionsDict = memberConversionsDict;
 		Translator.removeTexts = removeTexts;
-		TEMPLATES_PATH = UNITY_2_MANY_PATH + TEMPLATES_PATH;
+		TEMPLATES_PATH = HOLY_BLENDER_PATH + TEMPLATES_PATH;
 		base.Init (args);
 	}
 

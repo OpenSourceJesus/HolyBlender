@@ -1,9 +1,9 @@
 import os
 
-UNITY_2_MANY_PATH = os.path.expanduser('~/HolyBlender')
+HOLY_BLENDER_PATH = os.path.expanduser('~/HolyBlender')
 
 def ExcludeFolder (relativePath):
-	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
+	fileLines.insert(12, '\t\t<Compile Remove=\"' + HOLY_BLENDER_PATH + '/' + relativePath + '/**\" />\n')
 
 if not os.path.isdir('CSharpToPython'):
 	os.system('''git clone https://github.com/OpenSourceJesus/CSharpToPython.git --depth=1''')
@@ -29,7 +29,7 @@ os.system('''sudo apt -y install python3-setuptools
 	dotnet add package IronPython
 	dotnet add package System.Resources.Extensions''')
 
-filePath = UNITY_2_MANY_PATH + '/HolyBlender.csproj'
+filePath = HOLY_BLENDER_PATH + '/HolyBlender.csproj'
 fileLines = open(filePath, "rb").read().decode('utf-8').split('\n')
 ExcludeFolder ('BareUEProject')
 ExcludeFolder ('obj')

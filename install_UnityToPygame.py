@@ -1,15 +1,15 @@
 import os
 
-UNITY_2_MANY_PATH = os.path.expanduser('~/HolyBlender')
+HOLY_BLENDER_PATH = os.path.expanduser('~/HolyBlender')
 
 def ExcludeFolder (relativePath):
-	fileLines.insert(12, '\t\t<Compile Remove=\"' + UNITY_2_MANY_PATH + '/' + relativePath + '/**\" />\n')
+	fileLines.insert(12, '\t\t<Compile Remove=\"' + HOLY_BLENDER_PATH + '/' + relativePath + '/**\" />\n')
 
-if not os.path.isdir(UNITY_2_MANY_PATH + '/CSharpToPython'):
+if not os.path.isdir(HOLY_BLENDER_PATH + '/CSharpToPython'):
 	os.system('git clone https://github.com/OpenSourceJesus/CSharpToPython --depth=1')
-if not os.path.isdir(UNITY_2_MANY_PATH + '/py2many'):
+if not os.path.isdir(HOLY_BLENDER_PATH + '/py2many'):
 	os.system('git clone https://github.com/OpenSourceJesus/py2many --depth=1')
-if not os.path.isdir(UNITY_2_MANY_PATH + '/Blender_bevy_components_workflow'):
+if not os.path.isdir(HOLY_BLENDER_PATH + '/Blender_bevy_components_workflow'):
 	os.system('git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1')
 os.system('''sudo apt -y install python3-pygame
 	sudo apt -y install python3-toposort
@@ -24,7 +24,7 @@ os.system('''sudo apt -y install python3-pygame
 	dotnet add package Microsoft.CodeAnalysis.CSharp
 	dotnet add package IronPython
 	dotnet add package System.Resources.Extensions''')
-filePath = UNITY_2_MANY_PATH + '/HolyBlender.csproj'
+filePath = HOLY_BLENDER_PATH + '/HolyBlender.csproj'
 fileLines = open(filePath, 'rb').read().decode('utf-8').split('\n')
 ExcludeFolder ('BareUEProject')
 ExcludeFolder ('obj')

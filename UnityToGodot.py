@@ -8,7 +8,8 @@ CODE_PATH = GODOT_PROJECT_PATH + '/Scripts'
 EXCLUDE_ITEM_INDICATOR = 'exclude='
 excludeItems = []
 
-os.system('make build_UnityToGodot')
+os.system('''rm obj -r -f
+	dotnet build HolyBlender.csproj -p:StartupObject=UnityToGodot -o=UnityToGodot''')
 
 for arg in sys.argv:
 	if arg.startswith(EXCLUDE_ITEM_INDICATOR):

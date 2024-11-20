@@ -18,7 +18,7 @@ Then run 'sudo apt -y install make' to install make.
 
 Now, run 'cd HolyBlender' to change directory to HolyBlender.
 
-Next, run 'make install_BlenderPlugin' to install the required parts to use BlenderPlugin. To install the parts for any of the other tools like UnityToUnreal UnityToBevy, or KritaToBlender, run 'make install_' and then add the name of the tool to run as one command.
+Next, run 'python3 install_BlenderPlugin.py' to install the required parts to use BlenderPlugin. To install the parts for any of the other tools like UnityToUnreal UnityToBevy, or KritaToBlender, run 'python3 install_' and then add the name of the tool and '.py' to run as one command.
 
 ## Requirements
 Currently, only Linux operating systems are supported. Testing has only been done on Ubuntu 23.10, Ubuntu 24.04, and Pop!_OS 22.04.
@@ -62,7 +62,7 @@ Currently, there isn't a way to have nested prefabs when exporting from Blender 
 
 Currently, exporting mesh objects from Blender won't work properly unless a version of Unity is installed.
 
-This project's translation tools rely on my forks of CSharpToPython (https://github.com/OpenSourceJesus/CSharpToPython) and py2many (https://github.com/OpenSourceJesus/py2many). Additionally, UnityToBevy relies on my fork of Blender_bevy_components_workflow (https://github.com/OpenSourceJesus/Blender_bevy_components_workflow). Running the 'make install_' commands will install the corresponding forks.
+This project's translation tools rely on my forks of CSharpToPython (https://github.com/OpenSourceJesus/CSharpToPython) and py2many (https://github.com/OpenSourceJesus/py2many). Additionally, UnityToBevy relies on my fork of Blender_bevy_components_workflow (https://github.com/OpenSourceJesus/Blender_bevy_components_workflow). Running the 'python3 install_' commands will install the corresponding forks.
 
 # Support
 Use this webpage to know what should be done in the future of this project (and what has been done) and feel free to add issues (entries) to it: 'https://github.com/OpenSourceJesus/HolyBlender/issues'. Also, my email is 'gileadcosman@gmail.com', and I would love to respond to any questions or comments you have.

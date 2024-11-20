@@ -10,7 +10,7 @@ public class UnityToUnreal : Translator
 	public const string UNREAL_MODE_INDICATOR = "unreal=";
 	public static List<string> mainClassNames = new List<string>();
 	static bool unrealMode;
-	static string TEMPLATES_PATH = UNITY_2_MANY_PATH + "/Templates";
+	static string TEMPLATES_PATH = HOLY_BLENDER_PATH + "/Templates";
 	static Stage stage;
 	static string className;
 	static int beginPlayMethodLine = -1;

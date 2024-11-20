@@ -35,7 +35,7 @@ public class Translator
 	public static int lineAtLastRunEnd;
 	public static List<string> excludeItemsPaths = new List<string>();
 	public static string pythonFileContents;
-	public static string UNITY_2_MANY_PATH = "/home/" + Environment.UserName + "/HolyBlender";
+	public static string HOLY_BLENDER_PATH = "/home/" + Environment.UserName + "/HolyBlender";
 	static string inputFilePath;
 
 	public virtual void Init (string[] args)
@@ -57,7 +57,7 @@ public class Translator
 
 	public virtual void Do ()
 	{
-		string saveFilePath = UNITY_2_MANY_PATH + '/' + SAVE_FILE_NAME;
+		string saveFilePath = HOLY_BLENDER_PATH + '/' + SAVE_FILE_NAME;
 		if (File.Exists(saveFilePath))
 		{
 			string[] savedLines = File.ReadAllLines(saveFilePath);
@@ -311,9 +311,9 @@ public class Translator
 	{
 		string output = path.Replace('\\', '/');
 		if (output == ".")
-			output = UNITY_2_MANY_PATH;
+			output = HOLY_BLENDER_PATH;
 		else if (output.StartsWith("./"))
-			output = UNITY_2_MANY_PATH + '/' + output.Substring(2);
+			output = HOLY_BLENDER_PATH + '/' + output.Substring(2);
 		return output;
 	}
 }
