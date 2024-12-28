@@ -1,16 +1,15 @@
-import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
+import bpy, subprocess, os, sys#, webbrowser
 
-_thisdir = os.path.split(os.path.abspath(__file__))[0]
-if _thisdir not in sys.path: sys.path.append(_thisdir)
-from libholyblender import *
+thisDir = os.path.split(os.path.abspath(__file__))[0]
+if thisDir not in sys.path: sys.path.append(thisDir)
+from libs.lib_HolyBlender import *
 
-if not os.path.isdir( os.path.join(_thisdir, './Blender_bevy_components_workflow') ):
+if not os.path.isdir( os.path.join(thisDir, 'Blender_bevy_components_workflow') ):
 	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
 	print(cmd)
-	subprocess.check_call(cmd.split(), cwd=_thisdir)
+	subprocess.check_call(cmd.split(), cwd = thisDir)
 
-sys.path.append(os.path.join(_thisdir, 'Blender_bevy_components_workflow/tools'))
-print(sys.path)
+sys.path.append(os.path.join(thisDir, 'Blender_bevy_components_workflow/tools'))
 import bevy_components
 print(bevy_components)
 import gltf_auto_export
@@ -26,7 +25,6 @@ bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):
 	setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text))
-
 
 registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 registryText = registryText.replace('ꗈ', '')
@@ -55,7 +53,7 @@ class Unity2BevyImportButton (bpy.types.Operator):
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath != '':
 			BuildTool('UnityToBevy')
-			command = [ 'python3', os.path.join(_thisdir,'UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
+			command = [ 'python3', os.path.join(thisDir, 'UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
 			print(command)
 			subprocess.check_call(command)
 
@@ -149,7 +147,7 @@ def ConvertCSFileToRust (filePath):
 	open('/tmp/HolyBlender Data (UnityToBevy)', 'wb').write(data.encode('utf-8'))
 	command = [
 		'dotnet',
-		os.path.join(_thisdir,'HolyBlender.dll'), 
+		os.path.join(thisDir,' HolyBlender.dll'), 
 		'includeFile=' + filePath,
 		'bevy=true',
 		'output=/tmp'

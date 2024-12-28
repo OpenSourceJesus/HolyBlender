@@ -1,5 +1,7 @@
-import subprocess, sys, os, install_UnityExport
-os.system('rm /tmp/HolyBlender*')
+import subprocess, sys, os
+sys.path.append('Install Scripts')
+import install_UnityExport
+os.system('rm /tmp/HolyBlender')
 monogame = netghost = False
 
 TEST_BEVY = '''
@@ -85,6 +87,8 @@ if sys.platform == 'win32': # Windows
 	blender = 'C:/Program Files/Blender Foundation/Blender 4.2/blender.exe'
 elif sys.platform == 'darwin': # Apple
 	blender = '/Applications/Blender.app/Contents/MacOS/Blender'
+elif os.path.expanduser('~') == '/home/gilead':
+	blender = '/home/gilead/Downloads/blender-4.4.0-alpha+main.8efd41271de2-linux.x86_64-release/blender'
 command = []
 user_script = None
 user_opts = []
@@ -128,19 +132,19 @@ if user_opts:
 	command += user_opts
 print(command)
 
-if not os.path.isdir('./Blender_bevy_components_workflow'):
+if not os.path.isdir('libs/Blender_bevy_components_workflow'):
 	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
 	print(cmd)
 	
 	subprocess.check_call(cmd.split())
 
-if netghost and not os.path.isdir('./Net-Ghost-SE'):
+if netghost and not os.path.isdir('Net-Ghost-SE'):
 	cmd = 'git clone https://github.com/brentharts/Net-Ghost-SE.git --depth=1'
 	print(cmd)
 	subprocess.check_call(cmd.split())
 
 if monogame:
-	if not os.path.isdir('./MonoGame'):
+	if not os.path.isdir('MonoGame'):
 		cmd = 'git clone https://github.com/MonoGame/MonoGame.git --depth=1'
 		print(cmd)
 		subprocess.check_call(cmd.split())

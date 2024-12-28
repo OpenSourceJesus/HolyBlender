@@ -90,25 +90,25 @@ TB = '''
 TB_SETUP = '''
 def on_unity_event():
 	blend = ink2blend()
-	cmd = ["blender", blend, '--python', "./libholy_unity.py"]
+	cmd = ["blender", blend, '--python', "./lib_Unity.py"]
 	print(cmd)
 	subprocess.check_call(cmd, cwd="..")
 
 def on_unreal_event():
 	blend = ink2blend()
-	cmd = ["blender", blend, '--python', "./libholy_unreal.py"]
+	cmd = ["blender", blend, '--python', "./lib_Unreal.py"]
 	print(cmd)
 	subprocess.check_call(cmd, cwd="..")
 
 def on_bevy_event():
 	blend = ink2blend()
-	cmd = ["blender", blend, '--python', "./libholy_bevy.py"]
+	cmd = ["blender", blend, '--python', "./lib_bevy.py"]
 	print(cmd)
 	subprocess.check_call(cmd, cwd="..")
 
 def on_godot_event():
 	blend = ink2blend()
-	cmd = ["blender", blend, '--python', "./libholy_godot.py"]
+	cmd = ["blender", blend, '--python', "./lib_Godot.py"]
 	print(cmd)
 	subprocess.check_call(cmd, cwd="..")
 

@@ -1,8 +1,8 @@
 import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
-_thisdir = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(_thisdir)
-from libholyblender import *
+thisDir = os.path.split(os.path.abspath(__file__))[0]
+sys.path.append(thisDir)
+from libs.lib_HolyBlender import *
 
 
 bpy.types.World.godotExportPath = bpy.props.StringProperty(
@@ -105,7 +105,7 @@ class GodotExportButton(bpy.types.Operator):
 
 	def MakeObject (self, obj):
 		#global attachedGodotScriptsDict
-		attachedGodotScriptsDict = get_user_scripts('godot')
+		attachedGodotScriptsDict = GetScripts('godot')
 		for obj2 in bpy.data.objects:
 			if obj in obj2.children and obj2 not in self.exportedObjs:
 				self.MakeObject (obj2)

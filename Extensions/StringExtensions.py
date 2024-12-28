@@ -1,4 +1,4 @@
-def IndexOfAny (string, findAny, startIndex = 0):
+def IndexOfAny (string : str, findAny : list[str], startIndex = 0):
 	output = len(string)
 	for find in findAny:
 		indexOfFind = string.find(find, startIndex)

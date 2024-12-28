@@ -2,20 +2,26 @@ import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 user_args = None
 for arg in sys.argv:
-	if arg == '--': user_args = []
-	elif type(user_args) is list: user_args.append(arg)
-if user_args: print('user_args:', user_args)
+	if arg == '--':
+		user_args = []
+	elif type(user_args) is list:
+		user_args.append(arg)
+if user_args:
+	print('user_args:', user_args)
 
-_thisdir = os.path.split(os.path.abspath(__file__))[0]
-if _thisdir not in sys.path: sys.path.append(_thisdir)
+thisDir = os.path.split(os.path.abspath(__file__))[0]
+if thisDir not in sys.path:
+	sys.path.append(thisDir)
 
-import libholy_unity
-import libholy_unreal
-import libholy_bevy
-import libholy_godot
+sys.path.append('libs')
+sys.path.append('Extensions')
+import lib_Unity
+import lib_Unreal
+import lib_bevy
+import lib_Godot
 
-if os.path.isdir(os.path.join(_thisdir,'Net-Ghost-SE')):
-	sys.path.append(os.path.join(_thisdir,'Net-Ghost-SE'))
+if os.path.isdir(os.path.join(thisDir, 'Net-Ghost-SE')):
+	sys.path.append(os.path.join(thisDir, 'Net-Ghost-SE'))
 	import ghostblender
 	print(ghostblender)
 else:

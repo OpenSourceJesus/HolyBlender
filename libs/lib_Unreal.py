@@ -1,8 +1,8 @@
 import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
-_thisdir = os.path.split(os.path.abspath(__file__))[0]
-if _thisdir not in sys.path: sys.path.append(_thisdir)
-from libholyblender import *
+thisDir = os.path.split(os.path.abspath(__file__))[0]
+if thisDir not in sys.path: sys.path.append(thisDir)
+from libs.lib_HolyBlender import *
 
 bpy.types.World.unrealExportPath = bpy.props.StringProperty(
 	name = 'Unreal project path',
@@ -103,7 +103,7 @@ class UnrealExportButton (bpy.types.Operator):
 			data += 'Children\n'
 			data += self.GetObjectsData(childrenDict) + '\n'
 			data += '\nScripts'
-			attachedUnrealScriptsDict = get_user_scripts('unreal')
+			attachedUnrealScriptsDict = GetScripts('unreal')
 			for obj in attachedUnrealScriptsDict:
 				if len(attachedUnrealScriptsDict[obj]) > 0:
 					data += '\n' + self.GetBasicObjectData(obj) + '☣️' + '☣️'.join(attachedUnrealScriptsDict[obj]) + '\n'

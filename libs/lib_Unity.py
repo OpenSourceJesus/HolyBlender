@@ -1,8 +1,8 @@
-import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
+import bpy, subprocess, os, sys
 
-_thisdir = os.path.split(os.path.abspath(__file__))[0]
-sys.path.append(_thisdir)
-from libholyblender import *
+thisDir = os.path.split(os.path.abspath(__file__))[0]
+sys.path.append(thisDir)
+from libs.lib_HolyBlender import *
 
 sys.path.append(os.path.expanduser(os.path.join('~', '.local', 'lib', 'python3.10', 'site-packages')))
 try:
@@ -989,7 +989,7 @@ PolygonCollider2D:
 
 		unityGltfPath = os.path.join(self.projectExportPath, 'Assets', 'UnityGLTF')
 		if not os.path.isdir(unityGltfPath):
-			os.system('cp -r ' + os.path.join(_thisdir, 'UnityGLTF') + ' ' + unityGltfPath)
+			os.system('cp -r ' + os.path.join(HOLY_BLENDER_PATH, 'UnityGLTF') + ' ' + unityGltfPath)
 
 		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
 		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Prefabs')
@@ -1116,7 +1116,7 @@ PolygonCollider2D:
 		return (gameObjectId, self.lastId - 1)
 
 	def MakeObject (self, obj, parentTransformId = 0) -> int:
-		attachedUnityScriptsDict = get_user_scripts('unity')
+		attachedUnityScriptsDict = GetScripts('unity')
 		self.componentIds = []
 		prefabName = ''
 		# for collection in bpy.data.collections:

@@ -1,23 +1,24 @@
-import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
-_thisdir = os.path.split(os.path.abspath(__file__))[0]
-if _thisdir not in sys.path: sys.path.append(_thisdir)
+import bpy, subprocess, os, sys, hashlib
+from mathutils import *
 
-sys.path.append(os.path.join(_thisdir, 'blender-to-unity-fbx-exporter'))
+thisDir = os.path.split(os.path.abspath(__file__))[0]
+HOLY_BLENDER_PATH = os.path.join(thisDir, '..')
+sys.path.append(os.path.join(HOLY_BLENDER_PATH, 'blender-to-unity-fbx-exporter'))
 try:
 	import blender_to_unity_fbx_exporter as fbxExporter
 	print(fbxExporter)
 except:
 	fbxExporter = None
-if fbxExporter:
+if fbxExporter != None:
 	bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
 
 REPLACE_INDICATOR = 'ꗈ'
 WATTS_TO_CANDELAS = 0.001341022
 PI = 3.141592653589793
-UNITY_SCRIPTS_PATH = os.path.join(_thisdir, 'Unity Scripts')
-GODOT_SCRIPTS_PATH = os.path.join(_thisdir, 'Godot Scripts')
-EXTENSIONS_PATH = os.path.join(_thisdir, 'Extensions')
-TEMPLATES_PATH = os.path.join(_thisdir, 'Templates')
+UNITY_SCRIPTS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Unity Scripts')
+GODOT_SCRIPTS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Godot Scripts')
+EXTENSIONS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Extensions')
+TEMPLATES_PATH = os.path.join(HOLY_BLENDER_PATH, 'Templates')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
 MAX_SCRIPTS_PER_OBJECT = 32
@@ -42,7 +43,7 @@ bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy
 bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
 bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
 
-def get_user_scripts (mode):
+def GetScripts (mode):
 	assert mode in 'unity unreal bevy godot'.split()
 	scripts_dict = {}
 	for ob in bpy.data.objects:
@@ -55,7 +56,7 @@ def get_user_scripts (mode):
 			scripts_dict[ob] = scripts
 	return scripts_dict
 
-sys.path.append(os.path.join(_thisdir, 'Extensions'))
+sys.path.append(EXTENSIONS_PATH)
 from SystemExtensions import *
 from StringExtensions import *
 from CollectionExtensions import *
@@ -78,9 +79,9 @@ def ExportObject (obj, folder : str) -> str:
 	filePath += '.glb'
 	return filePath
 
-def GetObjectBounds (obj) -> (mathutils.Vector, mathutils.Vector):
-	_min = mathutils.Vector((float('inf'), float('inf'), float('inf')))
-	_max = mathutils.Vector((float('-inf'), float('-inf'), float('-inf')))
+def GetObjectBounds (obj) -> (Vector, Vector):
+	_min = Vector((float('inf'), float('inf'), float('inf')))
+	_max = Vector((float('-inf'), float('-inf'), float('-inf')))
 	if obj.type == 'MESH':
 		for vertex in obj.data.vertices:
 			vertex = obj.matrix_world @ vertex.co

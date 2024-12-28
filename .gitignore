@@ -1,5 +1,5 @@
 /target
-/__pycache__
+*/__pycache__
 /obj
 /src
 /UnityToBevy
@@ -13,10 +13,9 @@
 /assets
 /CSharpToPython
 /py2many
-/Blender_bevy_components_workflow
+/libs/Blender_bevy_components_workflow
 /wand
 /blender-to-unity-fbx-exporter
 /UnityGLTF
 /HolyBlender.csproj
-/Extensions/__pycache__
 /inkscape2019
