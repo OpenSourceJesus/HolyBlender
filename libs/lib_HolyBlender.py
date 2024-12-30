@@ -3,14 +3,14 @@ from mathutils import *
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 HOLY_BLENDER_PATH = os.path.join(thisDir, '..')
-sys.path.append(os.path.join(HOLY_BLENDER_PATH, 'blender-to-unity-fbx-exporter'))
+sys.path.append(os.path.join(HOLY_BLENDER_PATH, 'Blender_To_Unity_FBX_Export'))
 try:
-	import blender_to_unity_fbx_exporter as fbxExporter
+	import Blender_To_Unity_FBX_Export as fbxExporter
 	print(fbxExporter)
 except:
 	fbxExporter = None
 if fbxExporter != None:
-	bpy.ops.preferences.addon_enable(module='blender_to_unity_fbx_exporter')
+	bpy.ops.preferences.addon_enable(module='Blender_To_Unity_FBX_Export')
 
 REPLACE_INDICATOR = 'ꗈ'
 WATTS_TO_CANDELAS = 0.001341022

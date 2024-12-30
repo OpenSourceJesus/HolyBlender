@@ -87,13 +87,11 @@ if sys.platform == 'win32': # Windows
 	blender = 'C:/Program Files/Blender Foundation/Blender 4.2/blender.exe'
 elif sys.platform == 'darwin': # Apple
 	blender = '/Applications/Blender.app/Contents/MacOS/Blender'
-elif os.path.expanduser('~') == '/home/gilead':
-	blender = '/home/gilead/Downloads/blender-4.4.0-alpha+main.8efd41271de2-linux.x86_64-release/blender'
 command = []
-user_script = None
-user_opts = []
-test_bevy = False
-for i,arg in enumerate(sys.argv):
+userScript = None
+userOptions = []
+testBevy = False
+for i, arg in enumerate(sys.argv):
 	if arg.endswith('.blend'):
 		command.append(os.path.expanduser(arg))
 	elif arg.endswith('.exe'): # Windows
@@ -103,33 +101,33 @@ for i,arg in enumerate(sys.argv):
 	elif arg.endswith(('blender', 'Blender')):
 		blender = arg
 	elif arg == '--eval':
-		user_script = sys.argv[i + 1]
+		userScript = sys.argv[i + 1]
 	elif arg == '--test-bevy':
-		test_bevy = True
-		tmp = '/tmp/__test_bevy__.py'
+		testBevy = True
+		tmp = '/tmp/__testBevy__.py'
 		open(tmp, 'w').write(TEST_BEVY)
-		user_script = tmp
+		userScript = tmp
 	elif arg == '--test-html':
-		user_script = '/tmp/__test_html__.py'
-		open(user_script, 'w').write(TEST_HTML)
+		userScript = '/tmp/__test_html__.py'
+		open(userScript, 'w').write(TEST_HTML)
 	elif arg == '--test-unity':
-		user_script = '/tmp/__test_unity__.py'
-		open(user_script, 'w').write(TEST_UNITY)
+		userScript = '/tmp/__test_unity__.py'
+		open(userScript, 'w').write(TEST_UNITY)
 	elif arg == '--ghost':
 		netghost = True
 	elif arg == '--monogame' in sys.argv:
 		monogame = True
 	elif arg.startswith('--'):
-		user_opts.append(arg)
+		userOptions.append(arg)
 
 command = [blender] + command + [ '--python', 'MakeBlenderPlugin.py' ]
 
-if user_script or user_opts:
+if userScript or userOptions:
 	command.append('--')
-if user_script:
-	command.append(user_script)
-if user_opts:
-	command += user_opts
+if userScript:
+	command.append(userScript)
+if userOptions:
+	command += userOptions
 print(command)
 
 if not os.path.isdir('libs/Blender_bevy_components_workflow'):

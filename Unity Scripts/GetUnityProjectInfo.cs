@@ -30,13 +30,31 @@ public class GetUnityProjectInfo : MonoBehaviour
 				fileLines[i] = inputModeIndicator + '2';
 		}
 		File.WriteAllLines(projectSettingsPath, fileLines);
+		string tagManagerPath = projectPath + "/ProjectSettings/TagManager.asset";
+		fileLines = File.ReadAllLines(tagManagerPath);
+		bool foundThirdLayer = false;
+		byte layer = 3;
+		for (int i = 0; i < fileLines.Length; i ++)
+		{
+			string line = fileLines[i];
+			if (line == "  - ")
+			{
+				foundThirdLayer = true;
+				fileLines[i] += "" + layer;
+			}
+			if (foundThirdLayer)
+				layer ++;
+		}
+		File.WriteAllLines(tagManagerPath, fileLines);
 		string outputPath = "/tmp/HolyBlender Data (BlenderToUnity)";
 		fileLines = File.ReadAllLines(outputPath);
 		for (int i = 0; i < 32; i ++)
 		{
-			string fileLine = fileLines[i];
 			for (int i2 = 0; i2 < 32; i2 ++)
+			{
+				string fileLine = fileLines[i + i2 * 32];
 				Physics2D.IgnoreLayerCollision(i, i2, fileLine != "True");
+			}
 		}
 		string outputText = "";
 		outputText += GetAssetsInfo(".glb", typeof(Mesh));

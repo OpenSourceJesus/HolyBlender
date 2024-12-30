@@ -2,7 +2,7 @@ import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 if thisDir not in sys.path: sys.path.append(thisDir)
-from libs.lib_HolyBlender import *
+from lib_HolyBlender import *
 
 bpy.types.World.unrealExportPath = bpy.props.StringProperty(
 	name = 'Unreal project path',

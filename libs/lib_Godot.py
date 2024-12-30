@@ -2,7 +2,7 @@ import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(thisDir)
-from libs.lib_HolyBlender import *
+from lib_HolyBlender import *
 
 
 bpy.types.World.godotExportPath = bpy.props.StringProperty(

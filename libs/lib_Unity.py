@@ -5,6 +5,7 @@ sys.path.append(thisDir)
 from libs.lib_HolyBlender import *
 
 sys.path.append(os.path.expanduser(os.path.join('~', '.local', 'lib', 'python3.10', 'site-packages')))
+sys.path.append(os.path.expanduser(os.path.join('~', '.local', 'lib', 'python3.13', 'site-packages')))
 try:
 	from PIL import Image
 except:
@@ -257,7 +258,7 @@ public class FirstPersonControls : MonoBehaviour
 		transform.Rotate(new Vector3(look.y, look.x));
 		previousMousePosition = mousePosition;
 	}
-}''',
+}'''
 }
 
 def DrawIsMonoBehaviourToggle (self, context):
@@ -910,6 +911,8 @@ PolygonCollider2D:
   m_Points:
     m_Paths: ꗈ6
   m_UseDelaunayMesh: 0'''
+	TAG_MANAGER_PATH_SUFFIX = os.path.join('ProjectSettings', 'TagManager.asset')
+	DATA_FILE_PATH = '/tmp/HolyBlender Data (BlenderToUnity)'
 	gameObjectsAndComponentsText = ''
 	rootTransformsIds = []
 	componentIds = []
@@ -951,7 +954,12 @@ PolygonCollider2D:
 			meshesDict[mesh.name] = []
 		for img in bpy.data.images:
 			if img.filepath != '':
+				wasPacked = len(img.packed_files) > 0
+				if wasPacked:
+					img.unpack(method = 'WRITE_ORIGINAL')
 				self.MakeSprite (img.filepath)
+				if wasPacked:
+					img.pack()
 		scriptsPath = os.path.join(self.projectExportPath, 'Assets', 'Scripts')
 		MakeFolderForFile (os.path.join(scriptsPath, ''))
 		for obj in bpy.context.scene.objects:
@@ -977,7 +985,7 @@ PolygonCollider2D:
 			collidingLayers = getattr(bpy.data.worlds[0], 'collisionMask' + str(i))
 			for i2 in range(32):
 				fileText += str(collidingLayers[i2]) + '\n'
-		open('/tmp/HolyBlender Data (BlenderToUnity)', 'w').write(fileText)
+		open(self.DATA_FILE_PATH, 'w').write(fileText)
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
 		CopyFile (os.path.join(EXTENSIONS_PATH, 'SystemExtensions.cs'), os.path.join(scriptsPath, 'SystemExtensions.cs'))
@@ -991,7 +999,7 @@ PolygonCollider2D:
 		if not os.path.isdir(unityGltfPath):
 			os.system('cp -r ' + os.path.join(HOLY_BLENDER_PATH, 'UnityGLTF') + ' ' + unityGltfPath)
 
-		self.dataText = open('/tmp/HolyBlender Data (BlenderToUnity)', 'rb').read().decode('utf-8')
+		self.dataText = open(self.DATA_FILE_PATH, 'rb').read().decode('utf-8')
 		prefabsPath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Prefabs')
 		MakeFolderForFile (os.path.join(prefabsPath, ''))
 		self.isMakingScene = False
@@ -1052,7 +1060,7 @@ PolygonCollider2D:
 		if scenePath == '':
 			scenePath = 'Test.unity'
 		scenePath = scenesFolderPath + '/' + scenePath
-		sceneTemplateText = open(os.path.expanduser('~/HolyBlender/Templates/Scene.unity'), 'rb').read().decode('utf-8')
+		sceneTemplateText = open(os.path.join(TEMPLATES_PATH, 'Scene.unity'), 'rb').read().decode('utf-8')
 		sceneText = sceneTemplateText.replace(REPLACE_INDICATOR + '0', self.gameObjectsAndComponentsText)
 		sceneText = sceneText.replace(REPLACE_INDICATOR + '1', sceneRootsText)
 		open(scenePath, 'wb').write(sceneText.encode('utf-8'))

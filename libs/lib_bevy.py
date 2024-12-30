@@ -2,7 +2,7 @@ import bpy, subprocess, os, sys#, webbrowser
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 if thisDir not in sys.path: sys.path.append(thisDir)
-from libs.lib_HolyBlender import *
+from lib_HolyBlender import *
 
 if not os.path.isdir( os.path.join(thisDir, 'Blender_bevy_components_workflow') ):
 	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'

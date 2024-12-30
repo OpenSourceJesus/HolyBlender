@@ -26,7 +26,7 @@ except:
 
 from GetUnityProjectInfo import *
 from SystemExtensions import *
-from libs.lib_HolyBlender import MAX_SCRIPTS_PER_OBJECT
+from lib_HolyBlender import MAX_SCRIPTS_PER_OBJECT
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
