@@ -26,7 +26,7 @@ except:
 
 from GetUnityProjectInfo import *
 from SystemExtensions import *
-from lib_HolyBlender import MAX_SCRIPTS_PER_OBJECT
+from lib_HolyBlender import MAX_SCRIPTS_PER_OBJECT, HOLY_BLENDER_PATH
 
 UNITY_PROJECT_PATH = ''
 BEVY_PROJECT_PATH = ''
@@ -552,7 +552,7 @@ def MakeComponent (objectName : str, componentType : str):
 def RemoveComponent (objectName : str, componentType : str):
 	if objectName != '':
 		obj = bpy.data.objects[objectName]
-		sys.path.append(os.path.expanduser('~/HolyBlender/Blender_bevy_components_workflow/tools'))
+		sys.path.append(os.path.join(HOLY_BLENDER_PATH, 'Blender_bevy_components_workflow', 'tools'))
 		import bevy_components.components.metadata as metadata
 		metadata.remove_component_to_object(obj, componentType.replace('Unit2Many::', ''))
 

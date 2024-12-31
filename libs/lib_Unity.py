@@ -2,7 +2,7 @@ import bpy, subprocess, os, sys
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 sys.path.append(thisDir)
-from libs.lib_HolyBlender import *
+from lib_HolyBlender import *
 
 sys.path.append(os.path.expanduser(os.path.join('~', '.local', 'lib', 'python3.10', 'site-packages')))
 sys.path.append(os.path.expanduser(os.path.join('~', '.local', 'lib', 'python3.13', 'site-packages')))
@@ -1542,7 +1542,7 @@ class PhysicsPanel (bpy.types.Panel):
 	bl_context = 'physics'
 
 	def draw (self, context):
-		self.layout.label(text='Collider2D')
+		self.layout.label(text = 'Collider2D')
 		self.layout.prop(context.active_object, 'collisionType')
 		self.layout.prop(context.active_object, 'isTrigger')
 		self.layout.prop(context.active_object, 'offset')
@@ -1550,7 +1550,7 @@ class PhysicsPanel (bpy.types.Panel):
 		self.layout.prop(context.active_object, 'edgeRadius')
 		for i in range(MAX_COLLIDER_2D_POINT_COUNT):
 			self.layout.prop(context.active_object, 'point' + str(i))
-		self.layout.label(text='Rigidbody2D')
+		self.layout.label(text = 'Rigidbody2D')
 		self.layout.prop(context.active_object, 'rigidbodyType')
 		self.layout.prop(context.active_object, 'isSimulated')
 		self.layout.prop(context.active_object, 'useFullKinematicContacts')
@@ -1575,31 +1575,13 @@ class WorldPanel (bpy.types.Panel):
 	bl_context = 'world'
 
 	def draw (self, context):
+		self.layout.label(text = 'Collision Mask')
 		for i in range(32):
 			self.layout.prop(context.world, 'collisionMask' + str(i))
 		self.layout.prop(context.world, 'unity_project_import_path')
 		self.layout.prop(context.world, 'unity_project_export_path')
-		self.layout.operator('unity.export', icon='CONSOLE')
-		self.layout.operator('unity.play', icon='CONSOLE')
-
-# @bpy.utils.register_class
-class ScriptVariablesPanel (bpy.types.Panel):
-	bl_idname = 'OBJECT_PT_Script_Public_Variables'
-	bl_label = 'Scripts Public Variables'
-	bl_space_type = 'PROPERTIES'
-	bl_region_type = 'WINDOW'
-	bl_context = 'object'
-
-	def draw (self, context):
-		for propertyName in propertyNames:
-			if varaiblesTypesDict[propertyName] == 'Color':
-				if not Equals(getattr(context.active_object, propertyName), NULL_COLOR):
-					self.layout.prop(context.active_object, propertyName)
-			elif varaiblesTypesDict[propertyName] == 'GameObject' or varaiblesTypesDict[propertyName] == 'Transform':
-				if propertyName in gameObjectAndTrsVarsDict[context.active_object]:
-					self.layout.prop(context.active_object, propertyName)
-			else:
-				self.layout.prop(context.active_object, propertyName)
+		self.layout.operator('unity.export', icon = 'CONSOLE')
+		self.layout.operator('unity.play', icon = 'CONSOLE')
 
 @bpy.utils.register_class
 class UnityScriptsPanel (bpy.types.Panel):
@@ -1610,7 +1592,7 @@ class UnityScriptsPanel (bpy.types.Panel):
 	bl_context = 'object'
 
 	def draw (self, context):
-		self.layout.label(text='Attach Unity scripts')
+		self.layout.label(text = 'Attach Unity scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
 			hasScript = getattr(context.active_object, 'unity_script' + str(i)) != None

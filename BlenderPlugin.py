@@ -134,7 +134,7 @@ if not os.path.isdir('libs/Blender_bevy_components_workflow'):
 	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
 	print(cmd)
 	
-	subprocess.check_call(cmd.split())
+	subprocess.check_call(cmd.split(), cwd = 'libs')
 
 if netghost and not os.path.isdir('Net-Ghost-SE'):
 	cmd = 'git clone https://github.com/brentharts/Net-Ghost-SE.git --depth=1'

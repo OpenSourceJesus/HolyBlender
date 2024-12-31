@@ -1,13 +1,11 @@
-import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
+import bpy, os, sys
 
-user_args = None
+userArgs = None
 for arg in sys.argv:
 	if arg == '--':
-		user_args = []
-	elif type(user_args) is list:
-		user_args.append(arg)
-if user_args:
-	print('user_args:', user_args)
+		userArgs = []
+	elif type(userArgs) is list:
+		userArgs.append(arg)
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 if thisDir not in sys.path:
@@ -267,13 +265,37 @@ class HttpServerOperator (bpy.types.Operator):
 
 HTTPD_ACTIVE = True
 bpy.ops.httpd.run()'''
+previousSelected = []
+
+def OnObjectChanged (*args):
+	key = args[0]
+	value = args[1][key]
+	print(key, value)
+	for obj in bpy.context.selected_objects:
+		if key in obj.keys():
+			obj[key] = value
+
+def Update ():
+	global previousSelected
+	for obj in bpy.context.selected_objects:
+		if obj not in previousSelected:
+			for key in obj.keys():
+				bpy.msgbus.subscribe_rna(key = obj.path_resolve(key, False),
+					owner = obj,
+					args = (key, obj),
+					notify = OnObjectChanged)
+	for obj in previousSelected:
+		if obj not in bpy.context.selected_objects:
+			bpy.msgbus.clear_by_owner(obj)
+	previousSelected = bpy.context.selected_objects
+	return 0.1
 
 class ScriptVariablesPanel (bpy.types.Panel):
-	bl_label = "Scripts Public Variables"
-	bl_idname = "OBJECT_PT_Script_Public_Variables"
-	bl_space_type = "PROPERTIES"
-	bl_region_type = "WINDOW"
-	bl_context = "object"
+	bl_idname = 'OBJECT_PT_Script_Public_Variables'
+	bl_label = 'Scripts Public Variables'
+	bl_space_type = 'PROPERTIES'
+	bl_region_type = 'WINDOW'
+	bl_context = 'object'
 
 	def draw (self, context):
 		for propertyName in propertyNames:
@@ -286,16 +308,18 @@ class ScriptVariablesPanel (bpy.types.Panel):
 			else:
 				self.layout.prop(context.active_object, propertyName)
 
+@bpy.utils.register_class
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
 	bl_label = 'Add or Remove'
-	template : bpy.props.StringProperty(default = '')
+	template = bpy.props.StringProperty(default = '')
 
 	def invoke (self, context, event):
 		if context.edit_text != None:
 			context.edit_text.from_string(EXAMPLES_DICT[self.template])
 		return {'FINISHED'}
 
+@bpy.utils.register_class
 class ExamplesMenu (bpy.types.Menu):
 	bl_idname = 'TEXT_MT_u2m_menu'
 	bl_label = 'HolyBlender Templates'
@@ -307,11 +331,13 @@ class ExamplesMenu (bpy.types.Menu):
 			op.template = name
 
 if __name__ == '__main__':
-	if user_args:
-		for arg in user_args:
+	if userArgs != None:
+		print('User arguments:', userArgs)
+		for arg in userArgs:
 			if arg.endswith('.py'):
 				print('exec:', arg)
 				exec(open(arg).read())
 			elif arg == '--test-unity':
 				bpy.ops.unity.export()
 	bpy.data.worlds[0].use_nodes = False
+	bpy.app.timers.register(Update)

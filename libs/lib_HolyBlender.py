@@ -10,7 +10,7 @@ try:
 except:
 	fbxExporter = None
 if fbxExporter != None:
-	bpy.ops.preferences.addon_enable(module='Blender_To_Unity_FBX_Export')
+	bpy.ops.preferences.addon_enable(module = 'Blender_To_Unity_FBX_Export')
 
 REPLACE_INDICATOR = 'ꗈ'
 WATTS_TO_CANDELAS = 0.001341022
@@ -38,10 +38,10 @@ propertyNames = []
 childrenDict = {}
 gameObjectAndTrsVarsDict = {}
 
-bpy.types.World.holyserver = bpy.props.PointerProperty(name='Python Server', type=bpy.types.Text)
-bpy.types.World.html_code = bpy.props.PointerProperty(name='HTML code', type=bpy.types.Text)
-bpy.types.Object.html_on_click = bpy.props.PointerProperty(name='JavaScript on click', type=bpy.types.Text)
-bpy.types.Object.html_css = bpy.props.PointerProperty(name='CSS', type=bpy.types.Text)
+bpy.types.World.holyserver = bpy.props.PointerProperty(name = 'Python Server', type = bpy.types.Text)
+bpy.types.World.html_code = bpy.props.PointerProperty(name = 'HTML code', type = bpy.types.Text)
+bpy.types.Object.html_on_click = bpy.props.PointerProperty(name = 'JavaScript on click', type = bpy.types.Text)
+bpy.types.Object.html_css = bpy.props.PointerProperty(name = 'CSS', type = bpy.types.Text)
 
 def GetScripts (mode):
 	assert mode in 'unity unreal bevy godot'.split()
