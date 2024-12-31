@@ -1,4 +1,5 @@
 import bpy, os, sys
+from mathutils import *
 
 userArgs = None
 for arg in sys.argv:
@@ -6,18 +7,17 @@ for arg in sys.argv:
 		userArgs = []
 	elif type(userArgs) is list:
 		userArgs.append(arg)
-
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
 if thisDir not in sys.path:
 	sys.path.append(thisDir)
-
 sys.path.append('libs')
 sys.path.append('Extensions')
 import lib_Unity
 import lib_Unreal
 import lib_bevy
 import lib_Godot
+from lib_HolyBlender import *
 
 if os.path.isdir(os.path.join(thisDir, 'Net-Ghost-SE')):
 	sys.path.append(os.path.join(thisDir, 'Net-Ghost-SE'))
@@ -267,6 +267,7 @@ class HttpServerOperator (bpy.types.Operator):
 HTTPD_ACTIVE = True
 bpy.ops.httpd.run()'''
 previousSelected = []
+usingCloneTool = False
 
 def OnObjectChanged (*args):
 	key = args[0]
@@ -312,24 +313,75 @@ class ScriptVariablesPanel (bpy.types.Panel):
 @bpy.utils.register_class
 class ExamplesOperator (bpy.types.Operator):
 	bl_idname = 'u2m.show_template'
-	bl_label = 'Add or Remove'
+	bl_label = 'HolyBlender Examples'
 	template = bpy.props.StringProperty(default = '')
 
 	def invoke (self, context, event):
 		if context.edit_text != None:
 			context.edit_text.from_string(EXAMPLES_DICT[self.template])
-		return {'FINISHED'}
+		return { 'FINISHED' }
 
 @bpy.utils.register_class
 class ExamplesMenu (bpy.types.Menu):
 	bl_idname = 'TEXT_MT_u2m_menu'
-	bl_label = 'HolyBlender Templates'
+	bl_label = 'HolyBlender Examples Menu'
 
 	def draw (self, context):
-		layout = self.layout
 		for name in EXAMPLES_DICT:
-			op = layout.operator('u2m.show_template', text=name)
+			op = self.layout.operator('u2m.show_template', text = name)
 			op.template = name
+
+@bpy.utils.register_class
+class CloneToolOperator (bpy.types.Operator):
+	bl_idname = 'tools.clone_tool'
+	bl_label = 'Clone on surfaces'
+	bl_options = { 'REGISTER', 'UNDO' }
+
+	def execute (self, context):
+		ray = GetRay(self.mousePosition, context.region, context.region_data)
+		hitInfo = context.scene.ray_cast(context.evaluated_depsgraph_get(), ray[0], ray[1])
+		if hitInfo[0]:
+			for obj in context.selected_objects:
+				newObj = CopyObject(obj)
+				newObj.location = hitInfo[1]
+		return { 'RUNNING_MODAL' }
+
+	def invoke (self, context, event):
+		global usingCloneTool
+		usingCloneTool = True
+		self.mousePosition = Vector((event.mouse_region_x, event.mouse_region_y))
+		context.window_manager.modal_handler_add(self)
+		return { 'RUNNING_MODAL' }
+	
+	def modal (self, context, event):
+		global usingCloneTool
+		if event.type == 'LEFTMOUSE':
+			self.mousePosition = Vector((event.mouse_region_x, event.mouse_region_y))
+			self.execute(context)
+		elif event.type in { 'RIGHTMOUSE', 'ESC' }:
+			usingCloneTool = False
+			return { 'FINISHED' }
+		return { 'RUNNING_MODAL' }
+
+class View3DPanel:
+	bl_space_type = 'VIEW_3D'
+	bl_region_type = 'UI'
+	bl_category = 'Tool'
+
+	@classmethod
+	def poll (cls, context):
+		return context.object != None
+
+@bpy.utils.register_class
+class ToolsPanel (View3DPanel, bpy.types.Panel):
+	bl_idname = 'VIEW3D_PT_tools'
+	bl_label = 'HolyBlender Tools'
+
+	def draw (self, context):
+		if usingCloneTool:
+			self.layout.operator('tools.clone_tool', text = 'Right click to stop cloning on surfaces')
+		else:
+			self.layout.operator('tools.clone_tool')
 
 if __name__ == '__main__':
 	if userArgs != None:

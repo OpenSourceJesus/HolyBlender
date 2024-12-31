@@ -1,4 +1,5 @@
 import bpy, subprocess, os, sys, hashlib
+from bpy_extras.view3d_utils import *
 from mathutils import *
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
@@ -98,3 +99,17 @@ def GetObjectBounds (obj) -> (Vector, Vector):
 
 def GetGuid (filePath : str):
 	return hashlib.md5(filePath.encode('utf-8')).hexdigest()
+
+def GetRay (point : Vector, region : bpy.types.Region = bpy.context.region, regionView : bpy.types.RegionView3D = bpy.context.region_data) -> (Vector, Vector):
+	origin = region_2d_to_origin_3d(region, regionView, point)
+	direction = region_2d_to_vector_3d(region, regionView, point)
+	return (origin, direction)
+
+def CopyObject (obj, copyData = True, copyAnimationActions = True, collection = bpy.context.collection):
+    output = obj.copy()
+    if copyData:
+        output.data = output.data.copy()
+    if copyAnimationActions and output.animation_data != None:
+        output.animation_data.action = output.animation_data.action.copy()
+    collection.objects.link(output)
+    return output

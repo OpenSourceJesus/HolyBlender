@@ -24,7 +24,7 @@ class WorldPanel (bpy.types.Panel):
 	bl_context = 'world'
 	def draw (self, context):
 		self.layout.prop(context.world, 'unrealExportPath')
-		self.layout.operator('unreal.export', icon='CONSOLE')
+		self.layout.operator('unreal.export', icon = 'CONSOLE')
 
 @bpy.utils.register_class
 class UnrealTranslateButton (bpy.types.Operator):
