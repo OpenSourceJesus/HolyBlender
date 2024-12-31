@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 9333d7c29895ddf4c9a8c94b3304347b
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Resources/Shaders/Extras/PointRenderer.shader
+  uploadId: 680024

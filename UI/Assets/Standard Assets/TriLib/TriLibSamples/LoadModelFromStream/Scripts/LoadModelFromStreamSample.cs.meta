@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: e8e06b97742b98d4a882fabfe6a83a06
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/LoadModelFromStream/Scripts/LoadModelFromStreamSample.cs
+  uploadId: 680024

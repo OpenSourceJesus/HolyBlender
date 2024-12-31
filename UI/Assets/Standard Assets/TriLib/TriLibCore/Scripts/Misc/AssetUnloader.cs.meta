@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 06359162990f6364e8dc33fe5478004f
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Scripts/Misc/AssetUnloader.cs
+  uploadId: 680024

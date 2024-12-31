@@ -1,6 +1,7 @@
 import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
+thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
 sys.path.append(thisDir)
 from lib_HolyBlender import *
 

@@ -1,0 +1,16 @@
+fileFormatVersion: 2
+guid: 46f74df866ff8dd4782b8127dfb4c652
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures: []
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Resources/Shaders/Utility/ExtractChannelData.shader
+  uploadId: 680024

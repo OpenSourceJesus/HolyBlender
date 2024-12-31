@@ -2,6 +2,7 @@ import bpy, subprocess, os, sys, hashlib
 from mathutils import *
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
+thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
 HOLY_BLENDER_PATH = os.path.join(thisDir, '..')
 sys.path.append(os.path.join(HOLY_BLENDER_PATH, 'Blender_To_Unity_FBX_Export'))
 try:

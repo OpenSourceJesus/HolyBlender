@@ -1,0 +1,13 @@
+- TriLib is not a Model exporter.
+- The FBX Importer does not import multiple texture layers yet.  
+- The FBX Importer can't load models created before FBX SDK 2012.
+- The glTF2 Importer doesn't support the EXT_meshopt_compression extension.
+- The glTF2 Draco Importer doesn't support skinned meshes.
+- FBX physical cameras aren't fully supported yet.
+- 3MF Beam Lattice format is not supported yet.
+- 3MF PBR Specular materials are not supported yet.
+- Blend-shape normals and tangents are not imported yet. They are instead, calculated.
+- The AssetViewer normals debug view has issues when the model has no normal textures.
+- TriLib can't import generic or humanoid animations. It only supports legacy animation clips.
+Regression issues (working on a fix):
+- DAE importer has issues

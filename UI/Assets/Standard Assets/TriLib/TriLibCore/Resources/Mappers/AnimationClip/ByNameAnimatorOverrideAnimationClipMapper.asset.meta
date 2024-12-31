@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 252ca7325cd81ea4ea6f662185d1ef4e
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Resources/Mappers/AnimationClip/ByNameAnimatorOverrideAnimationClipMapper.asset
+  uploadId: 680024

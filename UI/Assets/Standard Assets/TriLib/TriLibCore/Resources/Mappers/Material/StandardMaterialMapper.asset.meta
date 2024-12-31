@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 17461d45f67737848a84da434a451788
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Resources/Mappers/Material/StandardMaterialMapper.asset
+  uploadId: 680024

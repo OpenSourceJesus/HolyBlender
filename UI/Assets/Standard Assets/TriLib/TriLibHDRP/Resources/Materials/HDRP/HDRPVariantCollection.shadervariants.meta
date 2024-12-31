@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5f4d89098d9e5bc41bdb8924c2eaf314
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 20000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibHDRP/Resources/Materials/HDRP/HDRPVariantCollection.shadervariants
+  uploadId: 680024

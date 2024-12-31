@@ -1,0 +1,19 @@
+fileFormatVersion: 2
+guid: bcb49ddb0ed5644fda9c3b055cafa27a
+timeCreated: 1483902788
+licenseType: Store
+MonoImporter:
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibStandaloneFileBrowser/StandaloneFileBrowser/StandaloneFileBrowserMac.cs
+  uploadId: 680024

@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 97c7b767458fc7846becf405cdfb3244
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/AvatarLoader/AnimatorControllers/Mannequin.controller
+  uploadId: 680024

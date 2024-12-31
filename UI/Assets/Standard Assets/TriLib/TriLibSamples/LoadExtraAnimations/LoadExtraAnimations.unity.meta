@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: d3b78fd319ef79146b4af4deb8a5fedb
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/LoadExtraAnimations/LoadExtraAnimations.unity
+  uploadId: 680024

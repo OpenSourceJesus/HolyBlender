@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 3a022dc1932183b4a8e686f2355cb3c3
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Licenses/PCX.txt
+  uploadId: 680024

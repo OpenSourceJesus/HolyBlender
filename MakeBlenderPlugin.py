@@ -8,6 +8,7 @@ for arg in sys.argv:
 		userArgs.append(arg)
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
+thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
 if thisDir not in sys.path:
 	sys.path.append(thisDir)
 

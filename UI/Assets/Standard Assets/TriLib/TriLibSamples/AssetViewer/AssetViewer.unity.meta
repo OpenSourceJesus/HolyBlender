@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 8a818d2b4ce6c2540a14f595e69acdde
+timeCreated: 1503341856
+licenseType: Store
+DefaultImporter:
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/AssetViewer/AssetViewer.unity
+  uploadId: 680024

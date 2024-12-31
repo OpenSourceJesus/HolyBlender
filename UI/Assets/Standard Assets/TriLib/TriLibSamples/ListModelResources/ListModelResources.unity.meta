@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 84d9bd9d7a40cd64d8e0ebd67e44a365
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/ListModelResources/ListModelResources.unity
+  uploadId: 680024

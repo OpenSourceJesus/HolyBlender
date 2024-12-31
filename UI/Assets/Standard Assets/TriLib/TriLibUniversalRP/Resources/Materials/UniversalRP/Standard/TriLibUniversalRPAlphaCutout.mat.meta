@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 0ab521f21a89b9a47aec5e34a2044470
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibUniversalRP/Resources/Materials/UniversalRP/Standard/TriLibUniversalRPAlphaCutout.mat
+  uploadId: 680024

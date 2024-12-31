@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 07173a76e05a0c74f86edc33f60425be
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/UserPropertiesLoading/Scripts/SampleUserPropertiesMapper.cs
+  uploadId: 680024

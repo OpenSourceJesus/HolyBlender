@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: 4b158927e3684968acc8b6099d0be223
+timeCreated: 1589082349
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Scripts/Mappers/LegacyToHumanoidAnimationClipMapper.cs
+  uploadId: 680024

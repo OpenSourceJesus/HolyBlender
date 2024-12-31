@@ -1,0 +1,33 @@
+fileFormatVersion: 2
+guid: b6a98ca66c26fc34c8d4053a9aeaa4fa
+TrueTypeFontImporter:
+  externalObjects: {}
+  serializedVersion: 4
+  fontSize: 15
+  forceTextureCase: -1
+  characterSpacing: 0
+  characterPadding: 1
+  includeFontData: 1
+  fontName: Open Sans
+  fontNames:
+  - Open Sans
+  fallbackFontReferences:
+  - {fileID: 12800000, guid: 325a32228e334114db298913e28a3666, type: 3}
+  - {fileID: 12800000, guid: 9071504716ea61444a15a4471c91180d, type: 3}
+  - {fileID: 12800000, guid: e4b15a1f3fefca54f8d31f015c3a9c4b, type: 3}
+  - {fileID: 12800000, guid: 435a25bff3c549c44b41c8e61728706e, type: 3}
+  customCharacters: 
+  fontRenderingMode: 0
+  ascentCalculationMode: 1
+  useLegacyBoundsCalculation: 0
+  shouldRoundAdvanceValue: 1
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/Common/Fonts/OpenSans-Regular.ttf
+  uploadId: 680024

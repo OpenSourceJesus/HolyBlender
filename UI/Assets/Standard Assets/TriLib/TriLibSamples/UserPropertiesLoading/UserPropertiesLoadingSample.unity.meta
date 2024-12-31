@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 19d9f4198c9478b4e9a062089e1178c9
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibSamples/UserPropertiesLoading/UserPropertiesLoadingSample.unity
+  uploadId: 680024

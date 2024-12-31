@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: ca2e0455013d452eab4c7af7d2476796
+timeCreated: 1572015142
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Scripts/Mappers/ByNameAnimatorOverrideAnimationClipMapper.cs
+  uploadId: 680024

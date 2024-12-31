@@ -1,0 +1,679 @@
+2.3.7
+Changelog:
+-Added Autodesk Interactive material mapper and sample scene.
+-Added shader variant collections support. Please add the variants you want to use in the shader variant collection used by your rendering pipeline.
+-Fixed bug with glTF2 uncommon file encoding.
+-Fixed FBX bug where instanced meshes were not being created.
+-Fixed bug when changing TriLib settings.
+-Fixed HDRP texture roughness generation.
+-Added LoadDisplacementTextures asset loader option. Turn on this field to load displacement textures.
+
+2.3.6
+Changelog:
+-Fixed FBX embedded textures regression issue.
+-Fixed embedded textures not loading when using native Unity texture loader.
+
+2.3.5
+Changelog:
+-Fixed FBX reader regression issues (Loading slowdown, ASCII embedded textures not working, and files with empty meshes not loading correctly).
+-Fixed normal calculation regression issue.
+-Removed AssetUnloader from in-editor loaded models.
+-Removed material mapper automatic assignment. This feature was causing issues on newer Unity versions.
+-Miscellaneous fixes.
+Version Notes:
+-TriLib no longer automatically checks for the most suitable material mapper for the current rendering pipeline, as this feature is causing errors on newer Unity features when called right after the package is loaded.
+If you're using URP or HDRP rendering pipelines, you must select a material mapper suitable for your rendering pipeline at the "Edit->Project Settings->TriLib" menu.
+
+2.3.4
+Changelog:
+-Created a new point cloud renderer. (Compatible with all platforms. SRP only at the moment.)
+-Fixed FBX null reference issue.
+-Fixed FBX 3ds Max materials compatibility.
+Set the ExtractEmbeddedData asset loader default value to "false." That will prevent unauthorized file access errors on sandboxed platforms.
+-Improved FBX memory usage.
+-Added LoadTexturesAtOnce asset loader option. This option is enabled by default and decreases memory usage when loading textures.
+-Added GetCompatibleTextureFormat asset loader option.
+-Fixed StandaloneFileBrowser OSX AnyCPU assignment bug.
+-Switched from SafeStbImageSharp to StbImageSharp for performance reasons.
+
+2.3.3
+Changelog:
+-Fixed Draco decompression mesh mismatch.
+-Fixed negative scale matrix decomposition issues.
+-Fixed FBX animation issues.
+-Fixed FBX pivot issues. Only FBX static models have pivot preservation. Pivot preservation for animated models is in the works. 
+-Added MaxVertexDataInitialCapacity asset loader option. Use this field to set the maximum initial capacity of meshes vertex buffers. Vertex count higher than that will use the default .NET exponential capacity increasing method.
+-Added animation curve simplification. Please refer to SimplifyAnimations, PositionThreshold, RotationThreshold, and ScaleThreshold asset loader options.
+
+2.3.2
+Changelog:
+-Fixed glTF2 WebGL out-of-memory error.
+-Added coroutine meshes loading.
+-Added MaxCoroutineDelayInMS asset loader option. Use this field to set a maximum of milliseconds a Coroutine can take without waiting for a main thread frame to execute.
+
+2.3.1
+Changelog:
+-Fixed texture compression is not being called.
+-Rolled back. AssetLoaderOptions.UnityNativeNormalCalculator is "false" by default now.
+-Removed TriLibCore.Textures and moved classes to TriLibCore.
+-Added MaterialMapper.UsesCoroutine field and MaterialMapper.MapCoroutine method. You can override the field and the method if you want your material mapper to process in a Coroutine.
+-Added AssetLoaderOptions.UseCoroutines. Turn off this field to disable TriLib coroutines. Coroutines ensure that model data loads with the fewest possible main thread stalls. (This field is on by default).
+
+2.3.0
+Changelog:
+-Fixed glTF2 regression issues.
+-Fixed glTF2 occlusion map extraction.
+-Fixed glTF2 KHR_lights_punctual intensity calculation.
+-Fixed 3MF loader issues.
+-Fixed DAE loader issues.
+-Memory usage fixes.
+-Set GltfReader.SpotLightDistance default value to 100.
+-Set UseUnityNativeNormalCalculator to be the default normal calculator.
+-Deprecated LoadedTextures in favor of LoadedCompoundTextures.
+
+2.2.9
+Changelog:
+-Fixed FBX bind-pose matrix decomposition issue.
+-Fixed glTF2 default metallic/roughness value issue.
+-Fixed glTF2 blend-shape issue.
+-Fixed issues in OBJ, PLY, and STL readers where custom streams were closed automatically.
+-Fixed bug with bone weight assignment.
+-Fixed HDRP material mapper mask creation.
+-Fixed skinned mesh renderer bounds calculation.
+-Added CreateMaterialsForAllModels asset loader option. Turn on this field to make TriLib create materials for every loaded model, even models without an original material.
+
+2.2.8
+Changelog:
+-Removed deprecated asset loader options.
+-Fixed OBJ/STL meshes reading.
+-Fixed normals calculation.
+-Added missing asset loader options configuration in editor importing.
+-Added ObjReader.ParseVertexColor static field. Turn off this field to disable OBJ vertex color loading.
+-Added NameMapper class. A NameMapper can rename GameObjects upon loading based on original model attributes. 
+You can inherit the NameMapper class and assign it to your AssetLoaderOptions.NameMapper field.
+-Re-enabled IndexFormat asset loader option. Use this option to set the mesh index format (16 or 32 bits).
+
+2.2.7
+Changelog:
+-Fixed normals calculation regression issue.
+-Removed deprecated coroutine methods.
+-Fixed normal debug shader.
+
+2.2.6
+Changelog:
+-Added EnforceAlphaChannelTextures asset loader option. This option is enabled by default and fixes texture creation on WebGL when the UseUnityNativeTextureLoader option is disabled. 
+
+2.2.5
+Changelog:
+-Removed experimental coroutines support.
+
+2.2.4
+Changelog:
+-Fixed texture format assignment regression issue.
+-Added 3DS Max alternative diffuse texture support.
+-Mesh system changes. Using simpler Unity mesh API to reduce memory usage.
+
+2.2.3
+Changelog:
+-Fixed FBX ASCII embedded data reading.
+-Fixed OBJ files texture naming.
+-Fixed multiple parallel files loading bug.
+-Fixed built-in ExternalDataMapper regression issue preventing ZIP files from loading.
+-Fixed glTF2 empty arrays parsing.
+-Fixed normal map textures creation.
+-Fixed STL binary parsing issue.
+-Added lights CastShadow property parsing.
+-Added FBX physical camera properties parsing.
+-Added option in the TriLib settings menu to change in-editor loading timeout.
+-Misc. fixes.
+
+2.2.2
+Changelog:
+-Fixed glTF embedded textures issue.
+-Fixed vertex merging slowdown.
+
+2.2.1
+Changelog:
+-Added debug library versions.
+-Refactored mesh loading system to decrease memory usage.
+-Vertices are added on creation time now, decreasing memory usage.
+-Fixed OBJ naming issues.
+-Removed forced texture creation to simulate metallic/smooth color textures.
+-Removed all NativeArray usage from internal loaders to prevent native memory leaks.
+-Changed StbImageSharp to SafeStbImageSharp to prevent native memory leaks.
+-Removed RenderTexture creation when the original material has no metallic/roughness textures.
+-Temporarily removed DoubleSidedMaterials asset loader option. It is recommended to create custom shaders to support double-sided materials instead.
+-Misc fixes.
+
+2.2.0
+Changelog:
+-Fixed geometry index assignment bug.
+-Fixed gLTF2 buffer size bug.
+-Fixed gLTF2 albedo color mixing with texture bug.
+-Fixed FBX missing bone assignment bug.
+-Fixed FBX negative geometric scale bug.
+-Fixed FBX importing bug when the model has blend shapes, but user disabled blend shape importing.
+-Fixed Blender FBX texture emission values importing.
+-Fixed Fbx.Reader.FbxReader.Pivot processing.
+-Fixed DAE material assignment bug.
+-Fixed avatar mapping issues.
+-Fixed ScanForAlphaPixels option bug.
+-Refactored FBX ASCII parser.
+-Re-enabled MarkTexturesNoLongerReadable Asset Loader Option.
+-Added TriLib debug libraries.
+-Added support for diffuse textures inside zip files with the same short filename as the model file (Eg: model.png is assigned to the diffuse texture of model.fbx when the original texture isn't inside the zip file).
+-Added Blender FBX roughness/metallic material values support.
+-Added the ConversionPrecision static field to the readers.
+-Added glTF2 double-sided materials support.
+-Added glTF2 mask alpha mode support.
+-Added glTF2 KHR_materials_emissive_strength extension support.
+-Added AddAllBonesToSkinnedMeshRenderers Asset Loader Option. Turn on this field to add all available bones to every created SkinnedMeshRenderer.
+-Deprecated the TextureMapper Asset Loader Option. Please fill the TextureMappers array field now with your custom TextureMappers. Sample code has been updated.
+-Replaced the old "Map" method call from all TextureMappers with the new "Map" methodo verride.
+
+2.1.9
+Changelog:
+-Added PLY loader validation skip.
+-Added AssetViewer debug visualizations.
+-Added material creation tasks to the AssetLoaderContext.Tasks list.
+-Added TriLib error when model can't be loaded.
+-Added gLTF2 Draco support on Android, iOS, Mac, Linux, and WebGL.
+-Added ExtractEmbeddedData Asset Loader Option. Turn off this field to disable embedded resource extraction. When this field is on, embedded textures and resources are extracted to disk and can work as a cache system.
+-Added EmbeddedDataExtractionPath Asset Loader Option. Path to extract embedded resources. This path is set to the "Persistent Data Path" by default.
+-Added BufferizeFiles Asset Loader Option. Change this field to define how TriLib will load files into memory before processing the file (When enabled, decreases loading times, but increases memory usage).
+-Added ConvertMaterialTextures Asset Loader Option. Turn off this field to disable the "Metallic/Smoothness/Specular/Roughness" automatic textures creation.
+-Added ConvertMaterialTexturesUsingHalfRes Asset Loader Option. Convert Material Textures using Half Res", Turn off this field to generate the "Metallic/Smoothness/Specular/Roughness" textures with the full original resolution.
+-Added DisableTesselation Asset Loader Option. Turn on this field to disable the tesselation of polygons with more than three vertices.
+-Added UseCoroutines Asset Loader Option. Turn on this field to use Coroutines on the main thread and minimize stalls.
+-Added ExtractMetallicAndSmoothness to the MaterialMapper class. This property defines if the MaterialMapper needs the "smoothness/roughness" and "metallic" textures on a single texture each.
+-Fixed MaterialMapper assignment bug.
+-Fixed FBX mesh names bug.
+-Fixed FBX version error message.
+-Fixed FBX look at property parsing.
+-Fixed FBX ASCII embedded textures reading.
+-Fixed FlexibleVertexData creation bug.
+-Fixed geometry tesselation issues.
+-Fixed UniversalRP MaterialMapper assignment bug.
+-Fixed sample scenes model references.
+-Textures loaded with the built-in Unity loader are compressed by the time they are loaded now.
+-Disabled the default value of ApplyGammaCurveToMaterialColors as textures were looking "washed out".
+-Removed GCHelper class. Complete GC is made after the model and textures are loaded.
+-Deprecated LoadMaterialsProgressively Asset Loader Option. All TriLib textures are loaded at once after all material properties are loaded.
+-Various performance/memory usage improvements.
+-Misc fixes.
+Version Notes:
+-This TriLib version handles embedded textures differently. To save processing times and memory, embedded data is extracted to the "persistent data path".
+To disable this behavior and use the embedded data as it is, turn off your "AssetLoaderOptions.ExtractEmbeddedData" field.
+You can select another extraction path by changing the "AssetLoaderOptions.EmbeddedDataExtractionPath" field.
+
+2.1.8
+Changelog:
+-Added geometry groups and blend shape keys auto renaming.
+-Added FBX checkings to allow malformed files loading.
+-Added experimental DAE (Collada) loader. This feature must be enabled in the TriLib settings menu.
+-Fixed FBX binary key tangents reading.
+-Fixed FBX pivot issues.
+-Fixed FBX animation tangent issues.
+-Fixed FBX animation parsing issues.
+-Fixed gLTF duplicated animation curve binding name bug.
+-Memory usage improvements.
+-Performance improvements.
+
+2.1.7a
+Changelog:
+-Fixed OBJStreamReader memory leak.
+-Fixed texture compression error when using Unity native texture loader.
+-Fixed FBX materials ambient color usage.
+-Fixed STL model creation bug.
+-Improved PLY and OBJ loader performance.
+-Refactored FBX parsers.
+-Deprecated ReadAndWriteEnabled asset loader option. Please use MarkMeshesAsDynamic option instead.
+-Added ApplyGammaCurveToMaterialColors asset loader option. Disable this field to prevent TriLib from applying the gamma curve to the material colors.
+-Added FbxReader.ApplyAmbientColor static field. Turn on this field to apply ambient color to Phong materials.
+-Added StlReader.StoreTriangleIndexInTexCoord0 static field. Turn off this field to stop storing the index of the triangle in the X component of the mesh texture coordinates.
+-Added StlReader.ImportNormals static field. Turn off this field to skip STL normal importing.
+
+2.1.7
+Changelog:
+-Fixed AssetDownloader.CreateWebRequest GET/DELETE/HEAD parameters bug.
+-Fixed AssetLoaderZip error redirection bug.
+-Fixed IL2CPP compilation issues.
+-Fixed Apple Silicon StandaloneFileBrowser issues.
+-Fixed ReadEnabled Asset Loader Option implementation.
+-Fixed FBX vertex range issues.
+-Fixed FBX animation tangents.
+-Updated AssetViewer.
+-Added Dispatcher.DontDestroyOnLoad property. Turn on this property to prevent the Dispatcher instance from being destroyed when a new level is loaded.
+-Added the CustomData field to the AssetUnloader class. This field will have the same value as the CustomData field from the AssetLoaderContext used to load the model.
+-Added the StlReader.LoadWithYUp static field. Turn on this field to load your model with the Y-axis pointing up.
+-Added TRILIB_ENABLE_WEBGL_THREADS compiler directive. Enable this on the Edit->Project Settings->TriLib menu. Enabling this will enable threaded loading in WebGL platforms.
+-Added LoadPointClouds Asset Loader Option. Turn on this field to load the model as a Point Cloud (PLY and OBJ only).
+-Added Assembly Definition Files. Just extract the AssemblyDefinitions.zip contents into your Assets folder.
+-Now Normals/Tangent importing is controled by the ImportNormals/ImportTangents GenerateNormals/GenerateTangents Asset Loader Options.
+-Major refactoring.
+
+2.1.6
+Changelog:
+-Fixed AssetLoaderContext.LoadedTextures registration bug.
+-Fixed sRGB Colors/Textures loading.
+-Fixed FBX and OBJ Metallic/Smoothness Textures creation.
+-Fixed OBJ MTL color parsing issue.
+-Fixed AssetUnloader Id serialization bug.
+-Fixed AssetUnloader creation bug.
+-Fixed AssetLoaderOptions.MergeVertices bug.
+-Removed automatic AssetLoaderOptions.LoadTexturesAsSRGB flag deactivaction.
+-Added ListModelResources sample. This sample lists all Resources (Textures/External Data) from the loaded Model.
+-Added FBX Lights Range.
+-Added FBX 3dsMax Materials Offset and Tiling loading.
+-Added SetUnusedTexturePropertiesToNull Asset Loader Option. Enable this field to set the unused Material Texture Properties to null.
+-Added CustomDataHelper class. Use this class to handle the "CustomData" field from the AssetLoaderContext as a Type/Object Dictionary.
+
+2.1.5
+Changelog:
+-Increased FBX blend-shapes limit.
+-Fixed FBX ASCII reader issue.
+-Fixed FBX pivot issue.
+-Fixed AssetLoaderOptionsEditor typo.
+-Fixed gLTF2 Metallic/Smoothness Texture creation.
+-Added onPreLoad parameter to AssetLoader.LoadModelFromStream and AssetLoader.LoadModelFromFile. Use this parameter when you want to call a completion method on the loading Thread (onComplete is different from onPreLoad as it is always called on the main thread).
+
+2.1.4b
+Changelog:
+-Fixed FBX Animation ranges bug.
+-Fixed GetTriLibPreferences Resources loading bug.
+-Fixed long names replacement bug.
+-Fixed mobile input system.
+-Fixed stb_image issues.
+-Updated stb_image.
+-Fixed StandaloneFileBrowser on iOS.
+-Refactored FBX ASCII reader.
+-Removed DAE Importer options in TriLib Settings (reserved for a future release).
+-Added MergeAnimations sample. This sample uses a custom AnimationClipMapper to merge AnimationClip tuples into one.
+-Added MaxTexturesResolution Asset Loader Option. Use this field to change the maximum Texture resolutions.
+-Added back the AssetLoaderOptions.OptimizeMeshes functionality.
+-Added MergeSingleChild Asset Loader Option. Turn on this field to merge single child models into a single GameObject.
+
+2.1.4
+Changelog:
+-Fixed Materials processing.
+-Fixed OBJ objects creation.
+-Fixed ScanForAlphaPixels Asset Loader Option.
+-Fixed gLTF2 binary files loading.
+-Fixed duplicated name renaming method.
+-Fixed normals calculation on meshes without normals
+-Removed obligatory Animation component creation.
+-Deprecated FBXReader.MergeSingleChildDocument.
+-Added automatic Material default color assignment when there is a Texture in the same slot.
+-Added mobile controls to the Asset Viewer demo.
+-Added GltfReader.SpotLightDistance static field. Use this field to define the Spot Lights range (distance) when loading gLTF2 models.
+-Added DisableObjectsRenaming Asset Loader Option. Enable this field to disable TriLib objects/resources renaming. Remarks: this feature may break animations' compatibility as they won't work with duplicate object names.
+Version Notes:
+-Added experimental Cameras support. To enable it, enable the AssetLoaderOptions.ImportCameras field.
+-Added experimental Lights support. To enable it, enable the AssetLoaderOptions.ImportLights field.
+
+2.1.3
+Changelog:
+-Fixed Non-Power-Of-Two Textures creation.
+-Fixed FBX pivot issues.
+-Fixed FBX empty mesh bug.
+-Fixed FBX animation pivots bug.
+-Fixed FBX double Textures assignment bug.
+-Fixed FBX/gLTF2 material color assignment bug (Colors are only set when there isn't a texture for their slot or the texture could not be loaded).
+-Fixed OBJ duplicated material names in material library bug.
+-Fixed gLTF2 skinning bug.
+-Fixed OBJ, PLY, and STL invalid Quaternion bug.
+-Fixed UniversalRPMaterialMapper Emission Texture bug.
+-Fixed ValidTRS assertion bug.
+-Fixed Blend Shapes Normal calculation.
+-Fixed PivotPosition Asset Loader Option bug.
+-Fixed Pointer_stringify WebGL bug.
+-Misc. fixes.
+-Changed default Material Mappers creation mode to avoid serialization issues.
+-Changed Settings ScriptableObject to avoid serialization issues. *Note: You might need to re-configure your TriLib Settings in the Project Settings area.
+-Changed the FBXReader.PivotMode static field value to FBXPivotMode.PreserveRotationPivot. If you have any pivot issues loading your model, please switch it back to FBXPivotMode.Legacy.
+-Improved memory usage.
+-Improved OBJ, PLY, and STL async loading speed by reducing progress handling callback frequency.
+-Added support for the Input Manager Package on TriLib samples.
+-Added LeftContainsRight and RightContainsLeft String comparison modes.
+-Added AutomaticallyPlayLegacyAnimations Asset Loader Option, used to play Legacy Animation Clips automatically upon loading.
+-Added DoubleSidedMaterials Asset Loader Option, used to create double-sided Materials when loading the Models.
+-Added EnforceAnimatorWithLegacyAnimations Asset Loader Option, used to add an Animator when the AnimationType is set to Legacy.
+-Added TRILIB_ENABLE_UWP_THREADS compiler directive. Enable this on the Edit->Project Settings->TriLib menu. Enabling this will enable threaded loading in UWP platforms.
+-Added LoadMaterialsProgressively Asset Loader Option, used to load Materials progressively when loading using the async method.
+-Added CalculateBlendShapeNormals Asset Loader Option, used to define if Blend Shape Normals will be calculated.
+-Deprecated MarkTexturesNoLongerReadable Asset Loader Option. To reduce allocated resources, all TriLib Textures CPU data is released after the Texture is loaded, turning the Texture non-readable.
+-Deprecated MaterialMapper.LoadTextureCallback field. Now Textures are loaded using an internal method.
+Version Notes:
+-Deprecated fields from AssetLoaderOptions have been removed (LoadedTextureGroups, BoneTransforms, RootBone, MaterialsProcessed, LoadedTexturesCount, and GeneratedTexturesNamesCount). You might need to update your code.
+-The Materials creation system has changed. Now Textures are pre-loaded and Materials are created all at once. To use the old behavior, turn on your AssetLoaderOptions LoadMaterialsProgressively field.
+-Changed Settings ScriptableObject to avoid serialization issues. *Note: You might need to re-configure your TriLib Settings in the Project Settings area.
+-Changed the FBXReader.PivotMode static field value to FBXPivotMode.PreserveRotationPivot. If you have any pivot issues loading your model, please switch it back to FBXPivotMode.Legacy.
+-Added TRILIB_ENABLE_UWP_THREADS compiler directive. Enable this on the Edit->Project Settings->TriLib menu. Enabling this will enable threaded loading in UWP platforms.
+
+2.1.2
+Changelog:
+-Fixed FBX bone recognition bug.
+-Fixed FBX negative geometry indices bug.
+-Fixed FBX invalid bone referencing bug.
+-Fixed FBX ASCII exponent value bug.
+-Added FBX mesh tangent importing.
+-Added FBX MergeSingleChildDocument option to allow merging single root child document nodes.
+-Fixed PLY vertex color parsing.
+-Fixed PLY texcoords parsing.
+-Fixed ScriptedImporter Unity 2020.2 bug
+-Fixed splash screen.
+-Fixed normals calculation.
+-Fixed duplicated names bug.
+-Added CancellationTokenSource Asset Loader Option, used to cancel the loading on demand.
+-Replaced file-based runtime importer disabling by compiler directive-based importer disabling.
+
+2.1.1
+Changelog:
+-Added the PivotPosition Asset Loader Option.
+-Added option to disable in editor file-formats importing.
+-Fixed iOS StandaloneFileBrowser bug.
+-Fixed bug where OBJ geometry groups were not created correctly.
+-Fixed PLY big-endian loading issue.
+-Fixed glTF Draco loader.
+-Fixed glTF Quantitized loading.
+-Fixed OBJ reader NaN parsing.
+-Fixed FBX bug where a single layer was referenced by more than one animation stack.
+-Fixed textures compression issue.
+-Fixed alpha materials creation issue. TriLib was creating an alpha material even for meshes that don't use transparent textures or alpha values.
+-Fixed mip-maps generation bug.
+-Fixed misc. bugs.
+
+2.1.0
+Changelog:
+-Deprecated Specular Material Mode (now all maps and colors are converted to the Metallic workflow).
+-Deprecated Autodesk Interactive Materials for the same reason as above.
+-Refactored FBX Material system.
+-Standard/Universal/HDRP update/fixes.
+-Fixed issues with duplicated GameObject names.
+-Fixed colliders generation.
+-Fixed FBX parent GameObject when there is only a single child.
+-Fixed FBX orientation issues.
+-Fixed PLY materials importing.
+-Removed obligatory FBX animations resampling.
+-Removed FaceBuilder sample for refactoring.
+-Added a sample on how to load extra animations.
+-Added FBX animation curves tangent importing.
+-Added visibility FBX animation curves importing.
+-Added the ResampleFrequency loader option, used to define the frequency of FBX animation curves resampling.
+-Added PLY textures importing.
+-Added gLTF blend-shape name importing.
+-Wiki: Added Blender PBR material workflow video tutorial.
+
+2.0.17b
+Changelog:
+-Fixed regression issue preventing TextureMappers from executing.
+-Fixed gLTF specular materials processing.
+-Fixed StandardAlpha reflections.
+-Refactored gLTF reader for improved performance.
+-Added ScaleFactor processing to 3MF and PLY readers.
+
+2.0.17
+Changelog:
+-Fixed Android issues.
+-Fixed ScanForAlphaPixels feature.
+-Fixed PLY orientation issues.
+-Fixed STL orientation issues.
+-Fixed FBX ASCII parser issue.
+-Fixed FBX animation baking issue where there is only one keyframe at the curve.
+-Refactored FBX loader. Now TriLib won't duplicate meshes unless they have different Geometric matrices.
+-Refactored textures offset and scaling processing. Now any material texture can change the material offset and scale.
+-Refactored the way TriLib maps Root Bones. Some Models include more than one Skinned Mesh hierarchy, so now Root Bone Mappers work with a List of Transforms.
+-Dropped gLTFLoader dependency.
+-Added STL color support (via vertex-color).
+-Added KHR_texture_transform GLTF extension support.
+
+2.0.16
+Changelog:
+-Added missing GLTF2 Mesh Primitive Modes: Triangle Fan and Triangle Strip.
+-Allowed GLTF2 skinned meshes without bindposes to load.
+-Refactored STL ASCII parser.
+
+2.0.15b - HotFix
+Changelog:
+-Removed broken Assembly Definitions.
+
+2.0.15b
+Changelog:
+-Refactored Textures loading system, so there is only one Texture in CPU memory per-load now.
+-Dispatcher system refactoring.
+-Fixed bug with FBX blend-shapes having invalid rotation values.
+-Fixed bug with FBX files missing objects definition count.
+-Fixed bug with FBX vertex-colors.
+-Fixed FBX bug when animations don't have any layer.
+-Fixed Avatars position issue.
+-Fixed generation of LODGroups with more than one LOD group mesh.
+-TriLib now uses the Unity internal File Browser when working in the Editor.
+-OBJ reader and processor refactoring.
+-Removed GLTF validations.
+-Added TransparencyFactor parsing to FBX materials.
+-Added Textures scaling/offset importing. This must be enabled with "AssetLoaderOptions.ApplyTexturesOffsetAndScaling".
+-Added UseAutodeskInteractiveMaterials loading option. Enable it when you want to use AutodeskInteractive materials if suitable.
+Version Notes:
+The "Map" method from MaterialMapper is executed in parallel Threads now.
+If you want to call a code in the Main Thread from this method, use the "Dispatcher.InvokeAsyncAndWait" method.
+Keep in mind that your called method must implement the "TriLibCore.Interfaces.IAwaitable" to indicate when the method task is complete.
+
+2.0.15
+Changelog:
+-Added the LoadTexturesAsSRGB loader option to load textures as sRGB (enabled by default).
+-Added LODScreenRelativeTransitionHeightBase to set the initial relative transition height when creating LOD Groups.
+-Fixed PLY binary reader.
+-Fixed headless mode Material Mappers inclusion (You can set the material mapper via the -trilib_mappers command line parameter).
+-Fixed linear colorspace texture issues.
+-Fixed avatar root position issues.
+-Fixed LOD Groups creation.
+-Fixed FBX accessors out-of-bounds bug (Some FBX files contains invalid data, which TriLib ignores now).
+-Fixed FBX animation start-time regression bug.
+-Fixed HDRP material mapper checking name.
+-Fixed HDRP mask textures creation.
+-Fixed GLTF materials.
+-Changed FixNormalMaps loader option behavior. Now it does the normal map to use the ABBR channel scheme instead of the RGBA.
+-Deprecated AssetLoaderOptions.AddSecondAlphaMaterial and AssetLoaderOptions.UseAlphaMaterials settings in flavor of adding the AlphaMaterialMode setting.
+-Deprecated AssetLoaderOptions.Enforce16BitsTextures. Now all textures are loaded using their original bit-depth.
+-Deprecated AssetLoaderOptions.IndexFormat. Now All meshes are created with 32 bits indices.
+-Added TRILIB_USE_UNITY_TEXTURE_LOADER compiler directive to use Unity internal image loader instead of stb_image.
+-Added tangents loading to GLTF meshes.
+-Added FbxReader.PivotMode to change how TriLib handles FBX mesh pivots (Experimental).
+-Added StlReader.FixInfacingNormals option to fix in-facing normals on STL meshes (Experimental).
+
+2.0.14b
+Changelog:
+-Fixed regression bug on FBX animations.
+-Fixed HDRP materials.
+
+2.0.14
+Changelog:
+-Refactored FBX mesh generation.
+-Fixed StandaloneFileBrowser not opening on Windows.
+-Fixed STL flipped normals bug.
+-Fixed GCHelper.cs always running bug.
+-Fixed GLTF blend-shape animations bug.
+-Fixed GLTF roughness values.
+-Fixed FBX ASCII reader bug with out-of-range properties.
+-Fixed ImporterEditor references on newer Unity versions.
+-TriLib now fixes out of unit-range normals.
+-TriLib now figures animation lengths when FBX files have invalid LocalStop and LocalStop properties.
+-Removed bone weight limitations.
+-Added GLTF metallic texture creation to simulate metallic values when there is no texture available.
+-Added UseUnityNativeTextureLoader loader option to use Unity builtin texture loader instead of stb_image.
+-Added UseUnityNativeNormalCalculator loader option to use Unity builtin normal calculator.
+-Added GCHelperCollectionInterval loader option to set the interval GCHelper takes to release a loading model.
+-Added SimpleCustomAssetLoader sample.
+
+2.0.13b
+Changelog:
+-Fixed material/texture issues.
+-Removed the LoadHumanoidAnimationFromFilePicker sample for refactoring.
+-Added StandaloneFileBrowser sources.
+
+2.0.13
+Changelog:
+-Mesh system refactoring.
+-Memory management refactoring.
+-Fixed TriLibSettings.
+-Fixed GCHelper bugs.
+-Fixed model readers selection bug.
+-Fixed FBX PostRotation bug.
+-Now selecting materials on sample models depending on the rendering pipeline.
+-Implemented texture compression.
+-Implemented FBX ByPolygon geometry type.
+-Implemented texture CPU memory deallocation.
+-Not preventing the creation of colliders on animated meshes anymore.
+-TriLib now tries to guess the downloaded model extension by the URL.
+-Fixed misc bugs.
+
+2.0.12b
+Changelog:
+-FBX reader refactoring.
+-Fixed Avatar orientation issues.
+-Fixed UniversalRP/HDRP Material Mappers automatic assignment.
+-Fixed ByNameHumanoidAvatarMapper.
+-Fixed progress handling.
+-Added Thread names option.
+-Added deprecation warnings on the compilation.
+-Added Version Notes area.
+-Added Material Mapper settings to Project Settings/TriLib area.
+-Added TriLibSettings ScriptableObject used to save settings per project.
+-Added the ForceGCCollectionWhileLoading option to release memory promptly while loading the model.
+-Deprecated ResampleCurves loader option.
+-Renamed the SFB namespace to TriLibCore.SFB (*See notes).
+-Fixed AssetDownloader sample error.
+Version Notes:
+Since TriLib 2.0.12, the 'SFB' namespace has been replaced by the 'TriLibCore.SFB' namespace to avoid conflicts with the vanilla StandaloneFileBrowser.
+To fix errors related to the 'SFB' namespace, replace the 'SFB' namespace from your code with the 'TriLibCore.SFB' namespace.
+If you need any guidance, send a message to 'contato@ricardoreis.net'.
+
+2.0.11
+Fixed FBX animations with empty component keys issue.
+Fixed FBX material indices issue.
+Added FileShare.Read when reading file streams.
+Small refactoring.
+API Docs update.
+Moved Universal and HD pipeline scripts to their namespaces. (User code may need to be updated)
+
+2.0.10
+Fixed negative matrix scale values bug.
+Fixed OBJ MTL space in filenames bug.
+Fixed GLTF animation baking issues.
+
+2.0.9
+Fixed AssetLoaderZip options reference issue.
+Added conditional OnLoad and OnMaterialsLoad calls.
+Material indices fixing/refactoring.
+Fixed Standard Materials alpha.
+FBX Mesh creation refactoring.
+Added "EnsureQuaternionContinuity" loader option.
+Added "UseMaterialKeywords" loader option.
+Disabled the "SampleBindPose" loader option by default to improve avatars' compatibility.
+Disabled compiler warnings (false positives).
+
+2.0.8
+UniversalRP Material fixes.
+AssetDownloader FileExtension parameter requirement message.
+Added code to suppress GLTF validation.
+Fixed AssetLoaderZip infinite error callback.
+Fixed Texture creation bugs.
+Fixed HumanoidRetargeter bug.
+Remove Animation Mappers from default Asset Loader Options.
+
+2.0.7
+Fixed FBX Mesh bones issue.
+Improved T-Pose enforcement.
+Improved Humanoid Avatar creation.
+Added GLTF Draco Decoder native libraries.
+Added Humanoid Animations importing Sample.
+Fixed GLTF Draco Decoder inclusion issue.
+Fixed Shader Variants inclusion issue.
+Fixed Material float Property value multipliers.
+Deprecated Roughness Material mode.
+
+2.0.6
+Fixed FBX Mesh normals importing issue.
+Fixed Normal Maps creation issue.
+
+2.0.5
+Fixed ScriptableObject creation on the editor (TriLib was always replacing the existing Mapper assets).
+Fixed ImportColors, ImportMeshes, ImportMaterials, and ImportTextures option not working on some file-formats.
+Fixed Mesh normals calculation.
+Fixed Mesh tangents calculation.
+Added OBJ vertex-color support.
+Unrestricted bones-per-vertex option disabled for tweaking. Will be re-enabled on the next update.
+
+2.0.4
+Added AssetLoaderOptions editing to TriLibScriptedImporter.
+Fixed DestroyImmediate bug on AssetLoader.cs.
+
+2.0.3
+Added initial 3MF support.
+Fixed in-editor Mesh instancing memory leak.
+Fixed in-editor Material naming warnings.
+Moved pre-allocations inside AssetLoaderOptions.
+Fixed missing Scripts in demo scenes.
+
+2.0.2
+Added GLTF 2 Sparse Accessors support.
+
+2.0.1
+Material Mapper refactoring.
+Added experimental UniversalRP and HDRP support.
+
+2.0
+Initial TriLib 2 Asset Store release.
+
+1.9.0
+Fixed missing animation components assignment
+Fixed aiMaterial_GetShininessStrength and aiMaterial_GetShininess values reading
+Added options to: Disable Automatic Models loading on Editor, Disable Native Plugins checking, Disable Deprecated Versions checking on Project Settings.
+Added button to configure Native Plugins metadata on Project Settings.
+Moved TriLib menu items to Project Settings.
+Removed hard-coded references to TriLib install path on samples, allowing users to run the samples when TriLib is installed on a different folder.
+Deprecated AssetLoaderOptions.ForceAnimationComponents field
+
+1.8.9b
+WebGL native libraries reference fix
+
+1.8.9a
+Replaced WebGL libraries
+
+1.8.9
+STEP reader fixes
+3DS progress handler fix
+FBX reader fixes
+GLTF2 reader fixes
+GLTF reader fixes
+MD4 reader fixes
+MMD reader fixes
+OBJ reader fixes
+DAE reader fixes
+SMD reader fixes
+Removed invalid data checking which was preventing some models from loading
+Removed iOS internal ZLIB dependency (using TriLib own ZLIB)
+Fixed WebGL issues*
+Fixed a bug where older Android devices couldn't accept 32-bits indexed meshes
+Fixed a bug where unnamed embedded textures couldn't be loaded correctly
+Fixed a bug where temporary textures weren't disposed
+Fixed memory leaks
+Fixed material transparency issues
+Fixed FBX base-64 textures reading bug
+Fixed async errors catching
+Fixed bug where textures with empty names would cause errors
+Fixed samples issues
+Fixed misc. issues
+Added Hololens 2 experimental support
+Added UTF-8 texture path support
+Added WebGL template which is used on TriLib demo
+Added WebGL utility class JsHelper which contains methods to read file data from Javascript
+Added AssetLoaderOptions.UseOriginalPositionRotationAndScale to allow maintaining original model coordinates
+Added AssetLoaderOptions.MaterialShadingMode to allow material shading mode selection (Standard, Roughness or Specular)
+Added AssetLoaderOptions.MaterialTransparencyMode to allow material transparency mode selection
+Added AssetLoaderOptions.LoadRawMaterialProperties to allow custom material data loading. Custom properties will be available on AssetLoaderBase.MaterialData Properties field
+Added TIFF images support
+Added AssetLoaderOptions fields: ApplyGlossinessScale, ApplyGlossiness, ApplyNormalScale, ApplyMetallicTexture, ApplyOcclusionTexture, ApplyDisplacementTexture, ApplyNormalTexture, ApplySpecularTexture, ApplyEmissionTexture, ApplyDiffuseTexture, ApplySpecularColor, ApplyEmissionColor, ApplyDiffuseColor, ApplyColorAlpha to allow selectively components loading
+Added AssetLoaderOptions.DontAddMetadataCollection, when enabled, TriLib will add an AssimpMetadataCollection component to every GameObject child, containing a collection of metadata found while loading the model
+Added AssetLoaderOptions.ForceAnimationComponents to enforce Animation/Animator components creation even when there are no animated objects on the model
+*Note: WebGL module isn't working on Unity 2019 yet, we are working on a fix for this issue

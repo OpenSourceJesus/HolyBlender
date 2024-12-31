@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: e964c5e158b24dc6ad03b0a14c2ef811
+timeCreated: 1573053965
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Editor/Scripts/AssetLoaderOptionsEditor.cs
+  uploadId: 680024

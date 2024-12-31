@@ -1,0 +1,10 @@
+﻿fileFormatVersion: 2
+guid: a708b397799c4804adea16736aa7fa2e
+timeCreated: 1587677577
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Scripts/Mappers/LipSyncMapping.cs
+  uploadId: 680024

@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 5b157d7f7cf14154cbffe4166cb5ef76
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibStandaloneFileBrowser/StandaloneFileBrowser/StandaloneFileBrowserWinRT.cs
+  uploadId: 680024

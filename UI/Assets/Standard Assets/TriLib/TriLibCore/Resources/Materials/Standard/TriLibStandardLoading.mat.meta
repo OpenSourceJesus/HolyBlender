@@ -1,0 +1,17 @@
+fileFormatVersion: 2
+guid: 1d8ef15d0399c354597206d93038ff03
+timeCreated: 1575907221
+licenseType: Store
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Resources/Materials/Standard/TriLibStandardLoading.mat
+  uploadId: 680024

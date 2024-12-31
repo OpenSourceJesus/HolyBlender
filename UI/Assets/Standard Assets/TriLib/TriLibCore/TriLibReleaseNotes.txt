@@ -1,0 +1,9 @@
+﻿2.3.7
+Changelog:
+-Added Autodesk Interactive material mapper and sample scene.
+-Added shader variant collections support. Please add the variants you want to use in the shader variant collection used by your rendering pipeline.
+-Fixed bug with glTF2 uncommon file encoding.
+-Fixed FBX bug where instanced meshes were not being created.
+-Fixed bug when changing TriLib settings.
+-Fixed HDRP texture roughness generation.
+-Added LoadDisplacementTextures asset loader option. Turn on this field to load displacement textures.

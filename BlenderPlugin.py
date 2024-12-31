@@ -1,5 +1,8 @@
 import subprocess, sys, os
-sys.path.append('Install Scripts')
+thisDir = os.path.split(os.path.abspath(__file__))[0]
+thisDir = thisDir.replace('/dist/BlenderPlugin/_internal', '')
+print(thisDir)
+sys.path.append(os.path.join(thisDir, 'Install Scripts'))
 import install_UnityExport
 os.system('rm /tmp/HolyBlender')
 monogame = netghost = False
@@ -120,7 +123,7 @@ for i, arg in enumerate(sys.argv):
 	elif arg.startswith('--'):
 		userOptions.append(arg)
 
-command = [blender] + command + [ '--python', 'MakeBlenderPlugin.py' ]
+command = [blender] + command + [ '--python', os.path.join(thisDir, 'MakeBlenderPlugin.py') ]
 
 if userScript or userOptions:
 	command.append('--')

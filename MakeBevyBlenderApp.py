@@ -11,6 +11,7 @@ INSTALL NOTES:
 '''
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
+thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
 print(thisDir)
 #sys.path.append('/usr/lib/python3/dist-packages')
 #sys.path.append('/usr/local/lib/python3.12/dist-packages')

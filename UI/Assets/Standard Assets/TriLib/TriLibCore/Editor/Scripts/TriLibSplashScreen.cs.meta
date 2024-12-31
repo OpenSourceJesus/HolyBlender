@@ -1,0 +1,18 @@
+fileFormatVersion: 2
+guid: 11d5e1e8c2814ec46b6dac8c8c4b69bd
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences: []
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 157548
+  packageName: TriLib 2 - Model Loading Package
+  packageVersion: 2.3.7
+  assetPath: Assets/TriLib/TriLibCore/Editor/Scripts/TriLibSplashScreen.cs
+  uploadId: 680024
