@@ -26,7 +26,7 @@ bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 )
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):
-	setattr(bpy.types.Object, 'bevy_script' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text))
+	setattr(bpy.types.Object, 'bevyScript' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text))
 
 registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 registryText = registryText.replace('ꗈ', '')
@@ -75,7 +75,7 @@ class BevyExportButton (bpy.types.Operator):
 		for ob in bpy.data.objects:
 			scripts = []
 			for i in range(MAX_SCRIPTS_PER_OBJECT):
-				txt = getattr(ob, 'bevy_script%s' % i)
+				txt = getattr(ob, 'bevyScript%s' % i)
 				if txt:
 					scripts.append(txt)
 			if scripts:
@@ -133,9 +133,9 @@ class BevyScriptsPanel (bpy.types.Panel):
 		self.layout.label(text='Attach bevy scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasScript = getattr(context.active_object, 'bevy_script' + str(i)) != None
+			hasScript = getattr(context.active_object, 'bevyScript' + str(i)) != None
 			if hasScript or not foundUnassignedScript:
-				self.layout.prop(context.active_object, 'bevy_script' + str(i))
+				self.layout.prop(context.active_object, 'bevyScript' + str(i))
 			if not foundUnassignedScript:
 				foundUnassignedScript = not hasScript
 

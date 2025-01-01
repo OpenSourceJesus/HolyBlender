@@ -16,7 +16,7 @@ except:
 		Image = None
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):
-	setattr(bpy.types.Object, 'unity_script' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text))
+	setattr(bpy.types.Object, 'unityScript' + str(i), bpy.props.PointerProperty(name='Attach Unity script', type=bpy.types.Text))
 
 defaultCollisionMask = []
 for i in range(32):
@@ -1596,9 +1596,9 @@ class UnityScriptsPanel (bpy.types.Panel):
 		self.layout.label(text = 'Attach Unity scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasScript = getattr(context.active_object, 'unity_script' + str(i)) != None
+			hasScript = getattr(context.active_object, 'unityScript' + str(i)) != None
 			if hasScript or not foundUnassignedScript:
-				self.layout.prop(context.active_object, 'unity_script' + str(i))
+				self.layout.prop(context.active_object, 'unityScript' + str(i))
 			if not foundUnassignedScript:
 				foundUnassignedScript = not hasScript
 

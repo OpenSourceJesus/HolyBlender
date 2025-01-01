@@ -10,7 +10,7 @@ monogame = netghost = False
 TEST_BEVY = '''
 txt = bpy.data.texts.new(name='rotate.rs')
 txt.from_string('trs.rotate_y(5.0 * time.delta_seconds());)')
-bpy.data.objects["Cube"].bevy_script0 = txt
+bpy.data.objects["Cube"].bevyScript0 = txt
 bpy.ops.bevy.export()
 '''
 
@@ -34,7 +34,7 @@ bpy.ops.mesh.primitive_monkey_add()
 txtBlock = bpy.data.texts.new(name='Rotate')
 txtBlock.from_string(EXAMPLES_DICT['Rotate (Unity)'])
 txtBlock.isMonoBehaviour = True
-setattr(bpy.data.objects['Suzanne'], 'unity_script0', txtBlock)
+setattr(bpy.data.objects['Suzanne'], 'unityScript0', txtBlock)
 bpy.ops.object.select_all(action='DESELECT')
 mat = bpy.data.materials.get("Material")
 if mat is None:

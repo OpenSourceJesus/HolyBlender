@@ -26,6 +26,7 @@ REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
 MAX_SCRIPTS_PER_OBJECT = 32
 NULL_INT = 1234567936
 NULL_COLOR = [NULL_INT, NULL_INT, NULL_INT, NULL_INT]
+SCRIPT_TYPES = [ 'unity', 'unreal', 'bevy', 'godot' ]
 unrealCodePath = ''
 unrealCodePathSuffix = os.path.join('', 'Source', '')
 excludeItems = [ os.path.join('', 'Library') ]
@@ -45,18 +46,18 @@ bpy.types.World.html_code = bpy.props.PointerProperty(name = 'HTML code', type =
 bpy.types.Object.html_on_click = bpy.props.PointerProperty(name = 'JavaScript on click', type = bpy.types.Text)
 bpy.types.Object.html_css = bpy.props.PointerProperty(name = 'CSS', type = bpy.types.Text)
 
-def GetScripts (mode):
-	assert mode in 'unity unreal bevy godot'.split()
-	scripts_dict = {}
+def GetScripts (mode : str) -> dict:
+	assert mode in SCRIPT_TYPES
+	obsAndScriptsDict = {}
 	for ob in bpy.data.objects:
 		scripts = []
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			txt = getattr(ob, '%s_script%s' % (mode,i))
-			if txt:
+			txt = getattr(ob, '%sScript%s' % (mode, i))
+			if txt != None:
 				scripts.append(txt)
 		if scripts:
-			scripts_dict[ob] = scripts
-	return scripts_dict
+			obsAndScriptsDict[ob] = scripts
+	return obsAndScriptsDict
 
 sys.path.append(EXTENSIONS_PATH)
 from SystemExtensions import *

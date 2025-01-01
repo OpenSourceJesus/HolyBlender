@@ -279,6 +279,26 @@ def OnObjectChanged (*args):
 
 def Update ():
 	global previousSelected
+	for txt in bpy.data.texts:
+		indexOfPeriod = txt.name.rfind('.')
+		if indexOfPeriod != -1 and len(txt.name) > indexOfPeriod + 1:
+			potentialDigits = txt.name[indexOfPeriod + 1 :]
+			isCopiedTxt = True
+			for potentialDigit in potentialDigits:
+				if not potentialDigit.isdigit():
+					isCopiedTxt = False
+					break
+			if isCopiedTxt:
+				originalName = txt.name[: indexOfPeriod]
+				for scriptTarget in SCRIPT_TYPES:
+					obsAndScriptsDict = GetScripts(scriptTarget)
+					for ob in bpy.data.objects:
+						for i in range(32):
+							propertyName = scriptTarget + 'Script' + str(i)
+							script = getattr(ob, propertyName)
+							if script != None and script.name == txt.name:
+								ob[propertyName] = bpy.data.texts[originalName]
+				bpy.data.texts.remove(txt)
 	for obj in bpy.context.selected_objects:
 		if obj not in previousSelected:
 			for key in obj.keys():

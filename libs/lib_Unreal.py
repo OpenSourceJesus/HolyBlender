@@ -13,7 +13,7 @@ bpy.types.World.unrealExportPath = bpy.props.StringProperty(
 )
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):
-	setattr(bpy.types.Object, 'unreal_script' + str(i), bpy.props.PointerProperty(name='Attach Unreal script', type=bpy.types.Text))
+	setattr(bpy.types.Object, 'unrealScript' + str(i), bpy.props.PointerProperty(name='Attach Unreal script', type=bpy.types.Text))
 
 @bpy.utils.register_class
 class WorldPanel (bpy.types.Panel):
@@ -50,7 +50,7 @@ class UnrealTranslateButton (bpy.types.Operator):
 
 @bpy.utils.register_class
 class UnrealScriptsPanel (bpy.types.Panel):
-	bl_idname = 'OBJECT_PT_Unreal_Scripts_Panel'
+	bl_idname = 'OBJECT_PT_unrealScripts_Panel'
 	bl_label = 'HolyBlender Unreal Scripts'
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
@@ -60,9 +60,9 @@ class UnrealScriptsPanel (bpy.types.Panel):
 		self.layout.label(text='Attach Unreal scripts')
 		foundUnassignedScript = False
 		for i in range(MAX_SCRIPTS_PER_OBJECT):
-			hasScript = getattr(context.active_object, 'unreal_script' + str(i)) != None
+			hasScript = getattr(context.active_object, 'unrealScript' + str(i)) != None
 			if hasScript or not foundUnassignedScript:
-				self.layout.prop(context.active_object, 'unreal_script' + str(i))
+				self.layout.prop(context.active_object, 'unrealScript' + str(i))
 			if not foundUnassignedScript:
 				foundUnassignedScript = not hasScript
 
