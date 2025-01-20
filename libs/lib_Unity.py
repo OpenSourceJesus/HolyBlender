@@ -1,7 +1,7 @@
 import bpy, subprocess, os, sys
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
-thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
+thisDir = thisDir.replace('/dist/BlenderPlugin/_internal', '')
 sys.path.append(thisDir)
 from lib_HolyBlender import *
 
@@ -36,7 +36,7 @@ bpy.types.World.unity_project_import_path = bpy.props.StringProperty(
 bpy.types.World.unity_project_export_path = bpy.props.StringProperty(
 	name = 'Unity project export path',
 	description = '',
-	default = '~/TestUnityProject'
+	default = os.path.join(INIT_EXPORT_PATH, 'TestUnityProject')
 )
 bpy.types.Text.run_cs = bpy.props.BoolProperty(
 	name = 'Run C# Script',
@@ -933,7 +933,10 @@ PolygonCollider2D:
 		return True
 	
 	def execute (self, context):
-		unityVersionsPath = os.path.expanduser(os.path.join('~', 'Unity', 'Hub', 'Editor'))
+		if sys.platform == 'win32':
+			unityVersionsPath = os.path.join('/', 'Program Files', 'Unity', 'Hub', 'Editor')
+		else:
+			unityVersionsPath = os.path.expanduser(os.path.join('~', 'Unity', 'Hub', 'Editor'))
 		self.unityVersionPath = ''
 		if os.path.isdir(unityVersionsPath):
 			unityVersions = os.listdir(unityVersionsPath)
@@ -971,7 +974,7 @@ PolygonCollider2D:
 				MakeFolderForFile (fileExportPath)
 				fileExportPath = ExportObject(obj, fileExportFolder)
 				for materialSlot in obj.material_slots:
-					fileExportPath = self.projectExportPath + '/Assets/Resources/Materials/' + materialSlot.material.name + '.mat'
+					fileExportPath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Materials', materialSlot.material.name + '.mat')
 					MakeFolderForFile (fileExportPath)
 					materialColor = materialSlot.material.diffuse_color
 					material = open(os.path.join(TEMPLATES_PATH, 'Material.mat'), 'rb').read().decode('utf-8')
@@ -986,6 +989,7 @@ PolygonCollider2D:
 			collidingLayers = getattr(bpy.data.worlds[0], 'collisionMask' + str(i))
 			for i2 in range(32):
 				fileText += str(collidingLayers[i2]) + '\n'
+    MakeFolderForFile (self.DATA_FILE_PATH)
 		open(self.DATA_FILE_PATH, 'w').write(fileText)
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))
@@ -1147,7 +1151,7 @@ PolygonCollider2D:
 				transformId = self.MakeObject(childObj, myTransformId)
 				children += '\n' + self.CHILD_TRANSFORM_TEMPLATE.replace(REPLACE_INDICATOR, str(transformId))
 		if obj.type == 'MESH':
-			filePath = self.projectExportPath + '/Assets/Resources/Models/' + obj.name + '.glb.meta'
+			filePath = os.path.join(self.projectExportPath, 'Assets', 'Resources', 'Models' + obj.name + '.glb.meta')
 			meshGuid = GetGuid(filePath)
 			open(filePath, 'w').write('guid: ' + meshGuid)
 			if self.unityVersionPath != '':

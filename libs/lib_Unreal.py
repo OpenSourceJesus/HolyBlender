@@ -1,7 +1,7 @@
 import bpy, subprocess, os, sys, hashlib, mathutils, math, base64, webbrowser
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
-thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
+thisDir = thisDir.replace('/dist/BlenderPlugin/_internal', '')
 if thisDir not in sys.path:
 	sys.path.append(thisDir)
 from lib_HolyBlender import *
@@ -9,7 +9,7 @@ from lib_HolyBlender import *
 bpy.types.World.unrealExportPath = bpy.props.StringProperty(
 	name = 'Unreal project path',
 	description = '',
-	default = '~/TestUnrealProject'
+	default = os.path.join(INIT_EXPORT_PATH, 'TestUnrealProject')
 )
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):

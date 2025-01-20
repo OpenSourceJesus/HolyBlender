@@ -1,4 +1,4 @@
-import os
+import os, sys
 
 def GetAllFilePathsOfType (rootFolderPath : str, fileExtension : str) -> list[str]:
 	output = []
@@ -15,14 +15,18 @@ def GetAllFilePathsOfType (rootFolderPath : str, fileExtension : str) -> list[st
 	return output
 
 def MakeFolderForFile (path : str):
-	_path = path[: path.find('/')]
+	if sys.platform == 'win32':
+		separator = '\\'
+	else:
+		separator = '/'
+	_path = path[: path.find(separator)]
 	while _path != path:
 		if _path != '' and not os.path.isdir(_path):
 			os.mkdir(_path)
-		indexOfSlash = path.find('/', len(_path) + 1)
-		if indexOfSlash == -1:
+		indexOfSeparator = path.find(separator, len(_path) + 1)
+		if indexOfSeparator == -1:
 			break
-		_path = path[: indexOfSlash]
+		_path = path[: indexOfSeparator]
 
 def CopyFile (fromPath : str, toPath : str):
 	open(toPath, 'wb').write(open(fromPath, 'rb').read())

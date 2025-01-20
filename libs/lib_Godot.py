@@ -9,7 +9,7 @@ from lib_HolyBlender import *
 bpy.types.World.godotExportPath = bpy.props.StringProperty(
 	name = 'Godot project path',
 	description = '',
-	default = '~/TestGodotProject'
+	default = os.path.join(INIT_EXPORT_PATH, 'TestGodotProject')
 )
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):

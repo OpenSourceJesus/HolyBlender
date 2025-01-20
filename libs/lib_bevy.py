@@ -1,7 +1,7 @@
 import bpy, subprocess, os, sys#, webbrowser
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
-thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')
+thisDir = thisDir.replace('/dist/BlenderPlugin/_internal', '')
 if thisDir not in sys.path:
 	sys.path.append(thisDir)
 from lib_HolyBlender import *
@@ -22,7 +22,7 @@ bpy.ops.preferences.addon_enable(module='gltf_auto_export')
 bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 	name = 'Bevy project path',
 	description = '',
-	default = '~/TestBevyProject'
+	default = os.path.join(INIT_EXPORT_PATH, 'TestBevyProject')
 )
 
 for i in range(MAX_SCRIPTS_PER_OBJECT):
