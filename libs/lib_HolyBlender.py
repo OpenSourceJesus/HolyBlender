@@ -24,7 +24,9 @@ else:
 UNITY_SCRIPTS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Unity Scripts')
 GODOT_SCRIPTS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Godot Scripts')
 EXTENSIONS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Extensions')
+INSTALL_SCRIPTS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Install Scripts')
 TEMPLATES_PATH = os.path.join(HOLY_BLENDER_PATH, 'Templates')
+LIBS_PATH = os.path.join(HOLY_BLENDER_PATH, 'libs')
 TEMPLATE_REGISTRY_PATH = os.path.join(TEMPLATES_PATH, 'registry.json')
 REGISTRY_PATH = os.path.join('/tmp', 'registry.json')
 MAX_SCRIPTS_PER_OBJECT = 32

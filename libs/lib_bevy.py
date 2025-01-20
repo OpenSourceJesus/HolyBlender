@@ -1,14 +1,13 @@
 import bpy, subprocess, os, sys#, webbrowser
-
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 thisDir = thisDir.replace('/dist/BlenderPlugin/_internal', '')
 if thisDir not in sys.path:
 	sys.path.append(thisDir)
 from lib_HolyBlender import *
-
 if not os.path.isdir( os.path.join(thisDir, 'Blender_bevy_components_workflow') ):
 	cmd = 'git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1'
 	print(cmd)
+
 	subprocess.check_call(cmd.split(), cwd = thisDir)
 
 sys.path.append(os.path.join(thisDir, 'Blender_bevy_components_workflow/tools'))
@@ -24,17 +23,14 @@ bpy.types.World.bevy_project_path = bpy.props.StringProperty(
 	description = '',
 	default = os.path.join(INIT_EXPORT_PATH, 'TestBevyProject')
 )
-
 for i in range(MAX_SCRIPTS_PER_OBJECT):
 	setattr(bpy.types.Object, 'bevyScript' + str(i), bpy.props.PointerProperty(name='Attach bevy script', type=bpy.types.Text))
-
 registryText = open(TEMPLATE_REGISTRY_PATH, 'rb').read().decode('utf-8')
 registryText = registryText.replace('ꗈ', '')
 open(REGISTRY_PATH, 'wb').write(registryText.encode('utf-8'))
 registry = bpy.context.window_manager.components_registry
 registry.schemaPath = REGISTRY_PATH
 bpy.ops.object.reload_registry()
-
 EXAMPLES_DICT = {
 	'Hello World (bevy)' : 'println!("Hello World!");',
 	'Rotate (bevy)'      : 'trs.rotate_y(5.0 * time.delta_seconds());)'
@@ -48,15 +44,18 @@ class Unity2BevyImportButton (bpy.types.Operator):
 	@classmethod
 	def poll (cls, context):
 		return True
+	
 	def execute (self, context):
+		InstallDepencies ()
 		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
 		if not os.path.isdir(bevyExportPath):
 			MakeFolderForFile (bevyExportPath + '/')
 		importPath = os.path.expanduser(context.scene.world.unity_project_import_path)
 		if importPath != '':
-			BuildTool('UnityToBevy')
+			BuildTool ('UnityToBevy')
 			command = [ 'python3', os.path.join(thisDir, 'UnityToBevy.py'), 'input=' + importPath, 'output=' + bevyExportPath, 'exclude=/Library', 'webgl' ]
 			print(command)
+
 			subprocess.check_call(command)
 
 @bpy.utils.register_class
@@ -66,7 +65,9 @@ class BevyExportButton (bpy.types.Operator):
 	@classmethod
 	def poll (cls, context):
 		return True
+	
 	def execute (self, context):
+		InstallDepencies ()
 		bevyExportPath = os.path.expanduser(context.scene.world.bevy_project_path)
 		if not os.path.isdir(bevyExportPath):
 			MakeFolderForFile (bevyExportPath + '/')
@@ -115,11 +116,12 @@ class WorldPanel (bpy.types.Panel):
 	bl_space_type = 'PROPERTIES'
 	bl_region_type = 'WINDOW'
 	bl_context = 'world'
+	
 	def draw (self, context):
 		self.layout.prop(context.world, 'bevy_project_path')
 		self.layout.prop(context.world, 'holyserver')
 		self.layout.prop(context.world, 'html_code')
-		self.layout.operator('bevy.export', icon='CONSOLE')
+		self.layout.operator('bevy.export', icon = 'CONSOLE')
 
 @bpy.utils.register_class
 class BevyScriptsPanel (bpy.types.Panel):
@@ -138,6 +140,10 @@ class BevyScriptsPanel (bpy.types.Panel):
 				self.layout.prop(context.active_object, 'bevyScript' + str(i))
 			if not foundUnassignedScript:
 				foundUnassignedScript = not hasScript
+
+def InstallDepencies ():
+	sys.path.append(os.path.join(HOLY_BLENDER_PATH, 'Install Scripts'))
+	import install_UnityToBevy
 
 def ConvertCSFileToRust (filePath):
 	global mainClassName

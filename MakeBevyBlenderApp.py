@@ -933,7 +933,7 @@ def Do (attachedScriptsDict = {}):
 	open(BEVY_PROJECT_PATH + '/index.html', 'wb').write(htmlText.encode('utf-8'))
 
 	# os.system('cp ' + TEMPLATES_PATH + '/wasm.js' + ' ' + BEVY_PROJECT_PATH + '/api/wasm.js')
-	subprocess.check_call(['cp', '-v', os.path.join(_thisDir, 'Server.py'), os.path.join(BEVY_PROJECT_PATH, 'Server.py')])
+	subprocess.check_call(['cp', '-v', os.path.join(thisDir, 'Server.py'), os.path.join(BEVY_PROJECT_PATH, 'Server.py')])
 	subprocess.check_call(['chmod', '+x', os.path.join(BEVY_PROJECT_PATH, 'Server.py')])
 	CopyFile (os.path.join(TEMPLATES_PATH, 'wasm.js'), os.path.join(BEVY_PROJECT_PATH, 'api', 'wasm.js'))
 

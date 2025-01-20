@@ -11,8 +11,9 @@ namespace HolyBlender
 	public class SaveAndLoadManager : SingletonMonoBehaviour<SaveAndLoadManager>
 	{
 #if !UNITY_WEBGL
+		public SaveData defaultSaveData = new SaveData();
+		public static SaveData saveData = new SaveData();
 		static string SAVE_FILE_PATH;
-		static SaveData saveData = new SaveData();
 
 		public static void Init ()
 		{
@@ -25,13 +26,7 @@ namespace HolyBlender
 					File.Delete(SAVE_FILE_PATH);
 				BuildManager.IsFirstStartup = false;
 			}
-			saveData.boolDict = new Dictionary<string, bool>();
-			saveData.intDict = new Dictionary<string, int>();
-			saveData.floatDict = new Dictionary<string, float>();
-			saveData.stringDict = new Dictionary<string, string>();
-			saveData.vector2Dict = new Dictionary<string, Vector2>();
-			saveData.boolArrayDict = new Dictionary<string, bool[]>();
-			saveData.vector2IntArrayDict = new Dictionary<string, _Vector2Int[]>();
+			saveData = Instance.defaultSaveData;
 			if (File.Exists(SAVE_FILE_PATH))
 				Load ();
 		}
@@ -55,6 +50,7 @@ namespace HolyBlender
 		{
 			HolyBlender.Instance.blenderPathInputField.text = saveData.blenderPath;
 			HolyBlender.instance.blendFilePathInputField.text = saveData.blendFilePath;
+			HolyBlender.instance.autoExitToggle.isOn = saveData.autoExit;
 		}
 
 		public static void Load ()
@@ -305,6 +301,7 @@ namespace HolyBlender
 		{
 			public string blenderPath;
 			public string blendFilePath;
+			public bool autoExit;
 			public Dictionary<string, bool> boolDict;
 			public Dictionary<string, int> intDict;
 			public Dictionary<string, float> floatDict;

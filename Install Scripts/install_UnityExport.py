@@ -1,6 +1,7 @@
 import os
 
 HOLY_BLENDER_PATH = os.path.expanduser('~/HolyBlender')
+LIBS_PATH = os.path.join(HOLY_BLENDER_PATH, 'libs')
 
 thisDir = os.path.split(os.path.abspath(__file__))[0]
 thisDir = thisDir.replace('/dist/BlenderPlugin/_interrnal', '')

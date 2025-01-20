@@ -2,6 +2,7 @@ using TMPro;
 using System;
 using System.IO;
 using UnityEngine;
+using UnityEngine.UI;
 using TriLibCore.SFB;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -12,6 +13,18 @@ namespace HolyBlender
 	{
 		public TMP_InputField blenderPathInputField;
 		public TMP_InputField blendFilePathInputField;
+		public Toggle autoExitToggle;
+		public static bool AutoExit
+		{
+			get
+			{
+				return SaveAndLoadManager.saveData.autoExit;
+			}
+			set
+			{
+				SaveAndLoadManager.saveData.autoExit = value;
+			}
+		}
 #if UNITY_EDITOR
 		static string HOLY_BLENDER_PATH = Application.dataPath + "/../..";
 #else
@@ -49,11 +62,18 @@ namespace HolyBlender
 			app.StartInfo.RedirectStandardError = true;
 			app.StartInfo.WorkingDirectory = HOLY_BLENDER_PATH;
 			app.Start();
-			string ouptut = app.StandardOutput.ReadToEnd();  
-			string errors = app.StandardError.ReadToEnd();  
-      		app.WaitForExit();
-			print("Output: " + ouptut);
-			print("Errors: " + errors);
+			// string ouptut = app.StandardOutput.ReadToEnd();  
+			// string errors = app.StandardError.ReadToEnd();  
+	  		// app.WaitForExit();
+			// print("Output: " + ouptut);
+			// print("Errors: " + errors);
+			// if (!string.IsNullOrEmpty(errors))
+			// {
+			// 	GameManager.instance.DisplayNotification ("Errors: " + errors);
+			// 	return;
+			// }
+			if (AutoExit)
+				GameManager.instance.Quit ();
 		}
 	}
 }

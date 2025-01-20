@@ -1,19 +1,20 @@
 import os
 
 HOLY_BLENDER_PATH = os.path.expanduser('~/HolyBlender')
+LIBS_PATH = os.path.join(HOLY_BLENDER_PATH, 'libs')
 
 def ExcludeFolder (relativePath):
 	fileLines.insert(12, '\t\t<Compile Remove=\"' + HOLY_BLENDER_PATH + '/' + relativePath + '/**\" />\n')
 
-if not os.path.isdir(HOLY_BLENDER_PATH + '/CSharpToPython'):
+if not os.path.isdir(LIBS_PATH + '/CSharpToPython'):
 	os.system('git clone https://github.com/OpenSourceJesus/CSharpToPython --depth=1')
-if not os.path.isdir(HOLY_BLENDER_PATH + '/py2many'):
+if not os.path.isdir(LIBS_PATH + '/py2many'):
 	os.system('git clone https://github.com/OpenSourceJesus/py2many --depth=1')
-if not os.path.isdir(HOLY_BLENDER_PATH + '/Blender_bevy_components_workflow'):
+if not os.path.isdir(LIBS_PATH + '/Blender_bevy_components_workflow'):
 	os.system('git clone https://github.com/OpenSourceJesus/Blender_bevy_components_workflow --depth=1')
 os.system('''sudo apt install pip
 	pip install Wand --break-system-packages
-	cp -r ~/.local/lib/python3.12/site-packages/wand ''' + HOLY_BLENDER_PATH + '''/wand
+	cp -r ~/.local/lib/python3.12/site-packages/wand ''' + LIBS_PATH + '''/wand
 	sudo apt -y install python3-toposort
 	sudo apt install snapd
 	sudo snap install blender --classic
