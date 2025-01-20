@@ -989,7 +989,7 @@ PolygonCollider2D:
 			collidingLayers = getattr(bpy.data.worlds[0], 'collisionMask' + str(i))
 			for i2 in range(32):
 				fileText += str(collidingLayers[i2]) + '\n'
-    MakeFolderForFile (self.DATA_FILE_PATH)
+		MakeFolderForFile (self.DATA_FILE_PATH)
 		open(self.DATA_FILE_PATH, 'w').write(fileText)
 		MakeFolderForFile (os.path.join(self.projectExportPath, 'Assets', 'Editor', ''))
 		CopyFile (os.path.join(UNITY_SCRIPTS_PATH, 'GetUnityProjectInfo.cs'), os.path.join(self.projectExportPath, 'Assets', 'Editor', 'GetUnityProjectInfo.cs'))

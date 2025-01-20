@@ -18,8 +18,6 @@ Then run 'sudo apt -y install make' to install make.
 
 Now, run 'cd HolyBlender' to change directory to HolyBlender.
 
-Next, run 'python3 install_BlenderPlugin.py' to install the required parts to use BlenderPlugin. To install the parts for any of the other tools like UnityToUnreal UnityToBevy, or KritaToBlender, run 'python3 install_' and then add the name of the tool and '.py' to run as one command.
-
 ## Requirements
 Currently, only Linux operating systems are supported. Testing has only been done on Ubuntu 23.10, Ubuntu 24.04, and Pop!_OS 22.04.
 
@@ -44,13 +42,16 @@ Also, I made this project for testing as an input Unity project for translation:
 
 # Testing
 ```bash
+python3 BlenderPlugin.py --test-unity
 python3 BlenderPlugin.py --test-html
 python3 BlenderPlugin.py --test-bevy
 ```
 
 ## Notes
 
-For Unity exports, only scripts attached to objects get exported.
+For Unity exports, scripts only get exported if they are attached to objects.
+
+For Unity exports, collections are exported as prefabs. Currently, prefabs instanced as a scene don't have their contents inside the Unity scene.
 
 For Unity exports, mark classes derived from MonoBehaviour with the 'Is MonoBehaviour' checkbox for them to get attacehd to the corresponding GameObjects.
 
@@ -62,7 +63,7 @@ Currently, there isn't a way to have nested prefabs when exporting from Blender 
 
 Currently, exporting mesh objects from Blender won't work properly unless a version of Unity is installed.
 
-This project's translation tools rely on my forks of CSharpToPython (https://github.com/OpenSourceJesus/CSharpToPython) and py2many (https://github.com/OpenSourceJesus/py2many). Additionally, UnityToBevy relies on my fork of Blender_bevy_components_workflow (https://github.com/OpenSourceJesus/Blender_bevy_components_workflow). Running the 'python3 install_' commands will install the corresponding forks.
+This project's translation tools rely on my forks of CSharpToPython (https://github.com/OpenSourceJesus/CSharpToPython) and py2many (https://github.com/OpenSourceJesus/py2many). Additionally, UnityToBevy relies on my fork of Blender_bevy_components_workflow (https://github.com/OpenSourceJesus/Blender_bevy_components_workflow).
 
 # Support
 Use this webpage to know what should be done in the future of this project (and what has been done) and feel free to add issues (entries) to it: 'https://github.com/OpenSourceJesus/HolyBlender/issues'. Also, my email is 'gileadcosman@gmail.com', and I would love to respond to any questions or comments you have.

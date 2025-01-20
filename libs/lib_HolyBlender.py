@@ -20,7 +20,7 @@ PI = 3.141592653589793
 if sys.platform == 'win32':
 	INIT_EXPORT_PATH = '/'
 else:
-	INIT_EXPORT_PATH = os.path.expanduser('~')
+	INIT_EXPORT_PATH = '~'
 UNITY_SCRIPTS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Unity Scripts')
 GODOT_SCRIPTS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Godot Scripts')
 EXTENSIONS_PATH = os.path.join(HOLY_BLENDER_PATH, 'Extensions')
